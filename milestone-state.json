@@ -2,7 +2,7 @@
   "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
   "version": "2.0",
   "created_at": "2026-06-13T00:00:00Z",
-  "current_milestone_id": 13,
+  "current_milestone_id": 14,
   "planning_complete": true,
   "budget": {
     "used_usd": 0.0,
@@ -257,6 +257,28 @@
       "human_feedback": null,
       "history": [
         { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 全面重整經濟（ECONOMY 設定、DIFFS、xpNeed 曲線、拆分連續加成、真實獎勵申請/核准/退款流程、RPG 商店定價、狀態頁與家長頁經濟面板），並徹底移除保護券。新增遷移 v3→v4。smoke 69/69、desktop-save 4/4 通過。" }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "任務池擴充（100 任務／8 分類／6 難度／年齡性別）+ 1080p 桌面",
+      "spec_file": "milestones/m13-task-pool-expansion.md",
+      "spec_summary": "TASK_POOL 擴充為 100 個適齡（5–15）任務，新增 8 大分類與 6 級難度（E/D/C/B/A/S）；任務含 ageRange/estimatedMinutes/why/repeatRule；可設定孩子年齡與性別並據此抽選；家長可啟用停用、由每日抽選系統挑選；桌面版改 1920×1080 視窗模式。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [3, 10],
+      "acceptance_criteria": [
+        "TASK_POOL 達 100 個任務，分布 E20/D20/C20/B15/A15/S10，涵蓋 8 大分類，內容貼近台灣家庭與學校、鼓勵成長不含危險/羞辱/過度控制/侵犯隱私",
+        "難度 easy=E/normal=D/medium=C/hard=B/epic=A/super=S；E/D/C/B 進每日抽選，A/S 為每週挑戰",
+        "可在覺醒與管理者模式設定孩子年齡（5–15）與性別，任務依 ageRange/gender 篩選",
+        "任務不全顯示於每日畫面，而由家長啟用停用 + 每日抽選系統挑選",
+        "桌面版 1920×1080 視窗模式；smoke 75/75、desktop-save 4/4、accounts 10/10"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 重建 TASK_POOL 為 100 個適齡任務（8 分類、6 難度、ageRange/estimatedMinutes/why/repeatRule）；新增 normal(D)/super(S) 難度與 CHALLENGE 集合；ageMatch 改用 ageRange+gender；玩家加 age/gender 並可於覺醒與家長頁設定；每日抽選改 E/D/C/B 平均分配、A/S 每週挑戰；地圖/分頁/成就/職業加成同步更新；Electron 視窗改 1920×1080。smoke 75/75、desktop-save 4/4、accounts 10/10，exe 重新打包並啟動成功。" }
       ]
     }
   ]

@@ -5,13 +5,15 @@ const path = require('path');
 
 function createWindow(){
   const win = new BrowserWindow({
-    width: 480,
-    height: 860,
-    minWidth: 360,
-    minHeight: 620,
+    width: 1920,
+    height: 1080,
+    minWidth: 1024,
+    minHeight: 640,
+    center: true,
     backgroundColor: '#060b18',
     title: 'KidQuest：覺醒 獵人任務系統',
     autoHideMenuBar: true,
+    fullscreenable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
