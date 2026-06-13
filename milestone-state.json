@@ -1,0 +1,173 @@
+{
+  "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
+  "version": "2.0",
+  "created_at": "2026-06-13T00:00:00Z",
+  "current_milestone_id": 7,
+  "planning_complete": true,
+  "budget": {
+    "used_usd": 0.0,
+    "limit_usd": 30.0,
+    "tokens_used": 0,
+    "planning_calls": 1,
+    "execution_calls": 0,
+    "verification_calls": 0
+  },
+  "milestones": [
+    {
+      "id": 1,
+      "title": "核心骨架與存檔系統",
+      "spec_file": "milestones/backfill-v3.md",
+      "spec_summary": "單檔 HTML/Vanilla JS 架構；localStorage(kidquest_data) 存讀檔；v1/v2→v3 自動遷移；覺醒登錄（名稱/職業）。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [],
+      "acceptance_criteria": [
+        "進度自動存入 localStorage 並可正確讀回",
+        "v1/v2 舊存檔自動遷移到 v3 且保留等級/金幣/點數/技能/裝備/成就/PIN/紀錄",
+        "首次啟動可登錄獵人名稱與職業（魔法師/戰士/守護騎士）"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: backfilled — 由 test/smoke.js 65/65 通過驗證" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "任務系統",
+      "spec_file": "milestones/backfill-v3.md",
+      "spec_summary": "49 個任務的任務池（7 類）；每日抽選 8 個（E×3/C×3/B×2）+ 每週 S×2；今日時段推薦；挑戰完成→審核→發獎；每日重置與一鍵重抽。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [1],
+      "acceptance_criteria": [
+        "每日自動從任務池抽出正確數量與等級分布的今日任務",
+        "完成任務進入待審核，核准後發放對應報酬",
+        "每日重置與一鍵重抽今日任務正常運作"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: backfilled — 由 test/smoke.js 65/65 通過驗證" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "成長系統",
+      "spec_file": "milestones/backfill-v3.md",
+      "spec_summary": "升級每級 +3 能力點（力/敏/智/活/感，各有實效）+1 技能點；三職業各 7 技能依序解鎖；20 個獵人成就解鎖送獎。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [1],
+      "acceptance_criteria": [
+        "升級正確發放能力點與技能點，配點影響實際效果",
+        "三職業技能樹依序解鎖",
+        "成就條件達成時解鎖並發放獎勵"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: backfilled — 由 test/smoke.js 65/65 通過驗證" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "經濟與獎勵系統",
+      "spec_file": "milestones/backfill-v3.md",
+      "spec_summary": "金幣經濟節奏；44 項商店道具（含 5 套裝、類型篩選、感知折扣）；保護券（購買/成就贈送/抵消中斷）；連續紀錄報酬加成；15 個真實獎勵。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [2, 3],
+      "acceptance_criteria": [
+        "商店購買與類型篩選、感知折扣正確運作",
+        "連續紀錄加成與保護券抵消邏輯正確",
+        "真實獎勵可瀏覽與兌換"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: backfilled — 由 test/smoke.js 65/65 通過驗證" }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "管理者（家長）模式",
+      "spec_file": "milestones/backfill-v3.md",
+      "spec_summary": "PIN 鎖（預設 1234）；任務審核核准/退回；任務池管理（啟停/排程/年齡/增刪改）；今日任務設定；保護券核可；真實獎勵管理；本週統計、紀錄、重設 PIN/資料。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [2, 4],
+      "acceptance_criteria": [
+        "PIN 正確保護管理者功能且可重設",
+        "家長可審核任務、管理任務池與今日任務設定",
+        "保護券使用需家長核可"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: backfilled — 由 test/smoke.js 65/65 通過驗證" }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "UI／視覺與傳送門地圖",
+      "spec_file": "milestones/backfill-v3.md",
+      "spec_summary": "暗黑系統介面（Tailwind CDN + Noto Sans TC/Rajdhani）；發光特效與 emoji；今日任務化身傳送門地圖（E/C/B/S 篩選、S 級 DUNGEON BREAK）；375px–1200px RWD。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [2],
+      "acceptance_criteria": [
+        "暗黑系統風格介面與發光特效正常呈現",
+        "傳送門地圖可依等級篩選，S 級有特殊呈現",
+        "手機 375px 到桌機 1200px 響應式版面正常"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: backfilled — 由 test/smoke.js 65/65 通過驗證" }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "PWA 安裝與離線快取（提案）",
+      "spec_file": "milestones/m7-pwa-offline.md",
+      "spec_summary": "加入 manifest 與 service worker，讓遊戲可安裝到主畫面並完整離線執行；不改變既有玩法與存檔。",
+      "status": "pending",
+      "attempts": 0,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [1],
+      "acceptance_criteria": [
+        "可從瀏覽器『加入主畫面』安裝為 PWA",
+        "離線（無網路）時仍可開啟並正常遊玩",
+        "既有 localStorage 存檔與 65 項煙霧測試不受影響"
+      ],
+      "human_feedback": null,
+      "history": []
+    },
+    {
+      "id": 8,
+      "title": "跨裝置雲端同步（提案，需家長/隱私審核）",
+      "spec_file": "milestones/m8-cloud-sync.md",
+      "spec_summary": "可選的雲端存檔同步，解決 README 列出的『換瀏覽器/換電腦不同步』限制。涉及帳號與兒童資料，列為高風險、強制人工審核。",
+      "status": "pending",
+      "attempts": 0,
+      "max_attempts": 3,
+      "require_human_approval": true,
+      "depends_on": [1, 7],
+      "acceptance_criteria": [
+        "可選擇登入後將存檔同步到雲端並在另一裝置還原",
+        "未登入時遊戲行為與現在完全相同（純本機）",
+        "兒童個資處理符合隱私原則（最小化蒐集、家長同意）"
+      ],
+      "human_feedback": null,
+      "history": []
+    }
+  ]
+}
