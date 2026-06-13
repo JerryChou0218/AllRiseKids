@@ -19,6 +19,21 @@ npx serve .                      # 或用 Node
 - 桌面/主畫面有獨立 App 圖示，全螢幕無網址列。
 - Service worker 會快取 `index.html` 與 Tailwind/字型等 CDN 資源，**首次上線載入後即可完全離線遊玩**（解決原本斷網會掉樣式的問題）。
 - 改版時更新 `sw.js` 的 `CACHE_VERSION` 即可讓使用者取得新版。
+
+### 🖥️ 單機桌面版（.exe，存檔隨資料夾移動）
+不需瀏覽器、不需網路設定，雙擊資料夾內的 `KidQuest.exe` 就能玩。
+**帳號與進度存成 `.exe` 同層的 `kidquest-save.json`** —— 把整個資料夾複製到別台電腦，存檔跟著走、進度不遺失。
+
+開發 / 打包（需先 `npm install`）：
+```
+npm start        # 開發模式直接執行桌面版
+npm run pack     # 打包成 dist/KidQuest-win32-x64/（內含 KidQuest.exe）
+npm test         # 65 項邏輯測試 + 桌面存檔可攜性測試
+```
+- 打包後把 `dist/KidQuest-win32-x64/` 整包資料夾交給使用者即可，存檔產生在這個資料夾內。
+- 桌面版的存檔後端會自動切換：在 `.exe` 內寫檔案、在純瀏覽器內用 localStorage（同一份 `index.html` 兩用）。
+- 註：桌面版的介面樣式（Tailwind / 字型）目前仍走 CDN，**首次需連網**；若要在完全離線的電腦上也保持樣式，需把這些資源在地化（可另開里程碑處理）。
+
 v1 / v2 舊存檔會自動遷移到 v3，保留等級、金幣、能力點、技能、裝備、成就、家長 PIN 與紀錄。
 
 ## 🎮 玩法流程

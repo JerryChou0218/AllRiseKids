@@ -2,3 +2,5 @@ node_modules/
 *.log
 tmp.json
 .DS_Store
+dist/
+kidquest-save.json

@@ -954,11 +954,28 @@ function defaultData(){
   };
 }
 
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+/* 存檔後端：在 Electron 桌面版寫入 .exe 同層的存檔檔案（window.kqStore，由 preload 提供），
+   其餘環境（純瀏覽器 / 測試）退回 localStorage。介面相同，遊戲邏輯無需感知差異。 */
+const kqStorage = {
+  read(){
+    if(typeof window!=='undefined' && window.kqStore) return window.kqStore.read();
+    return localStorage.getItem(STORAGE_KEY);
+  },
+  write(str){
+    if(typeof window!=='undefined' && window.kqStore){ window.kqStore.write(str); return; }
+    localStorage.setItem(STORAGE_KEY, str);
+  },
+  remove(){
+    if(typeof window!=='undefined' && window.kqStore){ window.kqStore.remove(); return; }
+    localStorage.removeItem(STORAGE_KEY);
+  }
+};
+
+function save(){ kqStorage.write(JSON.stringify(state)); }
 
 function load(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = kqStorage.read();
     if(raw){
       let data = JSON.parse(raw);
       if(data.version !== VERSION) data = migrate(data);
@@ -2027,14 +2044,14 @@ function resetPin(){
 function resetData(){
   if(!confirm('⚠️ 確定要重置所有資料嗎？角色、進度、道具都會消失！')) return;
   if(!confirm('再次確認：這個動作無法復原！')) return;
-  localStorage.removeItem(STORAGE_KEY);
+  kqStorage.remove();
   location.reload();
 }
 
 /* ── 跨裝置存檔轉移（匯出 / 匯入；純本機檔案，無帳號、不上傳） ── */
 function exportSave(){
   try{
-    const raw = localStorage.getItem(STORAGE_KEY) || JSON.stringify(state);
+    const raw = kqStorage.read() || JSON.stringify(state);
     const blob = new Blob([raw], { type:'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -2058,7 +2075,7 @@ function importSave(input){
         toast('這不是有效的 KidQuest 存檔檔案。'); input.value=''; return;
       }
       if(!confirm('⚠️ 匯入會覆蓋這台裝置目前的進度，確定嗎？')){ input.value=''; return; }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      kqStorage.write(JSON.stringify(data));
       toast('匯入成功，重新載入中…');
       setTimeout(()=>location.reload(), 600);
     }catch(e){ toast('匯入失敗：檔案格式錯誤。'); input.value=''; }

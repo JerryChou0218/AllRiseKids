@@ -2,7 +2,7 @@
   "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
   "version": "2.0",
   "created_at": "2026-06-13T00:00:00Z",
-  "current_milestone_id": 9,
+  "current_milestone_id": 11,
   "planning_complete": true,
   "budget": {
     "used_usd": 0.0,
@@ -178,20 +178,41 @@
       "title": "帳號制雲端同步（Supabase + Google 登入）",
       "spec_file": "milestones/m9-cloud-sync-supabase.md",
       "spec_summary": "每位小孩用自己的 Google 帳號登入，進度存到 Supabase 並以 Row Level Security 個別隔離；自動跨裝置同步。未登入時維持純本機。先 Mockup + 設定包供審核，核准且使用者開好 Supabase 專案後再整合。",
-      "status": "pending_approval",
+      "status": "pending",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": true,
       "depends_on": [1],
+      "human_feedback": "暫緩：使用者覺得雲端設定麻煩，改先做單機可攜桌面版（M10）。Mockup 與 Supabase 設定包已備妥，日後要做雲端可直接接續。",
       "acceptance_criteria": [
         "小孩用自己的 Google 帳號登入後，進度自動同步到雲端並可在另一裝置還原",
         "不同帳號的進度各自獨立儲存且互相看不到（Supabase RLS）",
         "未登入時遊戲行為與現在完全相同（純本機、可離線）",
         "雲端設定缺失時自動退回純本機，且 65 項煙霧測試維持綠燈"
       ],
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "N/A", "ai_verification": "DEFERRED: 暫緩，改先做單機可攜桌面版（M10）；Mockup 與 Supabase 設定包已備妥，日後可直接續接。" }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "單機可攜桌面版（Electron，存檔隨資料夾移動）",
+      "spec_file": "milestones/m10-desktop-portable.md",
+      "spec_summary": "用 Electron 把遊戲包成桌面 App，可從資料夾內的 .exe 執行；帳號與進度存成 .exe 同層的 kidquest-save.json，整包搬到別處只要存檔在就能接續玩。瀏覽器版維持可用。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [1],
+      "acceptance_criteria": [
+        "可從資料夾內的 .exe 啟動遊戲（不需另開瀏覽器）",
+        "帳號與進度存成 .exe 同層的存檔檔案，移動整包資料夾後進度不遺失、可接續",
+        "未在 Electron 環境（純瀏覽器）時仍以 localStorage 正常運作",
+        "node test/smoke.js 維持 65/65"
+      ],
       "human_feedback": null,
       "history": [
-        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "N/A", "ai_verification": "PENDING: Mockup-First 關卡 — 已產出流程 Mockup（cloud-mockup.html）、Supabase schema（含 RLS）與設定指南，待人工審核流程並開好 Supabase 專案後再實作整合。" }
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: Electron 桌面外殼 + 檔案式存檔橋接（preload window.kqStore）。已打包 dist/KidQuest-win32-x64/KidQuest.exe 並實機啟動成功（4 進程）；新增 test/desktop-save.test.js 驗證存檔寫入資料夾並於『搬到另一資料夾』後接續（4/4）；smoke 維持 65/65。註：桌面版樣式仍走 CDN，完全離線需在地化資源（可另立里程碑）。" }
       ]
     }
   ]
