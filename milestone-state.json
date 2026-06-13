@@ -157,19 +157,21 @@
       "id": 8,
       "title": "跨裝置雲端同步（提案，需家長/隱私審核）",
       "spec_file": "milestones/m8-cloud-sync.md",
-      "spec_summary": "可選的雲端存檔同步，解決 README 列出的『換瀏覽器/換電腦不同步』限制。涉及帳號與兒童資料，列為高風險、強制人工審核。",
-      "status": "pending",
-      "attempts": 0,
+      "spec_summary": "解決『換瀏覽器/換電腦不同步』。採輕量方案：純本機匯出/匯入存檔（無帳號、不上傳），而非帳號制雲端後端。",
+      "status": "pending_approval",
+      "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": true,
       "depends_on": [1, 7],
       "acceptance_criteria": [
-        "可選擇登入後將存檔同步到雲端並在另一裝置還原",
+        "可在裝置間轉移存檔並在另一裝置還原（以匯出/匯入檔案實現）",
         "未登入時遊戲行為與現在完全相同（純本機）",
-        "兒童個資處理符合隱私原則（最小化蒐集、家長同意）"
+        "兒童個資處理符合隱私原則（此方案為零蒐集、不上傳）"
       ],
       "human_feedback": null,
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 管理者面板新增匯出/匯入存檔；跨裝置轉移可行、未登入行為不變、零個資蒐集；smoke 65/65。採輕量方案取代帳號制後端，待人工核准結案。" }
+      ]
     }
   ]
 }

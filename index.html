@@ -470,6 +470,10 @@
       <div class="sys-win mb-4">
         <div class="sys-head text-sm"><span class="sys-i">i</span>設定</div>
         <div class="p-3 grid gap-2">
+          <p class="text-xs" style="color:var(--sys-dim)">換裝置 / 換瀏覽器？用「匯出存檔」存成檔案，到新裝置「匯入存檔」即可延續進度。純本機檔案，不上傳、不需帳號。</p>
+          <button onclick="exportSave()" class="btn-sys py-2.5 text-sm">📤 匯出存檔（跨裝置轉移）</button>
+          <button onclick="triggerImport()" class="btn-sys py-2.5 text-sm">📥 匯入存檔</button>
+          <input id="import-file" type="file" accept="application/json,.json" onchange="importSave(this)" style="display:none">
           <button onclick="resetPin()" class="btn-sys py-2.5 text-sm">🔑 重設 PIN 碼</button>
           <button onclick="resetData()" class="btn-red py-2.5 text-sm">🗑️ 重置所有資料（示範用）</button>
         </div>
@@ -2025,6 +2029,41 @@ function resetData(){
   if(!confirm('再次確認：這個動作無法復原！')) return;
   localStorage.removeItem(STORAGE_KEY);
   location.reload();
+}
+
+/* ── 跨裝置存檔轉移（匯出 / 匯入；純本機檔案，無帳號、不上傳） ── */
+function exportSave(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY) || JSON.stringify(state);
+    const blob = new Blob([raw], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const d = new Date();
+    const stamp = d.getFullYear() + String(d.getMonth()+1).padStart(2,'0') + String(d.getDate()).padStart(2,'0');
+    a.href = url; a.download = 'kidquest-save-' + stamp + '.json';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    toast('存檔已匯出，請保存這個檔案。');
+  }catch(e){ toast('匯出失敗：' + e.message); }
+}
+function triggerImport(){ document.getElementById('import-file').click(); }
+function importSave(input){
+  const file = input.files && input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(){
+    try{
+      const data = JSON.parse(reader.result);
+      if(!data || typeof data !== 'object' || !data.player){
+        toast('這不是有效的 KidQuest 存檔檔案。'); input.value=''; return;
+      }
+      if(!confirm('⚠️ 匯入會覆蓋這台裝置目前的進度，確定嗎？')){ input.value=''; return; }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      toast('匯入成功，重新載入中…');
+      setTimeout(()=>location.reload(), 600);
+    }catch(e){ toast('匯入失敗：檔案格式錯誤。'); input.value=''; }
+  };
+  reader.readAsText(file);
 }
 
 /* ═══════════════════ 特效 ═══════════════════ */
