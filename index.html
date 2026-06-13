@@ -7,6 +7,14 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#060b18">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KidQuest">
 <style>
   :root{
     --sys-cyan:#00d2ff; --sys-blue:#1e4976; --sys-purple:#a855f7; --sys-gold:#f5c542;
@@ -2076,6 +2084,14 @@ if(!state.player.name){
   goScreen('status');
 }
 setInterval(()=>{ if(state.meta.lastDay !== todayStr()){ dailyReset(); ensureToday(); renderCurrent(); } }, 60000);
+</script>
+<!-- PWA：service worker 註冊（獨立區塊，不影響 smoke 測試擷取的主腳本） -->
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').catch(function(){ /* 離線或 file:// 下忽略 */ });
+  });
+}
 </script>
 </body>
 </html>

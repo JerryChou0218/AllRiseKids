@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0%" stop-color="#0e2a52"/>
+      <stop offset="60%" stop-color="#060b18"/>
+      <stop offset="100%" stop-color="#03060f"/>
+    </radialGradient>
+    <linearGradient id="blade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#e8f7ff"/>
+      <stop offset="100%" stop-color="#00d2ff"/>
+    </linearGradient>
+    <radialGradient id="portal" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.9"/>
+      <stop offset="70%" stop-color="#1e4976" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#1e4976" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- 背景（maskable 安全區：主要圖形集中於中央 80%） -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- 系統格線 -->
+  <g stroke="#00d2ff" stroke-opacity="0.10" stroke-width="2">
+    <path d="M0 170 H512 M0 342 H512 M170 0 V512 M342 0 V512"/>
+  </g>
+  <!-- 傳送門光暈 -->
+  <circle cx="256" cy="256" r="150" fill="url(#portal)"/>
+  <circle cx="256" cy="256" r="120" fill="none" stroke="#a855f7" stroke-opacity="0.55" stroke-width="4"/>
+  <!-- 寶劍 -->
+  <g>
+    <polygon points="256,96 274,300 256,330 238,300" fill="url(#blade)"/>
+    <rect x="210" y="312" width="92" height="16" rx="8" fill="#f5c542"/>
+    <rect x="248" y="326" width="16" height="64" rx="6" fill="#6b8cae"/>
+    <circle cx="256" cy="398" r="14" fill="#f5c542"/>
+  </g>
+  <!-- 頂部等級徽記 -->
+  <text x="256" y="150" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="800"
+        fill="#cfe8ff" text-anchor="middle" letter-spacing="2">KQ</text>
+</svg>

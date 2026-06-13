@@ -5,8 +5,20 @@
 
 ## 🚀 如何開始
 
-直接用瀏覽器打開 `index.html`，**完全離線可玩**，零安裝、零建置。
+直接用瀏覽器打開 `index.html` 即可遊玩，零安裝、零建置。
 所有進度自動儲存在瀏覽器 localStorage（鍵名 `kidquest_data`）。
+
+### 📲 安裝為 App（PWA，可離線）
+透過本機伺服器開啟（PWA 必須走 http/https，不支援 `file://`）：
+```
+# 在 KidQuest 資料夾執行任一種：
+python -m http.server 8000      # 然後瀏覽 http://localhost:8000
+npx serve .                      # 或用 Node
+```
+開啟後，瀏覽器選單會出現「**安裝 / 加入主畫面**」。安裝後：
+- 桌面/主畫面有獨立 App 圖示，全螢幕無網址列。
+- Service worker 會快取 `index.html` 與 Tailwind/字型等 CDN 資源，**首次上線載入後即可完全離線遊玩**（解決原本斷網會掉樣式的問題）。
+- 改版時更新 `sw.js` 的 `CACHE_VERSION` 即可讓使用者取得新版。
 v1 / v2 舊存檔會自動遷移到 v3，保留等級、金幣、能力點、技能、裝備、成就、家長 PIN 與紀錄。
 
 ## 🎮 玩法流程
