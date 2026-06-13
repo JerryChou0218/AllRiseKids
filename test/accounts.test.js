@@ -21,7 +21,7 @@ global.document = { getElementById:id=>{ els[id]=els[id]||el(); return els[id]; 
   querySelectorAll:()=>[], createElement:()=>el(), body:el() };
 global.window = { innerWidth:400, innerHeight:800, scrollTo(){} };  // 無 kqStore → 走 localStorage
 global.localStorage = { _d:{}, getItem(k){ return this._d[k]===undefined?null:this._d[k]; }, setItem(k,v){ this._d[k]=v; }, removeItem(k){ delete this._d[k]; } };
-global.confirm = ()=>true; global.prompt = ()=>'';
+global.confirm = ()=>true; global.prompt = ()=>'7777';
 global.setInterval = ()=>{}; global.setTimeout = f=>{ f(); return 0; }; global.clearTimeout = ()=>{};
 Math.random = (()=>{ let s=42; return ()=>{ s=(s*1103515245+12345)%2147483648; return s/2147483648; }; })();
 
@@ -73,12 +73,12 @@ const ab = JSON.parse(c.accounts.find(a=>a.name==='小宇').blob);
 const bb = JSON.parse(c.accounts.find(a=>a.name==='小美').blob);
 assert(ab.player.coins===111 && bb.player.coins===222, '兩帳號存檔各自獨立（111 / 222）');
 
-/* 6. 設定密碼 / 刪除帳號 */
+/* 6. 家長：變更指定帳號密碼 + 刪除指定帳號 */
+setAccountPassword(A.id);                   // prompt → '7777'
+assert(accountsLoad().accounts.find(a=>a.id===A.id).pass===__hash('7777'), '家長可變更指定帳號密碼');
 const cnt0 = accountsLoad().accounts.length;
-deleteAccount(A.id);                       // 刪除非登入中的小宇
-assert(accountsLoad().accounts.length===cnt0-1, '可刪除非登入中的帳號');
-deleteAccount(B.id);                        // 嘗試刪除登入中的小美 → 應被擋
-assert(accountsLoad().accounts.some(a=>a.id===B.id), '不可刪除登入中的帳號');
+deleteAccount(A.id);                        // 刪除指定帳號（A 非登入中）
+assert(accountsLoad().accounts.length===cnt0-1 && !accountsLoad().accounts.some(a=>a.id===A.id), '家長可刪除指定帳號');
 
 console.log('');
 console.log(__afail()===0 ? '=== 多帳號驗證通過（'+__apass()+' 項）===' : '=== 失敗 '+__afail()+' 項 ===');

@@ -372,11 +372,7 @@
         <div class="p-4" id="status-equip"></div>
       </div>
 
-      <div class="grid grid-cols-3 gap-2 mb-3">
-        <button onclick="goScreen('inventory')" class="btn-dark py-3 text-sm">🎒 背包</button>
-        <button onclick="goScreen('achievements')" class="btn-dark py-3 text-sm">🏆 成就</button>
-        <button onclick="tryParent()" class="btn-dark py-3 text-sm">🔒 家長</button>
-      </div>
+      <div class="mb-3" id="status-mypass"></div>
 
       <div class="sys-win mb-3">
         <div class="sys-head"><span class="sys-i">i</span>每日任務進度</div>
@@ -560,8 +556,7 @@
           <button onclick="exportSave()" class="btn-sys py-2.5 text-sm">📤 匯出存檔（跨裝置轉移）</button>
           <button onclick="triggerImport()" class="btn-sys py-2.5 text-sm">📥 匯入存檔</button>
           <input id="import-file" type="file" accept="application/json,.json" onchange="importSave(this)" style="display:none">
-          <button onclick="resetPin()" class="btn-sys py-2.5 text-sm">🔑 重設 PIN 碼</button>
-          <button onclick="resetData()" class="btn-red py-2.5 text-sm">🗑️ 重置所有資料（示範用）</button>
+          <button onclick="resetPin()" class="btn-sys py-2.5 text-sm">🔑 變更家長 PIN 碼</button>
         </div>
       </div>
     </div>
@@ -574,6 +569,8 @@
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="map" onclick="goScreen('map')"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">地圖</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="skills" onclick="goScreen('skills')"><div class="text-xl">✨</div><div class="text-[11px] font-bold">技能</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="inventory" onclick="goScreen('inventory')"><div class="text-xl">🎒</div><div class="text-[11px] font-bold">背包</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="achievements" onclick="goScreen('achievements')"><div class="text-xl">🏆</div><div class="text-[11px] font-bold">成就</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="shop" onclick="goScreen('shop')"><div class="text-xl">🛒</div><div class="text-[11px] font-bold">商店</div></button>
     </div>
   </nav>
@@ -698,7 +695,7 @@
 <!-- ════════ 獎勵編輯（家長）════════ -->
 <div id="rewardform-modal" class="modal-bg">
   <div class="modal-card sys-win max-w-sm">
-    <div class="sys-head"><span class="sys-i">i</span>新增真實獎勵</div>
+    <div class="sys-head"><span class="sys-i">i</span><span id="rewardform-title">新增真實獎勵</span></div>
     <div class="p-4">
       <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">獎勵名稱</label>
       <input id="rf-name" maxlength="30" placeholder="例如：零用錢 NT$50" class="inp mb-3">
@@ -1542,6 +1539,12 @@ function renderStatus(){
   const ecoBox = (v,l,c)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-lg font-bold" style="color:${c};">${v}</div><div class="text-[10px] font-bold" style="color:var(--sys-dim);">${l}</div></div>`;
   document.getElementById('status-economy').innerHTML =
     ecoBox('🪙'+todayCoins,'今日金幣','#ffd25c') + ecoBox('🪙'+weekCoins,'本週金幣','#5cb8ff') + ecoBox('🎁'+monthRewards,'本月已兌換獎勵','#5cffb8');
+
+  // 使用者自設密碼（同一台裝置可能有別的使用者）：有登入帳號才顯示
+  const mp = document.getElementById('status-mypass');
+  if(mp) mp.innerHTML = currentAccountId
+    ? `<button onclick="setMyPassword()" class="btn-dark w-full py-3 text-sm">🔑 設定我的密碼（保護我的帳號）</button>`
+    : '';
 }
 function renderEquipSummary(){
   const slots = ['hat','outfit','weapon','accessory','pet','title','emote'];
@@ -2019,14 +2022,32 @@ function renderInventory(){
   empty.classList.add('hidden');
   list.innerHTML = state.inventory.map(i=>{
     const catalog = state.shop.find(s=>s.id===i.id);
-    return `<button onclick="toggleEquip('${i.id}')" class="sys-win rar-${i.rarity} p-3 text-center" style="border-width:1px; ${i.equipped?'box-shadow:0 0 16px rgba(0,210,255,.5) !important;':''}">
-      <div class="text-3xl mb-1">${i.emoji}</div>
-      <div class="font-black text-white text-[11px] leading-tight">${i.name}</div>
-      <div class="text-[10px] font-bold" style="color:var(--sys-dim);">${SLOT_NAMES[i.type]}・${RARITY[i.rarity]}</div>
-      ${catalog&&catalog.set?`<div class="chip mt-0.5" style="font-size:9px;">🧩 ${catalog.set}</div>`:''}
-      <div class="text-[11px] font-black mt-1 ${i.equipped?'text-cyan-300':''}" style="${i.equipped?'':'color:#33506e;'}">${i.equipped?'✔ 裝備中':'點擊裝備'}</div>
-    </button>`;
+    const sellPrice = Math.floor(((catalog&&catalog.cost)||0)/2);
+    return `<div class="sys-win rar-${i.rarity} p-3 text-center" style="border-width:1px; ${i.equipped?'box-shadow:0 0 16px rgba(0,210,255,.5) !important;':''}">
+      <div onclick="toggleEquip('${i.id}')" style="cursor:pointer;">
+        <div class="text-3xl mb-1">${i.emoji}</div>
+        <div class="font-black text-white text-[11px] leading-tight">${i.name}</div>
+        <div class="text-[10px] font-bold" style="color:var(--sys-dim);">${SLOT_NAMES[i.type]}・${RARITY[i.rarity]}</div>
+        ${catalog&&catalog.set?`<div class="chip mt-0.5" style="font-size:9px;">🧩 ${catalog.set}</div>`:''}
+        <div class="text-[11px] font-black mt-1 ${i.equipped?'text-cyan-300':''}" style="${i.equipped?'':'color:#33506e;'}">${i.equipped?'✔ 裝備中':'點擊裝備'}</div>
+      </div>
+      <button onclick="sellItem('${i.id}')" class="btn-dark w-full py-1 mt-2 text-[10px] num">💰 賣出 +${sellPrice}🪙</button>
+    </div>`;
   }).join('');
+}
+function sellItem(id){
+  const idx = state.inventory.findIndex(i=>i.id===id);
+  if(idx<0) return;
+  const item = state.inventory[idx];
+  const catalog = state.shop.find(s=>s.id===id);
+  const refund = Math.floor(((catalog&&catalog.cost)||0)/2);   // 只返還原價值的一半
+  if(!confirm(`賣出「${item.name}」？只會返還原價一半（+${refund} 🪙），裝備會消失。`)) return;
+  state.inventory.splice(idx,1);
+  state.player.coins += refund;
+  state.history.unshift({ date:todayStr(), kind:'sell', name:`賣出：${item.name}`, xpEarned:0, coinsEarned:refund });
+  save();
+  toast(`已賣出「${item.name}」，返還 ${refund} 🪙（原價一半）。`);
+  renderInventory(); renderTop();
 }
 function toggleEquip(id){
   const item = state.inventory.find(i=>i.id===id);
@@ -2168,11 +2189,12 @@ function renderParent(){
         <span class="text-lg">${r.emoji||'🎁'}</span>
         <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${r.name}</div>
         <span class="num font-bold text-xs text-right" style="color:var(--sys-gold);">🪙${r.cost}<br><span class="text-[10px]" style="color:var(--sys-dim);">≈NT$${r.estimatedTwd||Math.round(r.cost/ECONOMY.coinsPerTwd)}</span></span>
+        <button onclick="openRewardForm('${r.id}')" class="btn-sys px-2.5 py-1.5 text-xs" title="編輯名稱 / 點數">✏️</button>
         <button onclick="deleteReward('${r.id}')" class="btn-red px-2.5 py-1.5 text-xs">🗑️</button>
       </div>`).join('')
     : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">尚未設定真實獎勵。</div>`;
 
-  const kindEmoji = { task:'✔', buy:'🛒', redeem:'🎁', achievement:'🏆', drop:'💎', bonus:'🎉' };
+  const kindEmoji = { task:'✔', buy:'🛒', sell:'💰', redeem:'🎁', achievement:'🏆', drop:'💎', bonus:'🎉' };
   document.getElementById('parent-history').innerHTML = state.history.length
     ? state.history.slice(0,50).map(h=>`
       <div class="flex justify-between gap-2 px-2.5 py-1.5 rounded" style="background:rgba(12,26,50,.7);">
@@ -2318,20 +2340,32 @@ function deleteTask(id){
 }
 
 /* ── 真實獎勵 ── */
-function openRewardForm(){
-  document.getElementById('rf-name').value='';
-  document.getElementById('rf-emoji').value='';
-  document.getElementById('rf-cost').value='100';
+let editingRewardId = null;
+function openRewardForm(id){
+  editingRewardId = id || null;
+  document.getElementById('rewardform-title').textContent = id ? '編輯真實獎勵' : '新增真實獎勵';
+  const r = id ? state.parentConfig.customRewards.find(x=>x.id===id) : null;
+  document.getElementById('rf-name').value = r ? r.name : '';
+  document.getElementById('rf-emoji').value = r ? (r.emoji||'') : '';
+  document.getElementById('rf-cost').value = r ? r.cost : '100';
   document.getElementById('rewardform-modal').classList.add('show');
 }
 function saveRewardForm(){
   const name = document.getElementById('rf-name').value.trim();
   const cost = parseInt(document.getElementById('rf-cost').value, 10);
+  const emoji = document.getElementById('rf-emoji').value.trim() || '🎁';
   if(!name || !cost || cost<1){ toast('請填寫名稱與有效的金幣數。'); return; }
-  state.parentConfig.customRewards.push({ id:uid(), name, emoji:document.getElementById('rf-emoji').value.trim()||'🎁', cost });
+  const estimatedTwd = Math.round(cost / ECONOMY.coinsPerTwd);
+  if(editingRewardId){
+    const r = state.parentConfig.customRewards.find(x=>x.id===editingRewardId);
+    if(r){ r.name=name; r.emoji=emoji; r.cost=cost; r.estimatedTwd=estimatedTwd; }
+    toast('獎勵已更新。');
+  }else{
+    state.parentConfig.customRewards.push({ id:uid(), name, emoji, cost, estimatedTwd, tier:'custom', status:'available' });
+    toast('獎勵已新增。');
+  }
   save();
   closeModal('rewardform-modal');
-  toast('獎勵已新增。');
   renderParent();
 }
 function deleteReward(id){
@@ -2346,12 +2380,6 @@ function resetPin(){
   state.parentConfig.pin = np;
   save();
   toast('PIN 碼已更新。');
-}
-function resetData(){
-  if(!confirm('⚠️ 確定要重置所有資料嗎？角色、進度、道具都會消失！')) return;
-  if(!confirm('再次確認：這個動作無法復原！')) return;
-  kqStorage.remove();
-  location.reload();
 }
 
 /* ── 跨裝置存檔轉移（匯出 / 匯入；純本機檔案，無帳號、不上傳） ── */
@@ -2557,26 +2585,39 @@ function switchAccount(){
   gateSel = c.activeId;
   showAccountGate();
 }
-function setAccountPassword(){
+// 家長：變更「指定帳號」的密碼（可改任何帳號）
+function setAccountPassword(id){
   const c = accountsLoad();
-  if(!c.activeId){ toast('目前為單人模式，尚未建立帳號。'); return; }
-  const np = prompt('設定本帳號密碼（留空表示不設密碼）：');
+  const a = c.accounts.find(x=>x.id===id); if(!a) return;
+  const np = prompt(`設定「${a.name}」的密碼（留空表示不設密碼）：`);
   if(np===null) return;
-  const a = c.accounts.find(x=>x.id===c.activeId);
-  if(!a) return;
   a.pass = hashPass(np.trim());
   accountsSave(c);
-  toast(np.trim() ? '本帳號密碼已設定。' : '已清除本帳號密碼。');
+  toast(np.trim() ? `已設定「${a.name}」的密碼。` : `已清除「${a.name}」的密碼。`);
   renderAccounts();
 }
+// 使用者：設定自己（登入中帳號）的密碼
+function setMyPassword(){
+  const c = accountsLoad();
+  if(!c.activeId){ toast('目前為單人模式，尚未建立帳號。'); return; }
+  setAccountPassword(c.activeId);
+}
+// 家長：刪除「指定帳號」（含登入中；刪除登入中帳號後回登入畫面）
 function deleteAccount(id){
   const c = accountsLoad();
   const a = c.accounts.find(x=>x.id===id); if(!a) return;
-  if(id===c.activeId){ toast('無法刪除目前登入中的帳號，請先切換。'); return; }
   if(!confirm(`確定刪除帳號「${a.name}」？該帳號的進度將永久消失！`)) return;
+  const wasActive = (id===c.activeId);
   c.accounts = c.accounts.filter(x=>x.id!==id);
+  if(wasActive) c.activeId = null;     // 避免之後誤把目前存檔快照寫回別人帳號
   accountsSave(c);
   toast(`已刪除帳號「${a.name}」。`);
+  if(wasActive){
+    currentAccountId = null;
+    if(c.accounts.length){ gateSel = c.accounts[0].id; showAccountGate(); }   // 還有帳號 → 回登入畫面
+    else { kqStorage.remove(); if(typeof location!=='undefined') location.reload(); }  // 沒帳號了 → 回單人初始
+    return;
+  }
   renderAccounts();
 }
 function renderAccounts(){
@@ -2592,13 +2633,13 @@ function renderAccounts(){
     <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
       <span class="text-lg">${avatarFor(a)}</span>
       <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${a.name} ${a.pass?'🔒':''}${a.id===c.activeId?'　<span class="text-cyan-300">（登入中）</span>':''}</div>
-      ${a.id===c.activeId?'':`<button onclick="deleteAccount('${a.id}')" class="btn-red px-2.5 py-1.5 text-xs">🗑️</button>`}
+      <button onclick="setAccountPassword('${a.id}')" class="btn-sys px-2.5 py-1.5 text-xs" title="變更此帳號密碼">🔑</button>
+      <button onclick="deleteAccount('${a.id}')" class="btn-red px-2.5 py-1.5 text-xs" title="刪除此帳號">🗑️</button>
     </div>`).join('');
   box.innerHTML = `
-    <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前登入：<span class="text-white">${active?active.name:'—'}</span></div>
+    <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前登入：<span class="text-white">${active?active.name:'—'}</span>　🔑＝變更密碼、🗑️＝刪除帳號</div>
     ${list}
-    <button onclick="setAccountPassword()" class="btn-sys py-2.5 text-sm mt-1">🔑 設定 / 變更本帳號密碼</button>
-    <button onclick="switchAccount()" class="btn-gold py-2.5 text-sm">🚪 登出 / 切換帳號</button>`;
+    <button onclick="switchAccount()" class="btn-gold py-2.5 text-sm mt-1">🚪 登出 / 切換帳號</button>`;
 }
 
 /* ═══════════════════ 啟動 ═══════════════════ */

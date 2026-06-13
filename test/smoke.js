@@ -108,6 +108,13 @@ assert(state.inventory.find(i=>i.id==='n11').equipped, '裝備雷霆魔劍');
 const pw1 = combatPower();
 assert(pw1 >= 700, '裝備史詩武器後戰鬥力含 +700（⚡'+pw1+'）');
 
+/* 6b. 賣回裝備：只返還原價一半 */
+const coinsBeforeSell = state.player.coins;
+const n11cost = state.shop.find(s=>s.id==='n11').cost;
+sellItem('n11');
+assert(!state.inventory.some(i=>i.id==='n11'), '賣出後背包移除雷霆魔劍');
+assert(state.player.coins===coinsBeforeSell+Math.floor(n11cost/2), '賣出返還原價一半（+'+Math.floor(n11cost/2)+'🪙）');
+
 /* 7. 保護券已移除：商店不應有 consumable / sp1 */
 assert(!state.shop.some(s=>s.type==='consumable' || s.id==='sp1'), '商店已無保護券（consumable 已移除）');
 assert(state.player.streakTickets===undefined, 'player 不再有 streakTickets 欄位');

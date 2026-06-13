@@ -2,7 +2,7 @@
   "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
   "version": "2.0",
   "created_at": "2026-06-13T00:00:00Z",
-  "current_milestone_id": 15,
+  "current_milestone_id": 16,
   "planning_complete": true,
   "budget": {
     "used_usd": 0.0,
@@ -301,6 +301,29 @@
       "human_feedback": null,
       "history": [
         { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 新增固定頂部列（帳號切換/家長登入）與桌面左側欄導覽 + 寬版內容（CSS @media ≥1024px）；renderTop 同步頂部列；孩子狀態頁第三格由 NT$ 改為『本月已兌換獎勵』次數（台幣僅家長頁）；SHOP_ITEMS 加 15 件(共58)、DEFAULT_REWARDS 加 10 個(共25)；smoke/desktop/accounts 全綠，exe 1080p 寬版啟動成功。" }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "家長帳號/獎勵/PIN 管理強化 + 使用者密碼 + 裝備賣回 + 移除重置鈕",
+      "spec_file": "milestones/m15-parent-controls-and-sell.md",
+      "spec_summary": "家長可變更/刪除任何帳號、編輯真實獎勵名稱與點數、變更 PIN；使用者可自設密碼；真實獎勵維持申請→核准/退回退款；背包裝備可賣回商店返還半價；移除『重置所有資料』按鈕；狀態頁背包/成就移到主選單、移除狀態頁家長鈕。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [11, 12, 14],
+      "acceptance_criteria": [
+        "家長可刪除任一帳號（含登入中）並可變更任一帳號密碼；家長 PIN 可變更",
+        "使用者可在狀態頁自設/變更自己的帳號密碼",
+        "真實獎勵購買為申請制，家長否決時全額退還金幣（沿用 M12）",
+        "移除『重置所有資料』按鈕；家長後台可編輯真實獎勵名稱與所需點數",
+        "狀態頁背包/成就移至主選單、移除狀態頁家長鈕；背包裝備可賣回商店返還半價",
+        "smoke 77/77、desktop-save 4/4、accounts 10/10，exe 重新打包啟動成功"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: setAccountPassword(id)/deleteAccount(id) 改為可操作任一帳號（刪除登入中帳號後回登入畫面）；新增 setMyPassword 與狀態頁『設定我的密碼』；真實獎勵表單支援編輯名稱/點數（estimatedTwd 連動）；新增 sellItem 返還半價並記錄；移除 resetData 按鈕與函式；主選單加背包/成就、狀態頁移除背包/成就/家長三鈕。smoke 77/77、desktop 4/4、accounts 10/10，exe 啟動成功。" }
       ]
     }
   ]
