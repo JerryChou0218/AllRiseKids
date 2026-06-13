@@ -1,0 +1,2081 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>KidQuest：覺醒 ⚔️ 獵人任務系統</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sys-cyan:#00d2ff; --sys-blue:#1e4976; --sys-purple:#a855f7; --sys-gold:#f5c542;
+    --sys-bg:#060b18; --sys-panel:rgba(8,18,38,.92); --sys-text:#cfe8ff; --sys-dim:#6b8cae;
+  }
+  *{ font-family:'Noto Sans TC',sans-serif; -webkit-tap-highlight-color:transparent; }
+  .num{ font-family:'Rajdhani','Noto Sans TC',sans-serif; }
+  body{
+    background:#060b18 radial-gradient(ellipse at 50% -10%, #0e2a52 0%, #060b18 55%);
+    color:var(--sys-text); min-height:100vh;
+  }
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:linear-gradient(rgba(0,210,255,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,210,255,.05) 1px, transparent 1px);
+    background-size:44px 44px;
+  }
+  .screen{ display:none; position:relative; z-index:1; }
+  .screen.active{ display:block; animation:screenIn .25s ease; }
+  @keyframes screenIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+
+  .sys-win{
+    background:var(--sys-panel);
+    border:1px solid rgba(0,210,255,.45);
+    box-shadow:0 0 16px rgba(0,210,255,.18), inset 0 0 24px rgba(0,210,255,.05);
+    border-radius:6px; position:relative;
+  }
+  .sys-win::before, .sys-win::after{ content:''; position:absolute; width:14px; height:14px; pointer-events:none; }
+  .sys-win::before{ top:-2px; left:-2px; border-top:2px solid var(--sys-cyan); border-left:2px solid var(--sys-cyan); }
+  .sys-win::after{ bottom:-2px; right:-2px; border-bottom:2px solid var(--sys-cyan); border-right:2px solid var(--sys-cyan); }
+  .sys-head{
+    display:flex; align-items:center; gap:8px; padding:8px 14px;
+    border-bottom:1px solid rgba(0,210,255,.3);
+    background:linear-gradient(90deg, rgba(0,210,255,.14), transparent 70%);
+    font-weight:900; letter-spacing:.15em; color:#9fdcff;
+  }
+  .sys-i{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--sys-cyan);
+    color:var(--sys-cyan); font-weight:900; font-size:12px;
+    display:inline-flex; align-items:center; justify-content:center; flex:none;
+    box-shadow:0 0 8px rgba(0,210,255,.6); font-family:'Rajdhani';
+  }
+  .gold-win{ border-color:rgba(245,197,66,.55); box-shadow:0 0 16px rgba(245,197,66,.2); }
+  .gold-win::before{ border-color:var(--sys-gold); } .gold-win::after{ border-color:var(--sys-gold); }
+
+  .btn-sys{
+    background:linear-gradient(180deg, rgba(0,210,255,.22), rgba(0,90,140,.3));
+    border:1px solid rgba(0,210,255,.65); color:#bdeeff; font-weight:900;
+    box-shadow:0 0 10px rgba(0,210,255,.25); border-radius:4px; transition:transform .12s, filter .15s;
+  }
+  .btn-gold{
+    background:linear-gradient(180deg, #ffd96b, #e0a92e);
+    border:1px solid #ffe9a8; color:#4a3000; font-weight:900;
+    box-shadow:0 0 12px rgba(245,197,66,.45); border-radius:4px; transition:transform .12s, filter .15s;
+  }
+  .btn-dark{
+    background:rgba(20,35,60,.8); border:1px solid #2c4a72; color:#7fa6cc; font-weight:700; border-radius:4px;
+    transition:transform .12s;
+  }
+  .btn-red{
+    background:linear-gradient(180deg, rgba(255,80,100,.25), rgba(140,20,40,.35));
+    border:1px solid rgba(255,90,110,.6); color:#ffb3c0; font-weight:900; border-radius:4px;
+  }
+  .btn-sys:active,.btn-gold:active,.btn-dark:active,.btn-red:active{ transform:scale(.94); }
+  .btn-sys:hover,.btn-gold:hover{ filter:brightness(1.15); }
+  button:disabled{ opacity:.4; pointer-events:none; }
+
+  .rank-ring{
+    width:52px; height:52px; border-radius:50%; flex:none; position:relative;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Rajdhani'; font-weight:700; font-size:26px;
+    border:2px solid currentColor; box-shadow:0 0 14px currentColor, inset 0 0 14px rgba(255,255,255,.08);
+    text-shadow:0 0 10px currentColor; background:rgba(0,10,25,.7);
+    animation:ringPulse 2.2s ease-in-out infinite;
+  }
+  @keyframes ringPulse{ 0%,100%{box-shadow:0 0 10px currentColor, inset 0 0 10px rgba(255,255,255,.06);} 50%{box-shadow:0 0 22px currentColor, inset 0 0 16px rgba(255,255,255,.12);} }
+  .rank-E{ color:#7fb4e8; } .rank-C{ color:#00d2ff; } .rank-B{ color:#b06bff; } .rank-S{ color:#ffd24a; }
+
+  .char-idle{ animation:idleBob 3s ease-in-out infinite; display:inline-block; filter:drop-shadow(0 0 18px rgba(0,210,255,.5)); }
+  @keyframes idleBob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+  .avatar-hex{
+    width:120px; height:132px; display:flex; align-items:center; justify-content:center;
+    clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background:linear-gradient(180deg, rgba(0,210,255,.18), rgba(10,25,55,.9));
+    border:1px solid rgba(0,210,255,.4); position:relative;
+  }
+  .power-num{
+    font-family:'Rajdhani'; font-weight:700; color:var(--sys-gold);
+    text-shadow:0 0 16px rgba(245,197,66,.7); animation:powerGlow 2s ease-in-out infinite;
+  }
+  @keyframes powerGlow{ 0%,100%{text-shadow:0 0 10px rgba(245,197,66,.5);} 50%{text-shadow:0 0 24px rgba(245,197,66,.95);} }
+
+  .bar-track{ background:rgba(10,25,50,.9); border:1px solid #1c3a60; border-radius:3px; overflow:hidden; }
+  .xp-fill{ height:100%; background:linear-gradient(90deg,#0080c0,#00d2ff,#9be9ff);
+    box-shadow:0 0 12px rgba(0,210,255,.8); transition:width .8s cubic-bezier(.22,1,.36,1);
+    animation:xpScan 2.4s linear infinite; background-size:200% 100%; }
+  @keyframes xpScan{ 0%{background-position:0% 0;} 100%{background-position:200% 0;} }
+  .stat-fill{ height:100%; transition:width .5s ease; box-shadow:0 0 8px currentColor; }
+
+  #gate-map{
+    position:relative; height:560px; border-radius:6px; overflow:hidden;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(20,60,120,.35), transparent 50%),
+      radial-gradient(ellipse at 75% 70%, rgba(70,30,130,.3), transparent 55%),
+      linear-gradient(rgba(0,210,255,.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,210,255,.06) 1px, transparent 1px),
+      #050a16;
+    background-size:auto,auto,36px 36px,36px 36px,auto;
+    border:1px solid rgba(0,210,255,.35);
+  }
+  .gate{ position:absolute; transform:translate(-50%,-100%); cursor:pointer; text-align:center; width:90px; }
+  .gate-beam{
+    width:16px; height:95px; margin:0 auto; border-radius:50% 50% 0 0;
+    filter:blur(1px); animation:beamFlicker 2.6s ease-in-out infinite;
+  }
+  @keyframes beamFlicker{ 0%,100%{opacity:.85; transform:scaleY(1);} 50%{opacity:1; transform:scaleY(1.06);} }
+  .gate-base{ width:56px; height:16px; margin:-7px auto 0; border-radius:50%; animation:basePulse 2.6s ease-in-out infinite; }
+  @keyframes basePulse{ 0%,100%{transform:scaleX(1); opacity:.8;} 50%{transform:scaleX(1.25); opacity:1;} }
+  .gate-tag{
+    margin-top:5px; background:rgba(5,15,32,.92); border:1px solid rgba(0,210,255,.5);
+    border-radius:4px; padding:3px 6px; font-size:10px; font-weight:700; line-height:1.3;
+    box-shadow:0 0 8px rgba(0,210,255,.25);
+  }
+  .gate-done{ opacity:.35; filter:grayscale(.6); }
+  .gate-break{ color:#ff79ff; font-family:'Rajdhani'; font-weight:700; font-size:10px; letter-spacing:.1em;
+    text-shadow:0 0 8px #d24aff; animation:breakBlink 1s steps(2) infinite; }
+  @keyframes breakBlink{ 50%{opacity:.4;} }
+
+  .skill-hex{
+    width:64px; height:70px; clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    display:flex; align-items:center; justify-content:center; font-size:26px;
+    background:linear-gradient(180deg, #14294a, #0a1830); cursor:pointer; position:relative;
+    border:none; transition:transform .15s;
+  }
+  .skill-hex:active{ transform:scale(.92); }
+  .skill-wrap{ position:relative; width:70px; }
+  .skill-wrap::before{
+    content:''; position:absolute; inset:-3px;
+    clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background:#1c3a60; z-index:-1;
+  }
+  .skill-wrap.unlocked::before{ background:linear-gradient(180deg,#00d2ff,#0070a8); }
+  .skill-wrap.unlocked .skill-hex{ box-shadow:inset 0 0 18px rgba(0,210,255,.4); filter:drop-shadow(0 0 8px rgba(0,210,255,.7)); }
+  .skill-wrap.canlearn::before{ background:linear-gradient(180deg,#f5c542,#a87b14); animation:canlearnPulse 1.4s ease-in-out infinite; }
+  @keyframes canlearnPulse{ 0%,100%{opacity:.7;} 50%{opacity:1;} }
+  .skill-wrap.locked .skill-hex{ filter:grayscale(.9) brightness(.55); }
+  .skill-wrap.selected::before{ background:#fff; }
+  .skill-link{ width:3px; height:22px; margin:0 auto; background:linear-gradient(180deg,#1c3a60,#1c3a60); }
+  .skill-link.on{ background:linear-gradient(180deg,#00d2ff,#0070a8); box-shadow:0 0 6px rgba(0,210,255,.6); }
+
+  .rar-common{ border-color:#5f7a99 !important; } .rar-common .rar-tag{ background:#3d5169; color:#c8d8ea; }
+  .rar-rare{ border-color:#2f8fff !important; } .rar-rare .rar-tag{ background:#1559b0; color:#cfe6ff; }
+  .rar-epic{ border-color:#b06bff !important; } .rar-epic .rar-tag{ background:#6d28d9; color:#eadbff; }
+  .rar-legendary{ border-color:#ffd24a !important; box-shadow:0 0 14px rgba(255,210,74,.4) !important; }
+  .rar-legendary .rar-tag{ background:#a87b14; color:#fff3cf; }
+
+  .modal-bg{ position:fixed; inset:0; background:rgba(2,6,14,.78); z-index:80; display:none;
+    align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(3px); }
+  .modal-bg.show{ display:flex; }
+  .modal-card{ animation:sysOpen .28s cubic-bezier(.22,1,.36,1); width:100%; max-height:92vh; overflow-y:auto; }
+  @keyframes sysOpen{ 0%{opacity:0; transform:scaleY(.6) scaleX(.92);} 100%{opacity:1; transform:scale(1);} }
+
+  .pin-dot{ width:16px; height:16px; border-radius:50%; border:1px solid #2c4a72; background:transparent; transition:all .15s; }
+  .pin-dot.fill{ background:var(--sys-cyan); box-shadow:0 0 8px rgba(0,210,255,.8); }
+
+  .coin-pop{ position:fixed; font-weight:700; pointer-events:none; z-index:90; animation:coinFloat 1.4s ease-out forwards; }
+  @keyframes coinFloat{ 0%{opacity:0; transform:translateY(0) scale(.6);} 15%{opacity:1; transform:translateY(-10px) scale(1.1);} 100%{opacity:0; transform:translateY(-80px);} }
+  .shard{ position:fixed; z-index:95; pointer-events:none; animation:shardFly 1.2s ease-out forwards;
+    width:5px; height:14px; clip-path:polygon(50% 0, 100% 60%, 50% 100%, 0 60%); }
+  @keyframes shardFly{ 0%{opacity:1; transform:translate(0,0) rotate(0) scale(1);} 100%{opacity:0; transform:translate(var(--dx),var(--dy)) rotate(540deg) scale(.4);} }
+
+  .fx-overlay{ position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center; padding:20px; }
+  .fx-overlay.show{ display:flex; }
+  .lv-flash{ position:absolute; inset:0; background:#bdeeff; animation:lvFlash .45s ease-out forwards; }
+  @keyframes lvFlash{ 0%{opacity:.9;} 100%{opacity:0;} }
+  .lv-bg{ position:absolute; inset:0; background:rgba(2,6,14,.88); animation:fadeIn .3s ease; }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  .lv-window{ animation:sysOpen .4s .1s cubic-bezier(.22,1,.36,1) both; }
+  .lv-arise{ font-family:'Rajdhani'; letter-spacing:.4em; color:var(--sys-cyan);
+    text-shadow:0 0 20px rgba(0,210,255,.9); animation:ariseGlow 1.4s ease-in-out infinite; }
+  @keyframes ariseGlow{ 0%,100%{opacity:.75;} 50%{opacity:1; text-shadow:0 0 34px rgba(0,210,255,1);} }
+  .gold-arise{ color:var(--sys-gold); text-shadow:0 0 20px rgba(245,197,66,.9); }
+
+  #toast{ position:fixed; left:50%; bottom:92px; transform:translateX(-50%) translateY(16px); z-index:120;
+    opacity:0; transition:all .3s ease; pointer-events:none; width:min(92vw,420px); }
+  #toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  .streak-flame{ animation:flamePulse 1s ease-in-out infinite; display:inline-block; }
+  @keyframes flamePulse{ 0%,100%{transform:scale(1);} 50%{transform:scale(1.18);} }
+  .tab-btn{ border:1px solid #1c3a60; background:rgba(12,24,46,.8); color:#6b8cae; font-weight:700; border-radius:4px; }
+  .tab-btn.active{ border-color:var(--sys-cyan); color:#bdeeff; background:rgba(0,210,255,.12); box-shadow:0 0 10px rgba(0,210,255,.2); }
+  .chip{ display:inline-block; font-size:10px; font-weight:700; padding:1px 6px; border-radius:3px;
+    background:rgba(0,210,255,.1); border:1px solid #1c3a60; color:#7fa6cc; }
+  .nav-btn{ color:#5d7da3; transition:all .15s; border-top:2px solid transparent; }
+  .nav-btn.active{ color:#bdeeff; border-top-color:var(--sys-cyan); text-shadow:0 0 10px rgba(0,210,255,.8);
+    background:linear-gradient(180deg, rgba(0,210,255,.12), transparent); }
+  .alert-line{ border:1px solid rgba(255,90,110,.5); background:rgba(120,20,40,.18); color:#ff9fae; }
+  .scanline{ position:relative; overflow:hidden; }
+  .scanline::after{ content:''; position:absolute; left:0; right:0; height:46px; top:-50px;
+    background:linear-gradient(180deg, transparent, rgba(0,210,255,.1), transparent);
+    animation:scan 3.6s linear infinite; pointer-events:none; }
+  @keyframes scan{ 0%{top:-50px;} 100%{top:110%;} }
+  input,select{ color-scheme:dark; }
+  .inp{ background:rgba(8,18,38,.9); border:1px solid #2c4a72; border-radius:4px; color:var(--sys-text);
+    padding:10px 12px; outline:none; width:100%; font-weight:700; }
+  .inp:focus{ border-color:var(--sys-cyan); box-shadow:0 0 8px rgba(0,210,255,.3); }
+  .inp-mini{ background:rgba(8,18,38,.9); border:1px solid #2c4a72; border-radius:3px; color:var(--sys-text);
+    padding:2px 4px; outline:none; font-weight:700; font-size:10px; }
+  ::-webkit-scrollbar{ width:6px; height:6px; } ::-webkit-scrollbar-thumb{ background:#1c3a60; border-radius:3px; }
+</style>
+</head>
+<body>
+
+<!-- ════════ 覺醒（新手引導）════════ -->
+<div id="onboarding" class="screen fixed inset-0 z-50 overflow-y-auto">
+  <div class="max-w-md mx-auto px-5 py-8">
+    <div class="text-center mb-5">
+      <div class="lv-arise text-xl font-bold mb-1">SYSTEM</div>
+      <div class="text-3xl font-black text-white" style="text-shadow:0 0 18px rgba(0,210,255,.8);">⚠ 覺醒通知</div>
+    </div>
+    <div class="sys-win scanline mb-4">
+      <div class="sys-head"><span class="sys-i">i</span>通知</div>
+      <div class="p-4 text-sm font-bold leading-relaxed">
+        偵測到具備「玩家」資格的對象。<br>
+        完成現實世界的每日任務，即可獲得經驗值與金幣，不斷變強。<br>
+        <span class="text-cyan-300">你願意接受嗎？</span>
+      </div>
+    </div>
+    <div class="sys-win mb-4">
+      <div class="sys-head"><span class="sys-i">i</span>登錄獵人名稱</div>
+      <div class="p-4"><input id="ob-name" maxlength="12" placeholder="輸入你的名字..." class="inp text-lg"></div>
+    </div>
+    <div class="sys-win mb-5">
+      <div class="sys-head"><span class="sys-i">i</span>選擇職業</div>
+      <div id="ob-classes" class="p-4 grid gap-3"></div>
+    </div>
+    <button onclick="finishOnboarding()" class="btn-gold w-full py-4 text-xl">【 接 受 】</button>
+    <p class="text-center text-xs mt-3" style="color:var(--sys-dim);">※ 拒絕的話……系統會一直等你按下接受。</p>
+  </div>
+</div>
+
+<!-- ════════ 主遊戲 ════════ -->
+<div id="game" class="hidden">
+  <div class="max-w-md mx-auto pb-24 lg:max-w-3xl px-3 pt-3 relative z-10">
+
+    <div class="flex justify-between items-center mb-3 text-sm font-bold">
+      <div class="sys-win px-3 py-1.5 num text-base" style="color:var(--sys-gold);">🪙 <span id="top-coins">0</span></div>
+      <div class="sys-win px-3 py-1.5"><span class="streak-flame">🔥</span> <span class="num text-base text-orange-300" id="top-streak">0</span> <span class="text-xs" style="color:var(--sys-dim);">連續</span></div>
+      <div class="sys-win px-3 py-1.5 num text-base text-cyan-300">Lv.<span id="top-level">1</span></div>
+    </div>
+
+    <!-- 1. 狀態 -->
+    <div id="screen-status" class="screen">
+      <div class="sys-win scanline mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>狀態視窗<span class="ml-auto text-xs num" id="status-rank-tag"></span></div>
+        <div class="p-4">
+          <div class="flex items-center gap-4">
+            <div class="avatar-hex"><span class="char-idle text-6xl" id="status-sprite">🗡️</span></div>
+            <div class="flex-1">
+              <div class="text-xl font-black text-white" id="status-name"></div>
+              <div class="flex gap-1.5 mt-1 flex-wrap">
+                <span class="text-xs font-bold px-2 py-0.5 rounded border border-cyan-700 text-cyan-300" id="status-class"></span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded border border-amber-600 text-amber-300 hidden" id="status-title"></span>
+              </div>
+              <div class="mt-2 text-xs font-bold" style="color:var(--sys-dim);">戰鬥力</div>
+              <div class="power-num text-3xl leading-none">⚡<span id="status-power">0</span></div>
+            </div>
+          </div>
+          <div class="mt-4">
+            <div class="flex justify-between text-xs font-bold mb-1">
+              <span class="text-cyan-300">EXP　Lv.<span id="status-level">1</span> <span id="status-rank"></span></span>
+              <span class="num" style="color:var(--sys-dim);"><span id="status-xp">0</span> / <span id="status-xpneed">100</span></span>
+            </div>
+            <div class="bar-track h-3.5"><div class="xp-fill" id="status-xpbar" style="width:0%;"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>能力值
+          <button onclick="openAlloc()" class="btn-sys ml-auto text-xs px-3 py-1 relative">能力值分配
+            <span id="alloc-badge" class="hidden absolute -top-2 -right-2 bg-red-500 text-white text-[10px] num rounded-full px-1.5 py-0.5 font-bold"></span>
+          </button>
+        </div>
+        <div class="p-4 grid gap-2.5" id="status-stats"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>裝備摘要</div>
+        <div class="p-4" id="status-equip"></div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <button onclick="goScreen('inventory')" class="btn-dark py-3 text-sm">🎒 背包</button>
+        <button onclick="goScreen('achievements')" class="btn-dark py-3 text-sm">🏆 成就</button>
+        <button onclick="tryParent()" class="btn-dark py-3 text-sm">🔒 家長</button>
+      </div>
+
+      <div class="sys-win">
+        <div class="sys-head"><span class="sys-i">i</span>每日任務進度</div>
+        <div class="p-4">
+          <div class="bar-track h-3"><div class="stat-fill text-emerald-400" id="status-dayprog" style="width:0%; background:linear-gradient(90deg,#0d9466,#34d399);"></div></div>
+          <p id="status-daytext" class="text-xs mt-2 font-bold" style="color:var(--sys-dim);"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. 任務欄 -->
+    <div id="screen-quests" class="screen">
+      <div class="sys-win gold-win mb-3" id="recommend-box"></div>
+      <div class="sys-win scanline mb-3">
+        <div class="sys-head"><span class="sys-i">!</span>每日任務：成為強者之路</div>
+        <div class="px-4 py-3">
+          <div class="flex justify-between text-xs font-bold mb-1">
+            <span style="color:var(--sys-dim);">完成度</span>
+            <span class="num text-cyan-300" id="quest-progress">0 / 0</span>
+          </div>
+          <div class="bar-track h-2.5 mb-2"><div class="xp-fill" id="quest-progbar" style="width:0%;"></div></div>
+          <div class="alert-line rounded px-3 py-2 text-xs font-bold">⚠ 警告：未完成全部每日任務，連續紀錄（🔥）將會中斷歸零。S級挑戰不影響連續紀錄。</div>
+        </div>
+      </div>
+      <div class="flex gap-2 mb-3">
+        <button class="tab-btn active flex-1 py-2 text-sm" data-ttab="today" onclick="setTaskTab('today')">每日任務</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-ttab="weekly" onclick="setTaskTab('weekly')">S級挑戰</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-ttab="all" onclick="setTaskTab('all')">全部</button>
+      </div>
+      <div id="task-list" class="grid gap-2.5 mb-4"></div>
+    </div>
+
+    <!-- 3. 傳送門地圖 -->
+    <div id="screen-map" class="screen">
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>傳送門 — 家事地圖<span class="ml-auto text-xs num" id="map-count"></span></div>
+      </div>
+      <div class="flex gap-2 mb-3" id="map-filter">
+        <button class="tab-btn active flex-1 py-1.5 text-xs" data-mfilter="all" onclick="setMapFilter('all')">全部</button>
+        <button class="tab-btn flex-1 py-1.5 text-xs num" data-mfilter="easy" onclick="setMapFilter('easy')">E</button>
+        <button class="tab-btn flex-1 py-1.5 text-xs num" data-mfilter="medium" onclick="setMapFilter('medium')">C</button>
+        <button class="tab-btn flex-1 py-1.5 text-xs num" data-mfilter="hard" onclick="setMapFilter('hard')">B</button>
+        <button class="tab-btn flex-1 py-1.5 text-xs num" data-mfilter="epic" onclick="setMapFilter('epic')">S</button>
+      </div>
+      <div id="gate-map"></div>
+      <p class="text-xs font-bold mt-2 text-center" style="color:var(--sys-dim);">點擊發光的傳送門，查看任務情報並開始攻略！紫色 = S級 DUNGEON BREAK</p>
+    </div>
+
+    <!-- 4. 技能樹 -->
+    <div id="screen-skills" class="screen">
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>技能樹<span class="ml-auto text-xs">技能點數 <span class="num text-base text-amber-300" id="sp-count">0</span></span></div>
+      </div>
+      <div class="flex gap-3">
+        <div class="sys-win flex-none p-4" style="min-width:108px;">
+          <div id="skill-tree" class="flex flex-col items-center"></div>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="sys-win sticky top-3" id="skill-info">
+            <div class="sys-head"><span class="sys-i">i</span>技能資訊</div>
+            <div class="p-4 text-sm font-bold" style="color:var(--sys-dim);">點選左側技能查看詳情</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. 商店 -->
+    <div id="screen-shop" class="screen">
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>系統商店<span class="ml-auto text-xs num" style="color:var(--sys-gold);">🪙 <span id="shop-coins">0</span></span></div>
+        <div class="px-4 py-2 text-xs font-bold" id="shop-discount-line" style="color:var(--sys-dim);"></div>
+      </div>
+      <div class="flex gap-2 mb-2">
+        <button class="tab-btn active flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')">⚔️ 裝備道具</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')">🎁 真實獎勵</button>
+      </div>
+      <div class="flex gap-1.5 mb-3 flex-wrap" id="shop-filter-row"></div>
+      <div id="shop-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4"></div>
+    </div>
+
+    <!-- 6. 背包 -->
+    <div id="screen-inventory" class="screen">
+      <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>背包 — 點擊道具裝備 / 卸下</div></div>
+      <div id="inv-list" class="grid grid-cols-3 gap-2.5 mb-4 lg:grid-cols-6"></div>
+      <div id="inv-empty" class="hidden text-center font-bold py-10" style="color:var(--sys-dim);">背包是空的。完成任務賺金幣，去商店補給吧。</div>
+    </div>
+
+    <!-- 7. 成就 -->
+    <div id="screen-achievements" class="screen">
+      <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>成就紀錄<span class="ml-auto text-xs num" id="ach-count"></span></div></div>
+      <div id="ach-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4"></div>
+    </div>
+
+    <!-- 8. 家長後台 -->
+    <div id="screen-parent" class="screen">
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>管理者模式
+          <button onclick="lockParent()" class="btn-dark ml-auto text-xs px-3 py-1">🔒 鎖定離開</button>
+        </div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>本週統計</div>
+        <div class="p-3 grid grid-cols-2 gap-2 text-center" id="parent-stats"></div>
+      </div>
+
+      <div class="sys-win gold-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">!</span>待審核任務 <span id="pending-count" class="text-xs text-red-300 num"></span></div>
+        <div class="p-3 grid gap-2" id="pending-list"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>連續紀錄保護</div>
+        <div class="p-3" id="parent-protect"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>今日任務設定
+          <button onclick="rerollDaily()" class="btn-sys ml-auto text-xs px-3 py-1">🎲 重新抽選今日任務</button>
+        </div>
+        <div class="p-3 grid gap-2.5">
+          <div class="flex items-center gap-2 text-xs font-bold">
+            <span class="flex-1" style="color:var(--sys-dim);">每日任務數量（4–12，預設 8）</span>
+            <input id="pf-dailycount" type="number" min="4" max="12" class="inp" style="width:80px; padding:6px 10px;" onchange="setDailyCount(this.value)">
+          </div>
+          <div class="flex items-center gap-2 text-xs font-bold">
+            <span class="flex-1" style="color:var(--sys-dim);">孩子年齡層（影響抽選範圍）</span>
+            <select id="pf-age" class="inp" style="width:120px; padding:6px 10px;" onchange="setAgeGroup(this.value)">
+              <option value="all">全年齡</option>
+              <option value="8-10">8–10 歲</option>
+              <option value="10-12">10–12 歲</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>任務池管理 <span class="text-xs num" id="pool-count"></span>
+          <button onclick="openTaskForm()" class="btn-sys ml-auto text-xs px-3 py-1">＋ 新增</button>
+        </div>
+        <div class="p-3 grid gap-2 max-h-96 overflow-y-auto" id="parent-pool"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>真實獎勵管理
+          <button onclick="openRewardForm()" class="btn-sys ml-auto text-xs px-3 py-1">＋ 新增</button>
+        </div>
+        <div class="p-3 grid gap-2 max-h-72 overflow-y-auto" id="parent-rewards"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>紀錄</div>
+        <div class="p-3 grid gap-1.5 max-h-60 overflow-y-auto text-xs" id="parent-history"></div>
+      </div>
+
+      <div class="sys-win mb-4">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>設定</div>
+        <div class="p-3 grid gap-2">
+          <button onclick="resetPin()" class="btn-sys py-2.5 text-sm">🔑 重設 PIN 碼</button>
+          <button onclick="resetData()" class="btn-red py-2.5 text-sm">🗑️ 重置所有資料（示範用）</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 底部導覽 -->
+  <nav class="fixed bottom-0 left-0 right-0 z-40" style="background:rgba(4,9,20,.96); border-top:1px solid rgba(0,210,255,.35); box-shadow:0 -4px 20px rgba(0,210,255,.12);">
+    <div class="max-w-md mx-auto lg:max-w-3xl flex justify-around">
+      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="status" onclick="goScreen('status')"><div class="text-xl">👤</div><div class="text-[11px] font-bold">狀態</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="map" onclick="goScreen('map')"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">地圖</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="skills" onclick="goScreen('skills')"><div class="text-xl">✨</div><div class="text-[11px] font-bold">技能</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="shop" onclick="goScreen('shop')"><div class="text-xl">🛒</div><div class="text-[11px] font-bold">商店</div></button>
+    </div>
+  </nav>
+</div>
+
+<!-- ════════ 能力值分配 ════════ -->
+<div id="alloc-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-md">
+    <div class="sys-head"><span class="sys-i">i</span>能力值分配
+      <button onclick="closeModal('alloc-modal')" class="ml-auto text-cyan-300 font-black px-2">✕</button>
+    </div>
+    <div class="p-4">
+      <div id="alloc-rows" class="grid gap-2 mb-3"></div>
+      <div class="flex justify-between items-center border-t border-cyan-900 pt-3 mb-4">
+        <span class="font-bold text-sm">可分配點數</span>
+        <span class="num text-2xl font-bold text-white" id="alloc-remaining">0</span>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="allocReset()" class="btn-sys flex-1 py-2.5">重置</button>
+        <button onclick="allocConfirm()" class="btn-gold flex-1 py-2.5">確認</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 任務情報 ════════ -->
+<div id="gate-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-sm scanline">
+    <div class="sys-head"><span class="sys-i">!</span>任務情報 QUEST INFO
+      <button onclick="closeModal('gate-modal')" class="ml-auto text-cyan-300 font-black px-2">✕</button>
+    </div>
+    <div class="p-4 text-center" id="gate-body"></div>
+  </div>
+</div>
+
+<!-- ════════ PIN ════════ -->
+<div id="pin-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-xs text-center">
+    <div class="sys-head"><span class="sys-i">i</span>管理者驗證</div>
+    <div class="p-5">
+      <p class="text-xs font-bold mb-4" style="color:var(--sys-dim);">請輸入 4 位數 PIN 碼</p>
+      <div class="flex justify-center gap-3 mb-5" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="grid grid-cols-3 gap-2" id="pin-pad"></div>
+      <button onclick="closePin()" class="mt-4 text-sm font-bold" style="color:var(--sys-dim);">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 購買確認 ════════ -->
+<div id="buy-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-xs text-center">
+    <div class="sys-head"><span class="sys-i">i</span>購買確認</div>
+    <div class="p-5">
+      <div id="buy-emoji" class="text-5xl mb-2"></div>
+      <h3 id="buy-name" class="font-black text-lg text-white mb-1"></h3>
+      <p id="buy-cost" class="num font-bold mb-4" style="color:var(--sys-gold);"></p>
+      <div class="flex gap-3">
+        <button onclick="closeBuy()" class="btn-dark flex-1 py-2.5">取消</button>
+        <button id="buy-confirm" class="btn-gold flex-1 py-2.5">購買</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 任務池編輯（家長）════════ -->
+<div id="taskform-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-sm">
+    <div class="sys-head"><span class="sys-i">i</span><span id="taskform-title">新增任務</span></div>
+    <div class="p-4">
+      <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">任務名稱</label>
+      <input id="tf-name" maxlength="30" class="inp mb-3">
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">圖示（emoji）</label>
+          <input id="tf-emoji" maxlength="4" placeholder="🧹" class="inp">
+        </div>
+        <div>
+          <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">預估時間</label>
+          <input id="tf-time" maxlength="10" placeholder="10分鐘" class="inp">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">分類</label>
+          <select id="tf-cat" class="inp"></select>
+        </div>
+        <div>
+          <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">等級</label>
+          <select id="tf-diff" class="inp"></select>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">排程</label>
+          <select id="tf-schedule" class="inp">
+            <option value="daily">每日任務</option>
+            <option value="weekly">每週 S級</option>
+            <option value="weekend">週末限定</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">建議年齡</label>
+          <select id="tf-age" class="inp">
+            <option value="all">全年齡</option>
+            <option value="8-10">8–10 歲</option>
+            <option value="10-12">10–12 歲</option>
+          </select>
+        </div>
+      </div>
+      <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">為什麼這個任務重要（顯示在任務情報）</label>
+      <input id="tf-why" maxlength="50" placeholder="一句給孩子的話" class="inp mb-4">
+      <div class="flex gap-3">
+        <button onclick="closeModal('taskform-modal')" class="btn-dark flex-1 py-2.5">取消</button>
+        <button onclick="saveTaskForm()" class="btn-gold flex-1 py-2.5">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 獎勵編輯（家長）════════ -->
+<div id="rewardform-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-sm">
+    <div class="sys-head"><span class="sys-i">i</span>新增真實獎勵</div>
+    <div class="p-4">
+      <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">獎勵名稱</label>
+      <input id="rf-name" maxlength="30" placeholder="例如：零用錢 NT$50" class="inp mb-3">
+      <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">圖示（emoji）</label>
+      <input id="rf-emoji" maxlength="4" placeholder="💵" class="inp mb-3">
+      <label class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">所需金幣</label>
+      <input id="rf-cost" type="number" min="1" max="99999" class="inp mb-4">
+      <div class="flex gap-3">
+        <button onclick="closeModal('rewardform-modal')" class="btn-dark flex-1 py-2.5">取消</button>
+        <button onclick="saveRewardForm()" class="btn-gold flex-1 py-2.5">儲存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 升級通知 ════════ -->
+<div id="levelup-overlay" class="fx-overlay">
+  <div class="lv-bg"></div>
+  <div class="lv-flash"></div>
+  <div class="lv-window sys-win max-w-sm w-full relative z-10 scanline">
+    <div class="sys-head"><span class="sys-i">!</span>通知</div>
+    <div class="p-6 text-center">
+      <div class="lv-arise text-sm mb-2">LEVEL UP</div>
+      <div class="text-4xl font-black text-white mb-1" style="text-shadow:0 0 20px rgba(0,210,255,.9);">等級提升！</div>
+      <div class="num text-6xl font-bold text-cyan-300 my-3" style="text-shadow:0 0 26px rgba(0,210,255,1);">Lv.<span id="lv-num"></span></div>
+      <div class="text-sm font-bold grid gap-1 mb-5">
+        <div class="text-amber-300">＋3 能力點數（可至狀態 → 能力值分配）</div>
+        <div class="text-purple-300">＋1 技能點數（可至技能樹學習技能）</div>
+        <div id="lv-rankup" class="hidden text-base text-white mt-1"></div>
+      </div>
+      <button onclick="hideLevelUp()" class="btn-gold w-full py-3 text-lg">確 認</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 今日攻略完成 ════════ -->
+<div id="dayclear-overlay" class="fx-overlay">
+  <div class="lv-bg"></div>
+  <div class="lv-flash"></div>
+  <div class="lv-window sys-win gold-win max-w-sm w-full relative z-10 scanline">
+    <div class="sys-head"><span class="sys-i">!</span>通知</div>
+    <div class="p-6 text-center">
+      <div class="lv-arise gold-arise text-sm mb-2">DAILY CLEAR</div>
+      <div class="text-4xl font-black text-white mb-2" style="text-shadow:0 0 20px rgba(245,197,66,.9);">今日攻略完成！</div>
+      <div class="text-sm font-bold mb-1" style="color:var(--sys-dim);">全部每日任務攻略成功</div>
+      <div class="num text-3xl font-bold my-3" style="color:var(--sys-gold); text-shadow:0 0 20px rgba(245,197,66,.9);">獎勵金幣 +20 🪙</div>
+      <div class="text-sm font-bold text-orange-300 mb-5">🔥 連續紀錄 <span class="num" id="dayclear-streak">1</span> 天</div>
+      <button onclick="closeModal('dayclear-overlay')" class="btn-gold w-full py-3 text-lg">確 認</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ 吐司 ════════ -->
+<div id="toast">
+  <div class="sys-win">
+    <div class="sys-head text-xs py-1.5"><span class="sys-i">i</span>系統訊息</div>
+    <div id="toast-inner" class="px-4 py-2.5 text-sm font-bold"></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ═══════════════════ 常數 ═══════════════════ */
+const STORAGE_KEY = 'kidquest_data';
+const VERSION = 3;
+const ALL_DONE_BONUS = 20;
+
+const CATS = {
+  homework: { name:'作業',     emoji:'📚', stat:'int' },
+  exercise: { name:'運動',     emoji:'💪', stat:'str' },
+  hygiene:  { name:'衛生',     emoji:'🛁', stat:'vit' },
+  chore:    { name:'家事',     emoji:'🏠', stat:'sen' },
+  virtue:   { name:'品格',     emoji:'💎', stat:'sen' },
+  create:   { name:'創作',     emoji:'🎨', stat:'agi' },
+  life:     { name:'生活技能', emoji:'🧭', stat:'vit' },
+  other:    { name:'其他',     emoji:'🌀', stat:'agi' },
+};
+const STATS = {
+  str: { name:'力量', desc:'戰鬥力 +15 / 點',            color:'#ff7a5c' },
+  agi: { name:'敏捷', desc:'S級寶箱掉落率 +0.5% / 點',   color:'#5cffb8' },
+  int: { name:'智力', desc:'任務經驗值 +1% / 點',        color:'#5cb8ff' },
+  vit: { name:'活力', desc:'任務金幣 +1% / 點',          color:'#ffd25c' },
+  sen: { name:'感知', desc:'商店折扣 +0.5% / 點（上限25%）', color:'#c98aff' },
+};
+const DIFFS = {
+  easy:   { rank:'E', name:'E級', xp:10,  coins:4,  statGain:1, color:'#7fb4e8', beam:'linear-gradient(to top,#2e7cd6,rgba(120,190,255,0))', base:'radial-gradient(ellipse,#2e7cd6aa,transparent 70%)' },
+  medium: { rank:'C', name:'C級', xp:25,  coins:10, statGain:2, color:'#00d2ff', beam:'linear-gradient(to top,#00b8e0,rgba(0,210,255,0))',  base:'radial-gradient(ellipse,#00b8e0aa,transparent 70%)' },
+  hard:   { rank:'B', name:'B級', xp:50,  coins:18, statGain:3, color:'#b06bff', beam:'linear-gradient(to top,#8b3df0,rgba(176,107,255,0))', base:'radial-gradient(ellipse,#8b3df0aa,transparent 70%)' },
+  epic:   { rank:'S', name:'S級', xp:100, coins:50, statGain:4, color:'#ffd24a', beam:'linear-gradient(to top,#d24aff,rgba(255,120,255,0))', base:'radial-gradient(ellipse,#d24affaa,transparent 70%)' },
+};
+const CLASSES = {
+  mage:     { name:'魔法師',   emoji:'🔮', sprite:'🧙', bonusCat:'homework', desc:'作業任務 經驗值 +50%' },
+  warrior:  { name:'戰士',     emoji:'⚔️', sprite:'🥷', bonusCat:'exercise', desc:'運動任務 經驗值 +50%' },
+  guardian: { name:'守護騎士', emoji:'🛡️', sprite:'🦸', bonusCat:'chore',    desc:'家事任務 經驗值 +50%' },
+};
+const HUNTER_RANKS = [ [50,'S'],[40,'A'],[30,'B'],[20,'C'],[10,'D'],[1,'E'] ];
+function hunterRank(lv){ for(const [min,r] of HUNTER_RANKS){ if(lv>=min) return r; } return 'E'; }
+
+const RARITY = { common:'普通', rare:'稀有', epic:'史詩', legendary:'傳說' };
+const RAR_POWER = { common:100, rare:300, epic:700, legendary:1500 };
+const SLOT_NAMES = { hat:'頭部', outfit:'服裝', weapon:'武器', accessory:'飾品', pet:'隨從', title:'稱號', emote:'徽記', consumable:'特殊' };
+const SCHEDULE_NAMES = { daily:'每日', weekly:'每週S', weekend:'週末限定' };
+const AGE_NAMES = { all:'全年齡', '8-10':'8–10', '10-12':'10–12' };
+
+/* ═══════════════════ 任務池（49 個）═══════════════════ */
+function P(id,name,emoji,category,difficulty,time,tod,why){
+  return { id, name, emoji, category, difficulty, time, tod, why,
+    schedule: difficulty==='epic' ? 'weekly' : 'daily', age:'all', enabled:true, custom:false };
+}
+const TASK_POOL = [
+  /* ── E級 ── */
+  P('t1','早晚刷牙','🪥','hygiene','easy','3分鐘','morning','保護牙齒，讓笑容隨時都是滿級狀態。'),
+  P('t2','整理床鋪','🛏️','chore','easy','3分鐘','morning','一早整理好床鋪，等於先攻略了今天第一個小目標。'),
+  P('t3','髒衣服放進洗衣籃','🧺','chore','easy','2分鐘','evening','物品歸位是強者的基本功。'),
+  P('t4','喝 8 杯水','💧','hygiene','easy','全天','morning','水分是體力藥水，補滿才能全力戰鬥。'),
+  P('t5','向家人道早安 / 晚安','👋','virtue','easy','1分鐘','morning','一句問候，就能幫全家補血。'),
+  P('p21','整理書包','🎒','homework','easy','5分鐘','morning','明天的自己會感謝今天準備好的你。'),
+  P('p22','鉛筆盒補給完成','✏️','homework','easy','3分鐘','evening','武器保養好，上課才能隨時出招。'),
+  P('p23','桌面清空 5 分鐘','🧽','chore','easy','5分鐘',null,'乾淨的桌面讓專注力 +100。'),
+  P('p24','鞋子排整齊','👟','chore','easy','1分鐘',null,'玄關整齊，全家出門都順利。'),
+  P('p25','毛巾掛好','🧼','hygiene','easy','1分鐘','evening','掛好的毛巾乾得快，細菌不敢靠近。'),
+  P('p26','飯前洗手','👐','hygiene','easy','1分鐘',null,'洗手是對抗病菌怪物的基本防禦魔法。'),
+  P('p27','對家人說謝謝','💬','virtue','easy','1分鐘',null,'一句謝謝，能讓對方獲得一整天的 buff。'),
+  P('p28','今天主動微笑打招呼','🙂','virtue','easy','1分鐘','morning','微笑是不用魔力的群體增益技能。'),
+  P('p29','把水壺裝滿','🥤','life','easy','2分鐘','morning','出發前補給完成，冒險才不會中途缺水。'),
+  P('p30','睡前準備明天衣服','👕','life','easy','5分鐘','evening','提前裝備好，明天早上多睡十分鐘。'),
+  /* ── C級 ── */
+  P('t6','洗澡','🛁','hygiene','medium','15分鐘','evening','洗掉一天的疲勞值，回復乾淨狀態。'),
+  P('t7','完成所有作業','✏️','homework','medium','40分鐘','afternoon','作業是每天的主線任務，先解主線再玩支線。'),
+  P('t8','閱讀 15 分鐘','📖','homework','medium','15分鐘','afternoon','閱讀是智力值最快的升級方式。'),
+  P('t9','幫忙擺餐桌','🍽️','chore','medium','5分鐘','evening','公會開飯前的準備工作，靠你了。'),
+  P('t10','整理自己的房間','🧹','chore','medium','15分鐘','evening','房間是你的基地，基地整齊戰力才高。'),
+  P('p31','英文單字複習 10 個','🔤','homework','medium','10分鐘','afternoon','每天 10 個單字，一年就是 3000 點經驗值。'),
+  P('p32','數學錯題訂正','🧮','homework','medium','15分鐘','afternoon','修正錯誤的地方，就是變強最快的捷徑。'),
+  P('p33','運動伸展 10 分鐘','🤸','exercise','medium','10分鐘','afternoon','伸展讓身體柔軟，受傷怪物無法近身。'),
+  P('p34','跳繩 100 下','🪢','exercise','medium','10分鐘','afternoon','跳繩是體力值修煉的高效率副本。'),
+  P('p35','幫忙倒垃圾','🗑️','chore','medium','5分鐘','evening','淨化基地的重要任務，公會不能沒有你。'),
+  P('p36','飯後收自己的碗','🍽️','chore','medium','3分鐘','evening','自己的裝備自己保養，碗也一樣。'),
+  P('p37','洗澡後浴室歸位','🚿','hygiene','medium','5分鐘','evening','用完恢復原狀，是高級玩家的習慣。'),
+  P('p38','今天不頂嘴','🛡️','virtue','medium','全天',null,'控制情緒，比打贏怪物更需要實力。'),
+  P('p39','完成一張畫或手作草稿','🎨','create','medium','20分鐘','afternoon','每個大作品，都是從一張草稿開始的。'),
+  /* ── B級 ── */
+  P('t11','運動 30 分鐘','⚽','exercise','hard','30分鐘','afternoon','運動直接提升力量值，身體就是最強裝備。'),
+  P('t12','不用提醒主動完成家事','💯','chore','hard','20分鐘',null,'不用提醒就行動，是 A 級獵人的證明。'),
+  P('t13','預習 / 複習功課','🧠','homework','hard','30分鐘','afternoon','提前準備，上課就像開了透視外掛。'),
+  P('t14','和爸媽一起做一道菜','👩‍🍳','chore','hard','40分鐘','evening','學會做菜，等於習得生存系技能。'),
+  P('t15','練習樂器或才藝 30 分鐘','🎹','create','hard','30分鐘','afternoon','每天練一點，才藝技能樹悄悄點滿。'),
+  P('p40','專心完成作業不中斷','🧠','homework','hard','40分鐘','afternoon','不分心的專注力，是最稀有的天賦技能。'),
+  P('p41','閱讀 30 分鐘並說出心得','📚','homework','hard','35分鐘','afternoon','說得出來的知識，才是真正屬於你的。'),
+  P('p42','自己整理房間一區','🧹','chore','hard','20分鐘','evening','每天攻下一小區，基地很快煥然一新。'),
+  P('p43','洗自己的水壺','🧴','hygiene','hard','5分鐘','evening','乾淨的水壺才能裝出滿值的體力藥水。'),
+  P('p44','主動幫家人一件事','🤝','virtue','hard','15分鐘',null,'主動出手相助，是隱藏的好感度任務。'),
+  P('p45','自己安排明天計畫','🗓️','life','hard','10分鐘','evening','會規劃的獵人，永遠比怪物快一步。'),
+  /* ── S級（每週挑戰）── */
+  P('t16','一天內完成全部每日任務','👑','virtue','epic','全天',null,'完美的一天，是王者的日常。'),
+  P('t17','連續運動 5 天','🏃','exercise','epic','5天',null,'連續修煉的身體，會記得你的努力。'),
+  P('t18','完成一本書並分享心得','📘','homework','epic','1週',null,'讀完整本書再說出想法，智力大躍升。'),
+  P('t19','幫助手足或朋友解決難題','🤝','virtue','epic','不限',null,'真正的強者，會伸手拉別人一把。'),
+  P('t20','完成一個作品：畫畫、模型、故事或影片','🌟','create','epic','1週',null,'從零做出作品，是創造系最強技能。'),
+  P('p46','一週 5 天準時完成作業','🏆','homework','epic','5天',null,'穩定輸出五天，證明你的實力不是運氣。'),
+  P('p47','房間大掃除','🧼','chore','epic','60分鐘',null,'大型副本攻略！打完基地閃閃發光。'),
+  P('p48','自己完成一次早餐準備','🍳','life','epic','30分鐘','morning','能餵飽自己的人，已經是半個大人了。'),
+  P('p49','主動道歉或修復一次衝突','💎','virtue','epic','不限',null,'承認錯誤需要的勇氣，比任何 BOSS 都難打。'),
+];
+
+/* ═══════════════════ 商店目錄 ═══════════════════ */
+const SHOP_ITEMS = [
+  /* 頭部 */
+  { id:'s1',  name:'獵人面罩',     emoji:'🎭', type:'hat',       cost:100, rarity:'common' },
+  { id:'s2',  name:'闇影兜帽',     emoji:'🥷', type:'hat',       cost:200, rarity:'rare' },
+  { id:'s3',  name:'君王之冠',     emoji:'👑', type:'hat',       cost:500, rarity:'legendary' },
+  { id:'n1',  name:'新手獵人耳機', emoji:'🎧', type:'hat',       cost:120, rarity:'common',    set:'訓練' },
+  { id:'n2',  name:'影襲面具',     emoji:'🎭', type:'hat',       cost:240, rarity:'rare',      set:'闇影' },
+  { id:'n3',  name:'星界觀測冠',   emoji:'👑', type:'hat',       cost:420, rarity:'epic',      set:'星界' },
+  { id:'n4',  name:'深淵君主冠',   emoji:'👑', type:'hat',       cost:700, rarity:'legendary', set:'深淵' },
+  /* 服裝 */
+  { id:'s4',  name:'獵人協會制服', emoji:'🦺', type:'outfit',    cost:150, rarity:'common' },
+  { id:'s5',  name:'強化戰鬥服',   emoji:'🥋', type:'outfit',    cost:250, rarity:'rare' },
+  { id:'s6',  name:'星辰披風',     emoji:'🌠', type:'outfit',    cost:400, rarity:'epic' },
+  { id:'n5',  name:'訓練者外套',   emoji:'🧥', type:'outfit',    cost:140, rarity:'common',    set:'訓練' },
+  { id:'n6',  name:'夜行戰鬥服',   emoji:'🥷', type:'outfit',    cost:280, rarity:'rare',      set:'闇影' },
+  { id:'n7',  name:'雷紋披風',     emoji:'🌩️', type:'outfit',    cost:480, rarity:'epic',      set:'雷霆' },
+  { id:'n8',  name:'黑曜戰甲',     emoji:'🛡️', type:'outfit',    cost:760, rarity:'legendary', set:'深淵' },
+  /* 武器 */
+  { id:'s7',  name:'鐵製短刀',     emoji:'🗡️', type:'weapon',    cost:150, rarity:'common' },
+  { id:'s8',  name:'魔力法杖',     emoji:'🪄', type:'weapon',    cost:250, rarity:'rare' },
+  { id:'n9',  name:'木製訓練劍',   emoji:'🗡️', type:'weapon',    cost:100, rarity:'common',    set:'訓練' },
+  { id:'n10', name:'破風短刃',     emoji:'⚔️', type:'weapon',    cost:260, rarity:'rare',      set:'闇影' },
+  { id:'n11', name:'雷霆魔劍',     emoji:'⚡', type:'weapon',    cost:520, rarity:'epic',      set:'雷霆' },
+  { id:'n12', name:'星隕大劍',     emoji:'☄️', type:'weapon',    cost:800, rarity:'legendary', set:'星界' },
+  /* 飾品 */
+  { id:'s10', name:'解析之鏡',     emoji:'👓', type:'accessory', cost:100, rarity:'common' },
+  { id:'s11', name:'獵人圍巾',     emoji:'🧣', type:'accessory', cost:100, rarity:'common' },
+  { id:'s12', name:'魔力戒指',     emoji:'💍', type:'accessory', cost:350, rarity:'epic' },
+  { id:'n13', name:'專注護符',     emoji:'🔷', type:'accessory', cost:120, rarity:'common',    set:'訓練' },
+  { id:'n14', name:'感知耳環',     emoji:'💠', type:'accessory', cost:260, rarity:'rare',      set:'闇影' },
+  { id:'n15', name:'獵人協會戒指', emoji:'💍', type:'accessory', cost:480, rarity:'epic' },
+  { id:'n16', name:'時空核心',     emoji:'🌀', type:'accessory', cost:780, rarity:'legendary', set:'星界' },
+  /* 隨從 */
+  { id:'s13', name:'影之獵犬',     emoji:'🐺', type:'pet',       cost:300, rarity:'rare' },
+  { id:'s14', name:'契約黑貓',     emoji:'🐈‍⬛', type:'pet',       cost:300, rarity:'rare' },
+  { id:'s15', name:'幻光麒麟',     emoji:'🦄', type:'pet',       cost:400, rarity:'epic' },
+  { id:'n17', name:'小影犬',       emoji:'🐺', type:'pet',       cost:300, rarity:'rare',      set:'闇影' },
+  { id:'n18', name:'書靈使魔',     emoji:'📘', type:'pet',       cost:320, rarity:'rare' },
+  { id:'n19', name:'雷雲幼龍',     emoji:'🐉', type:'pet',       cost:560, rarity:'epic',      set:'雷霆' },
+  { id:'n20', name:'古龍幼體',     emoji:'🐲', type:'pet',       cost:900, rarity:'legendary', set:'深淵' },
+  /* 稱號 */
+  { id:'s17', name:'稱號：作業獵人',       emoji:'📜', type:'title', cost:150, rarity:'rare' },
+  { id:'s18', name:'稱號：清潔王者',       emoji:'📜', type:'title', cost:150, rarity:'rare' },
+  { id:'s19', name:'稱號：不滅鬥士',       emoji:'📜', type:'title', cost:150, rarity:'rare' },
+  { id:'n21', name:'稱號：黎明覺醒者',     emoji:'🌅', type:'title', cost:180, rarity:'rare' },
+  { id:'n22', name:'稱號：連續紀錄守護者', emoji:'🔥', type:'title', cost:360, rarity:'epic' },
+  { id:'n23', name:'稱號：S級攻略者',      emoji:'🏆', type:'title', cost:420, rarity:'epic' },
+  { id:'n24', name:'稱號：家庭公會王牌',   emoji:'👑', type:'title', cost:700, rarity:'legendary' },
+  /* 徽記 */
+  { id:'s20', name:'勝利徽記',     emoji:'🏵️', type:'emote',     cost:100, rarity:'common' },
+  { id:'s21', name:'王者徽記',     emoji:'♠️', type:'emote',     cost:100, rarity:'common' },
+  /* 特殊 */
+  { id:'sp1', name:'連續紀錄保護券', emoji:'🎟️', type:'consumable', cost:300, rarity:'epic' },
+];
+
+const DEFAULT_REWARDS = [
+  { id:'r1',  name:'螢幕時間 +15 分鐘',       emoji:'📺', cost:60 },
+  { id:'r2',  name:'螢幕時間 +30 分鐘',       emoji:'📺', cost:100 },
+  { id:'r3',  name:'選今天晚餐',               emoji:'🍕', cost:140 },
+  { id:'r4',  name:'睡前故事加長 10 分鐘',     emoji:'📖', cost:80 },
+  { id:'r5',  name:'週末桌遊時間',             emoji:'🎲', cost:160 },
+  { id:'r6',  name:'和爸媽單獨約會 30 分鐘',   emoji:'☕', cost:180 },
+  { id:'r7',  name:'選一部家庭電影',           emoji:'🎬', cost:200 },
+  { id:'r8',  name:'公園或球場時間',           emoji:'🏀', cost:180 },
+  { id:'r9',  name:'小點心兌換券',             emoji:'🍪', cost:90 },
+  { id:'r10', name:'今天免一項小家事',         emoji:'🎫', cost:160 },
+  { id:'r11', name:'晚睡 15 分鐘',             emoji:'🌙', cost:120 },
+  { id:'r12', name:'買一本書補助',             emoji:'📚', cost:300 },
+  { id:'r13', name:'小文具補給',               emoji:'✏️', cost:220 },
+  { id:'r14', name:'選家庭活動',               emoji:'🚗', cost:350 },
+  { id:'r15', name:'神秘寶箱獎勵',             emoji:'🎁', cost:500 },
+];
+
+/* ═══════════════════ 技能樹 ═══════════════════ */
+const SKILLS = {
+  mage: [
+    { id:'m1', name:'魔力覺醒',   emoji:'🔮', sp:1, lv:2,  req:null,  effects:{power:200},        desc:'喚醒體內沉睡的魔力。戰鬥力 +200。' },
+    { id:'m2', name:'智慧光環',   emoji:'📘', sp:1, lv:3,  req:'m1',  effects:{coinCat:['homework',10]}, desc:'作業任務的金幣獎勵 +10%。' },
+    { id:'m3', name:'奧術強化',   emoji:'💠', sp:2, lv:5,  req:'m2',  effects:{xpAll:5},          desc:'所有任務經驗值 +5%。' },
+    { id:'m4', name:'時空交涉術', emoji:'⏳', sp:2, lv:8,  req:'m3',  effects:{discount:5},       desc:'與系統商店交涉。商店折扣 +5%。' },
+    { id:'m5', name:'元素掌控',   emoji:'🌪️', sp:2, lv:12, req:'m4',  effects:{power:500},        desc:'掌控四大元素之力。戰鬥力 +500。' },
+    { id:'m6', name:'賢者之眼',   emoji:'👁️', sp:2, lv:15, req:'m5',  effects:{drop:10},          desc:'看穿寶箱所在。S級掉落率 +10%。' },
+    { id:'m7', name:'終極魔法・流星雨', emoji:'☄️', sp:3, lv:20, req:'m6', effects:{sRankBonus:20, power:300}, desc:'究極奧義。S級任務的經驗值與金幣 +20%，戰鬥力 +300。' },
+  ],
+  warrior: [
+    { id:'w1', name:'鬥氣覺醒',   emoji:'🔥', sp:1, lv:2,  req:null,  effects:{power:200},        desc:'喚醒戰士的鬥氣。戰鬥力 +200。' },
+    { id:'w2', name:'戰士之心',   emoji:'❤️‍🔥', sp:1, lv:3,  req:'w1',  effects:{coinCat:['exercise',10]}, desc:'運動任務的金幣獎勵 +10%。' },
+    { id:'w3', name:'剛毅不屈',   emoji:'🛡️', sp:2, lv:5,  req:'w2',  effects:{coinAll:5},        desc:'所有任務金幣 +5%。' },
+    { id:'w4', name:'疾風步',     emoji:'💨', sp:2, lv:8,  req:'w3',  effects:{drop:5},           desc:'行動如風。S級掉落率 +5%。' },
+    { id:'w5', name:'不屈意志',   emoji:'⚔️', sp:2, lv:12, req:'w4',  effects:{power:500},        desc:'永不放棄的意志。戰鬥力 +500。' },
+    { id:'w6', name:'戰場直覺',   emoji:'🎯', sp:2, lv:15, req:'w5',  effects:{xpAll:5},          desc:'累積的戰鬥經驗。所有任務經驗值 +5%。' },
+    { id:'w7', name:'究極奧義・烈焰連斬', emoji:'🌋', sp:3, lv:20, req:'w6', effects:{sRankBonus:20, power:300}, desc:'究極奧義。S級任務的經驗值與金幣 +20%，戰鬥力 +300。' },
+  ],
+  guardian: [
+    { id:'g1', name:'守護覺醒',   emoji:'✨', sp:1, lv:2,  req:null,  effects:{power:200},        desc:'喚醒守護之力。戰鬥力 +200。' },
+    { id:'g2', name:'家園之盾',   emoji:'🏠', sp:1, lv:3,  req:'g1',  effects:{coinCat:['chore',10]}, desc:'家事任務的金幣獎勵 +10%。' },
+    { id:'g3', name:'秩序之力',   emoji:'⚖️', sp:2, lv:5,  req:'g2',  effects:{xpAll:5},          desc:'維持秩序的力量。所有任務經驗值 +5%。' },
+    { id:'g4', name:'慈愛光環',   emoji:'💖', sp:2, lv:8,  req:'g3',  effects:{discount:5},       desc:'商店店長被你感動了。商店折扣 +5%。' },
+    { id:'g5', name:'絕對聖域',   emoji:'🌐', sp:2, lv:12, req:'g4',  effects:{power:500},        desc:'展開守護結界。戰鬥力 +500。' },
+    { id:'g6', name:'守護者之眼', emoji:'🔍', sp:2, lv:15, req:'g5',  effects:{drop:10},          desc:'明察秋毫。S級掉落率 +10%。' },
+    { id:'g7', name:'終極守護・聖光審判', emoji:'🌟', sp:3, lv:20, req:'g6', effects:{sRankBonus:20, power:300}, desc:'究極奧義。S級任務的經驗值與金幣 +20%，戰鬥力 +300。' },
+  ],
+};
+
+const ACHIEVEMENTS = [
+  { id:'a1',  name:'初次覺醒',   emoji:'👁️', desc:'完成第一個任務',          coins:20,  target:1,   val:s=>s.counters.total },
+  { id:'a2',  name:'黎明獵人',   emoji:'🌅', desc:'在早上 8 點前完成任務',   coins:30,  target:1,   val:s=>s.counters.earlyBird?1:0 },
+  { id:'a3',  name:'淨化者',     emoji:'🫧', desc:'連續 7 天完成衛生任務',   coins:60,  target:7,   val:s=>s.counters.hygieneStreak },
+  { id:'a4',  name:'魔導書蟲',   emoji:'📖', desc:'完成閱讀任務 10 次',      coins:50,  target:10,  val:s=>s.counters.readCount },
+  { id:'a5',  name:'鋼鐵意志',   emoji:'🛡️', desc:'保持 14 天連續紀錄（＋保護券×1）', coins:150, target:14, ticket:1, val:s=>s.counters.bestStreak },
+  { id:'a6',  name:'三日修煉',   emoji:'🔥', desc:'保持 3 天連續紀錄',       coins:30,  target:3,   val:s=>s.counters.bestStreak },
+  { id:'a7',  name:'七日不滅',   emoji:'💫', desc:'保持 7 天連續紀錄（＋保護券×1）', coins:80, target:7, ticket:1, val:s=>s.counters.bestStreak },
+  { id:'a8',  name:'見習獵人',   emoji:'🌱', desc:'完成 10 個任務',          coins:30,  target:10,  val:s=>s.counters.total },
+  { id:'a9',  name:'精英獵人',   emoji:'🗡️', desc:'完成 50 個任務',         coins:80,  target:50,  val:s=>s.counters.total },
+  { id:'a10', name:'傳說獵人',   emoji:'🏅', desc:'完成 100 個任務',         coins:200, target:100, val:s=>s.counters.total },
+  { id:'a11', name:'賞金獵人',   emoji:'💰', desc:'累積賺取 500 金幣',       coins:50,  target:500, val:s=>s.counters.coinsEarned },
+  { id:'a12', name:'公會金庫',   emoji:'🏦', desc:'累積賺取 2000 金幣',      coins:150, target:2000,val:s=>s.counters.coinsEarned },
+  { id:'a13', name:'裝備收藏家', emoji:'🛍️', desc:'在商店購買 5 件道具',    coins:40,  target:5,   val:s=>s.counters.purchases },
+  { id:'a14', name:'武裝完成',   emoji:'🕶️', desc:'第一次裝備道具',         coins:20,  target:1,   val:s=>s.counters.equippedOnce?1:0 },
+  { id:'a15', name:'嶄露頭角',   emoji:'⭐', desc:'達到等級 5',              coins:30,  target:5,   val:s=>s.player.level },
+  { id:'a16', name:'D級升格',    emoji:'🎖️', desc:'達到等級 10',            coins:60,  target:10,  val:s=>s.player.level },
+  { id:'a17', name:'A級之路',    emoji:'🦸', desc:'達到等級 25',             coins:150, target:25,  val:s=>s.player.level },
+  { id:'a18', name:'S級君主',    emoji:'👑', desc:'達到最高等級 50',         coins:500, target:50,  val:s=>s.player.level },
+  { id:'a19', name:'DUNGEON BREAK', emoji:'🌀', desc:'完成第一個 S級任務',   coins:60,  target:1,   val:s=>s.counters.epicDone },
+  { id:'a20', name:'全能玩家',   emoji:'💎', desc:'五項能力值全部達到 10',   coins:100, target:1,   val:s=>(Object.values(s.player.stats).every(v=>v>=10))?1:0 },
+];
+
+const GATE_SLOTS = [
+  {x:18,y:16},{x:46,y:11},{x:74,y:17},{x:30,y:30},{x:60,y:28},{x:86,y:33},
+  {x:14,y:45},{x:42,y:44},{x:70,y:48},{x:26,y:62},{x:54,y:60},{x:82,y:65},
+  {x:16,y:79},{x:44,y:78},{x:72,y:82},{x:88,y:92},{x:30,y:92},{x:58,y:93},{x:12,y:30},{x:90,y:50},
+];
+
+/* ═══════════════════ 狀態 ═══════════════════ */
+let state = null;
+let pinBuffer = '';
+let parentUnlocked = false;
+let editingTaskId = null;
+let currentScreen = 'status';
+let taskTab = 'today';
+let shopTab = 'virtual';
+let shopFilter = 'all';
+let mapFilter = 'all';
+let allocPending = {};
+let selectedSkill = null;
+let buyTarget = null;
+
+function todayStr(){ return new Date().toLocaleDateString('sv'); }
+function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toLocaleDateString('sv'); }
+function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return d.toLocaleDateString('sv'); }
+function isWeekend(){ const day=new Date().getDay(); return day===0||day===6; }
+function uid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function xpNeeded(level){ return level*100; }
+
+function defaultData(){
+  return {
+    version: VERSION,
+    player: { name:'', class:'', level:1, xp:0, coins:0,
+      stats:{ str:0, agi:0, int:0, vit:0, sen:0 },
+      statPoints:0, skillPoints:0, skills:[], streakTickets:0,
+      streak:0, lastActiveDate:'', lastAllDoneDate:'' },
+    taskPool: TASK_POOL.map(t=>({ ...t })),
+    tasks: [],
+    inventory: [],
+    achievements: ACHIEVEMENTS.map(a=>({ id:a.id, unlocked:false })),
+    shop: SHOP_ITEMS.map(s=>({ ...s })),
+    parentConfig: { pin:'1234', customRewards: DEFAULT_REWARDS.map(r=>({ ...r })), dailyCount:8, ageGroup:'all' },
+    history: [],
+    counters: { total:0, readCount:0, hygieneStreak:0, hygieneLastDate:'', earlyBird:false,
+      purchases:0, coinsEarned:0, epicDone:0, equippedOnce:false, bestStreak:0 },
+    brokenStreak: null,
+    meta: { lastDay: todayStr(), lastWeek: weekKey() },
+  };
+}
+
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function load(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      let data = JSON.parse(raw);
+      if(data.version !== VERSION) data = migrate(data);
+      const d = defaultData();
+      state = { ...d, ...data,
+        player:{ ...d.player, ...data.player, stats:{ ...d.player.stats, ...(data.player&&data.player.stats||{}) } },
+        counters:{ ...d.counters, ...data.counters },
+        parentConfig:{ ...d.parentConfig, ...data.parentConfig },
+        meta:{ ...d.meta, ...data.meta } };
+      state.shop = SHOP_ITEMS.map(s=>({ ...s })); // 商店目錄永遠使用最新版
+      return;
+    }
+  }catch(e){ console.warn('讀取存檔失敗，重新初始化', e); }
+  state = defaultData();
+  save();
+}
+
+/* ── 版本遷移 ── */
+function migrate(data){
+  if(!data.version) data = migrateV1toV2(data);
+  if(data.version === 2) data = migrateV2toV3(data);
+  return data;
+}
+function migrateV1toV2(old){
+  const p = old.player||{}; const st = p.stats||{};
+  const classMap = { scholar:'mage', warrior:'warrior', guardian:'guardian' };
+  return { ...old, version:2,
+    player:{ ...p,
+      class: classMap[p.class] || p.class || 'warrior',
+      stats:{ str:st.strength||0, agi:0, int:st.wisdom||0, vit:st.vitality||0, sen:st.harmony||0 },
+      statPoints: Math.max(0,(p.level||1)-1)*3,
+      skillPoints: Math.max(0,(p.level||1)-1),
+      skills: p.skills||[] } };
+}
+function migrateV2toV3(old){
+  const d = defaultData();
+  const op = old.player||{};
+  d.player = { ...d.player, ...op,
+    stats:{ ...d.player.stats, ...(op.stats||{}) },
+    streakTickets: op.streakTickets||0 };
+  d.inventory = old.inventory||[];
+  d.history = old.history||[];
+  d.counters = { ...d.counters, ...(old.counters||{}) };
+  d.achievements = ACHIEVEMENTS.map(a=>{
+    const o = (old.achievements||[]).find(x=>x.id===a.id);
+    return { id:a.id, unlocked: o ? !!o.unlocked : false };
+  });
+  const opc = old.parentConfig||{};
+  d.parentConfig.pin = opc.pin||'1234';
+  const customRewards = (opc.customRewards||[]).filter(r=>!['r1','r2','r3'].includes(r.id));
+  d.parentConfig.customRewards = [ ...DEFAULT_REWARDS.map(r=>({ ...r })), ...customRewards ];
+  (old.tasks||[]).forEach(t=>{
+    const category = CATS[t.category] ? t.category : 'other';
+    if(t.custom && !d.taskPool.some(p2=>p2.id===t.id)){
+      d.taskPool.push({ id:t.id, name:t.name, emoji:t.emoji||'📌', category, difficulty:t.difficulty||'easy',
+        time:'', why:'', tod:null, schedule:(t.difficulty==='epic')?'weekly':'daily', age:'all', enabled:true, custom:true });
+    }
+    if(t.status==='pending'){
+      d.tasks.push({ id:t.id, name:t.name, emoji:t.emoji||'📌', category, difficulty:t.difficulty||'easy',
+        time:'', why:'', tod:null, status:'pending', completedDate:t.completedDate||todayStr(),
+        doneHour:(t.doneHour===undefined?null:t.doneHour), pickedDate:t.completedDate||todayStr() });
+    }
+  });
+  return d;
+}
+
+/* ═══════════════════ 今日任務抽選 ═══════════════════ */
+function ageMatch(t){
+  const g = state.parentConfig.ageGroup||'all';
+  return g==='all' || !t.age || t.age==='all' || t.age===g;
+}
+function sample(arr, n){
+  const a = arr.slice(); const out = [];
+  while(a.length && out.length<n) out.push(a.splice(Math.floor(Math.random()*a.length),1)[0]);
+  return out;
+}
+function dailyQuota(){
+  const n = Math.max(4, Math.min(12, state.parentConfig.dailyCount||8));
+  const e = Math.round(n*3/8), c = Math.round(n*3/8);
+  return { e, c, b: Math.max(0, n-e-c), total:n };
+}
+function eligibleDaily(){
+  return state.taskPool.filter(t=> t.enabled!==false && t.difficulty!=='epic' && ageMatch(t)
+    && (t.schedule==='daily' || (t.schedule==='weekend' && isWeekend())));
+}
+function makeInstance(p){
+  return { id:p.id, name:p.name, emoji:p.emoji, category:p.category, difficulty:p.difficulty,
+    time:p.time||'', why:p.why||'', tod:p.tod||null,
+    status:'available', completedDate:null, doneHour:null, pickedDate:todayStr() };
+}
+function pickDailyTasks(){
+  const today = todayStr();
+  const used = new Set(state.tasks.map(t=>t.id));
+  const existing = state.tasks.filter(t=>t.difficulty!=='epic' && t.pickedDate===today);
+  const q = dailyQuota();
+  const cnt = d=>existing.filter(t=>t.difficulty===d).length;
+  const pool = eligibleDaily().filter(t=>!used.has(t.id));
+  const byDiff = d=>pool.filter(t=>t.difficulty===d);
+  let picks = [
+    ...sample(byDiff('easy'),   Math.max(0, q.e - cnt('easy'))),
+    ...sample(byDiff('medium'), Math.max(0, q.c - cnt('medium'))),
+    ...sample(byDiff('hard'),   Math.max(0, q.b - cnt('hard'))),
+  ];
+  const want = Math.max(0, q.total - existing.length - picks.length);
+  if(want>0){
+    const left = pool.filter(t=>!picks.includes(t));
+    picks = picks.concat(sample(left, want));
+  }
+  picks.forEach(p=>state.tasks.push(makeInstance(p)));
+}
+function pickWeeklyTasks(){
+  const used = new Set(state.tasks.map(t=>t.id));
+  const existing = state.tasks.filter(t=>t.difficulty==='epic').length;
+  const pool = state.taskPool.filter(t=> t.enabled!==false && t.difficulty==='epic' && ageMatch(t) && !used.has(t.id));
+  sample(pool, Math.max(0, 2-existing)).forEach(p=>state.tasks.push(makeInstance(p)));
+}
+function ensureToday(){
+  // 兩者皆為「補到額度為止」的冪等操作，已滿則不動作
+  pickDailyTasks();
+  pickWeeklyTasks();
+  save();
+}
+function rerollDaily(){
+  state.tasks = state.tasks.filter(t=> t.difficulty==='epic' || t.status!=='available');
+  pickDailyTasks();
+  save();
+  toast('今日任務已重新抽選。');
+  renderParent();
+}
+
+/* ═══════════════════ 每日 / 每週重置 ═══════════════════ */
+function dailyReset(){
+  const today = todayStr();
+  if(state.meta.lastDay === today) return;
+  // 移除非待審核的每日任務實例（保留 pending 讓家長補審）
+  state.tasks = state.tasks.filter(t=> t.difficulty==='epic' || t.status==='pending');
+  const wk = weekKey();
+  if(state.meta.lastWeek !== wk){
+    state.tasks = state.tasks.filter(t=> t.difficulty!=='epic' || t.status==='pending');
+    state.meta.lastWeek = wk;
+    pickWeeklyTasks();
+  }
+  // 連續紀錄中斷（可用保護券由家長恢復）
+  if(state.player.lastAllDoneDate && state.player.lastAllDoneDate < yesterdayStr() && state.player.streak>0){
+    state.brokenStreak = { value: state.player.streak, date: today };
+    state.player.streak = 0;
+  }else if(state.brokenStreak && state.brokenStreak.date !== today){
+    state.brokenStreak = null;
+  }
+  if(state.counters.hygieneLastDate && state.counters.hygieneLastDate < yesterdayStr()) state.counters.hygieneStreak = 0;
+  pickDailyTasks();
+  state.meta.lastDay = today;
+  state.player.lastActiveDate = today;
+  save();
+}
+
+/* ═══════════════════ 加成計算 ═══════════════════ */
+function skillDefs(){ return SKILLS[state.player.class] || SKILLS.warrior; }
+function activeEffects(){
+  const eff = { power:0, xpAll:0, coinAll:0, drop:0, discount:0, sRankBonus:0, coinCat:{} };
+  skillDefs().forEach(sk=>{
+    if(!state.player.skills.includes(sk.id)) return;
+    const e = sk.effects;
+    if(e.power) eff.power += e.power;
+    if(e.xpAll) eff.xpAll += e.xpAll;
+    if(e.coinAll) eff.coinAll += e.coinAll;
+    if(e.drop) eff.drop += e.drop;
+    if(e.discount) eff.discount += e.discount;
+    if(e.sRankBonus) eff.sRankBonus += e.sRankBonus;
+    if(e.coinCat) eff.coinCat[e.coinCat[0]] = (eff.coinCat[e.coinCat[0]]||0) + e.coinCat[1];
+  });
+  return eff;
+}
+function combatPower(){
+  const p = state.player;
+  const statSum = Object.values(p.stats).reduce((a,b)=>a+b,0);
+  let power = p.level*100 + statSum*15 + activeEffects().power;
+  state.inventory.forEach(i=>{ if(i.equipped) power += RAR_POWER[i.rarity]||0; });
+  return power;
+}
+function shopDiscount(){ return Math.min(25, state.player.stats.sen*0.5 + activeEffects().discount); }
+function discounted(cost){ return Math.max(1, Math.round(cost * (1 - shopDiscount()/100))); }
+function dropChance(){ return Math.min(95, 60 + state.player.stats.agi*0.5 + activeEffects().drop); }
+function streakBonusPct(){ return Math.min(100, state.player.streak*10); }
+function classBonusApplies(task){ return (CLASSES[state.player.class]||{}).bonusCat === task.category; }
+function calcRewards(task){
+  const d = DIFFS[task.difficulty];
+  const eff = activeEffects();
+  const streakMult = 1 + streakBonusPct()/100;
+  let xpMult = streakMult * (classBonusApplies(task)?1.5:1) * (1 + (state.player.stats.int*1 + eff.xpAll)/100);
+  let coinMult = streakMult * (1 + (state.player.stats.vit*1 + eff.coinAll + (eff.coinCat[task.category]||0))/100);
+  if(task.difficulty==='epic' && eff.sRankBonus){ xpMult *= 1+eff.sRankBonus/100; coinMult *= 1+eff.sRankBonus/100; }
+  return { xp: Math.round(d.xp*xpMult), coins: Math.round(d.coins*coinMult) };
+}
+
+/* ═══════════════════ 畫面切換 ═══════════════════ */
+function goScreen(name){
+  currentScreen = name;
+  document.querySelectorAll('#game .screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.nav===name));
+  renderTop();
+  renderScreen(name);
+  window.scrollTo(0,0);
+}
+function renderScreen(name){
+  if(name==='status') renderStatus();
+  else if(name==='quests') renderQuests();
+  else if(name==='map') renderMap();
+  else if(name==='skills') renderSkills();
+  else if(name==='shop') renderShop();
+  else if(name==='inventory') renderInventory();
+  else if(name==='achievements') renderAchievements();
+  else if(name==='parent') renderParent();
+}
+function renderCurrent(){ renderTop(); renderScreen(currentScreen); }
+function renderTop(){
+  document.getElementById('top-coins').textContent = state.player.coins;
+  document.getElementById('top-streak').textContent = state.player.streak;
+  document.getElementById('top-level').textContent = state.player.level;
+}
+
+/* ═══════════════════ 覺醒引導 ═══════════════════ */
+let obClass = 'warrior';
+function renderOnboarding(){
+  document.getElementById('ob-classes').innerHTML = Object.entries(CLASSES).map(([k,c])=>`
+    <button onclick="pickClass('${k}')" class="text-left p-3 rounded flex items-center gap-3 transition-all"
+      style="border:1px solid ${k===obClass?'var(--sys-cyan)':'#1c3a60'}; background:${k===obClass?'rgba(0,210,255,.12)':'rgba(12,24,46,.6)'}; ${k===obClass?'box-shadow:0 0 12px rgba(0,210,255,.3);':''}">
+      <span class="text-3xl">${c.emoji}</span>
+      <span><span class="font-black text-white">${c.name}</span><br>
+      <span class="text-xs font-bold" style="color:var(--sys-dim);">${c.desc}</span></span>
+      ${k===obClass?'<span class="ml-auto text-cyan-300 font-black">✓</span>':''}
+    </button>`).join('');
+}
+function pickClass(k){ obClass=k; renderOnboarding(); }
+function finishOnboarding(){
+  const name = document.getElementById('ob-name').value.trim();
+  if(!name){ toast('請先登錄獵人名稱。'); return; }
+  state.player.name = name;
+  state.player.class = obClass;
+  state.player.lastActiveDate = todayStr();
+  save();
+  const ob = document.getElementById('onboarding');
+  ob.classList.remove('active'); ob.style.display='none';
+  document.getElementById('game').classList.remove('hidden');
+  spawnShards(window.innerWidth/2, window.innerHeight/3);
+  toast(`玩家「${name}」登錄完成。歡迎來到系統。`);
+  goScreen('status');
+}
+
+/* ═══════════════════ 狀態畫面 ═══════════════════ */
+function equippedItem(type){ return state.inventory.find(i=>i.type===type && i.equipped); }
+function spriteHTML(){
+  const cls = CLASSES[state.player.class] || CLASSES.warrior;
+  const hat=equippedItem('hat'), wp=equippedItem('weapon'), pet=equippedItem('pet');
+  return `${pet?`<span class="absolute -left-9 bottom-1 text-3xl">${pet.emoji}</span>`:''}
+    <span class="relative">${cls.sprite}
+      ${hat?`<span class="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl">${hat.emoji}</span>`:''}
+    </span>
+    ${wp?`<span class="absolute -right-8 bottom-2 text-2xl">${wp.emoji}</span>`:''}`;
+}
+function renderStatus(){
+  const p = state.player;
+  const cls = CLASSES[p.class] || CLASSES.warrior;
+  const rank = hunterRank(p.level);
+  document.getElementById('status-name').textContent = p.name;
+  document.getElementById('status-class').textContent = `${cls.emoji} ${cls.name}`;
+  document.getElementById('status-sprite').innerHTML = spriteHTML();
+  document.getElementById('status-rank-tag').innerHTML = `<span class="rank-${['E','D'].includes(rank)?'E':rank==='C'?'C':['B','A'].includes(rank)?'B':'S'}" style="font-size:13px;">${rank}-RANK HUNTER</span>`;
+  document.getElementById('status-rank').textContent = `（${rank} 級獵人）`;
+  const title = equippedItem('title');
+  const tEl = document.getElementById('status-title');
+  if(title){ tEl.textContent = '🏵️ '+title.name.replace('稱號：',''); tEl.classList.remove('hidden'); } else tEl.classList.add('hidden');
+  document.getElementById('status-power').textContent = combatPower().toLocaleString();
+  document.getElementById('status-level').textContent = p.level;
+  const need = xpNeeded(p.level);
+  document.getElementById('status-xp').textContent = p.level>=50 ? 'MAX' : p.xp;
+  document.getElementById('status-xpneed').textContent = need;
+  document.getElementById('status-xpbar').style.width = (p.level>=50?100:Math.min(100,p.xp/need*100))+'%';
+
+  const badge = document.getElementById('alloc-badge');
+  if(p.statPoints>0){ badge.textContent = p.statPoints; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+
+  document.getElementById('status-stats').innerHTML = Object.entries(STATS).map(([k,st])=>{
+    const v = p.stats[k]||0;
+    return `<div class="flex items-center gap-3">
+      <span class="font-black w-10 text-sm" style="color:${st.color};">${st.name}</span>
+      <div class="bar-track h-2.5 flex-1"><div class="stat-fill" style="width:${Math.min(100,v/50*100)}%; background:${st.color}; color:${st.color};"></div></div>
+      <span class="num font-bold w-8 text-right text-white">${v}</span>
+    </div>
+    <div class="text-[10px] font-bold -mt-1.5" style="color:var(--sys-dim); margin-left:52px;">${st.desc}</div>`;
+  }).join('');
+
+  renderEquipSummary();
+
+  const daily = state.tasks.filter(t=>t.difficulty!=='epic' && t.pickedDate===todayStr());
+  const done = daily.filter(t=>t.status==='completed').length;
+  document.getElementById('status-dayprog').style.width = (daily.length?done/daily.length*100:0)+'%';
+  document.getElementById('status-daytext').textContent = `已完成 ${done} / ${daily.length}${done===daily.length&&daily.length?' — 每日任務全數攻略完成。':''}`;
+}
+function renderEquipSummary(){
+  const slots = ['hat','outfit','weapon','accessory','pet','title','emote'];
+  let equipPower = 0;
+  state.inventory.forEach(i=>{ if(i.equipped) equipPower += RAR_POWER[i.rarity]||0; });
+  const chips = slots.map(sl=>{
+    const it = equippedItem(sl);
+    return `<div class="flex items-center gap-1.5 p-1.5 rounded" style="background:rgba(12,26,50,.7); border:1px solid ${it?'#1c5a86':'#16263e'};">
+      <span class="text-[10px] font-bold w-8 flex-none" style="color:var(--sys-dim);">${SLOT_NAMES[sl]}</span>
+      ${it?`<span class="text-sm">${it.emoji}</span><span class="text-[11px] font-bold text-white truncate">${it.name.replace('稱號：','')}</span>`
+          :`<span class="text-[11px] font-bold" style="color:#33506e;">—</span>`}
+    </div>`;
+  }).join('');
+  const setNames = [...new Set(state.shop.filter(s=>s.set).map(s=>s.set))];
+  const setLines = setNames.map(sn=>{
+    const items = state.shop.filter(s=>s.set===sn);
+    const owned = items.filter(s=>state.inventory.some(i=>i.id===s.id)).length;
+    return `<span class="chip ${owned===items.length?'text-amber-300':''}" ${owned===items.length?'style="border-color:#a87b14; color:#ffd96b;"':''}>🧩 ${sn}套裝 ${owned}/${items.length}</span>`;
+  }).join(' ');
+  document.getElementById('status-equip').innerHTML = `
+    <div class="grid grid-cols-2 gap-1.5 mb-2">${chips}</div>
+    <div class="text-xs font-bold mb-2">裝備戰鬥力 <span class="num" style="color:var(--sys-gold);">+${equipPower.toLocaleString()}</span>　🎟️ 保護券 <span class="num text-cyan-300">×${state.player.streakTickets||0}</span></div>
+    <div class="flex flex-wrap gap-1.5 mb-1">${setLines}</div>
+    <div class="text-[10px] font-bold" style="color:var(--sys-dim);">收集同套裝裝備，未來將開放套裝效果！</div>`;
+}
+
+/* ── 能力值分配 ── */
+function openAlloc(){
+  allocPending = { str:0, agi:0, int:0, vit:0, sen:0 };
+  renderAlloc();
+  document.getElementById('alloc-modal').classList.add('show');
+}
+function allocRemaining(){ return state.player.statPoints - Object.values(allocPending).reduce((a,b)=>a+b,0); }
+function renderAlloc(){
+  document.getElementById('alloc-remaining').textContent = allocRemaining();
+  document.getElementById('alloc-rows').innerHTML = Object.entries(STATS).map(([k,st])=>`
+    <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
+      <div class="flex-1 min-w-0">
+        <span class="font-black text-sm" style="color:${st.color};">${st.name}</span>
+        <div class="text-[10px] font-bold" style="color:var(--sys-dim);">${st.desc}</div>
+      </div>
+      <span class="num font-bold text-white text-lg">${state.player.stats[k]}</span>
+      ${allocPending[k]?`<span class="num font-bold text-emerald-400 text-sm">+${allocPending[k]}</span>`:''}
+      <button onclick="allocAdj('${k}',-1)" class="btn-dark w-9 h-9 text-lg num">−</button>
+      <button onclick="allocAdj('${k}',1)" class="btn-sys w-9 h-9 text-lg num">＋</button>
+    </div>`).join('');
+}
+function allocAdj(k,d){
+  if(d>0 && allocRemaining()<=0) return;
+  if(d<0 && allocPending[k]<=0) return;
+  allocPending[k]+=d;
+  renderAlloc();
+}
+function allocReset(){ allocPending={str:0,agi:0,int:0,vit:0,sen:0}; renderAlloc(); }
+function allocConfirm(){
+  const spent = Object.values(allocPending).reduce((a,b)=>a+b,0);
+  if(spent>0){
+    Object.keys(allocPending).forEach(k=>{ state.player.stats[k]+=allocPending[k]; });
+    state.player.statPoints -= spent;
+    checkAchievements();
+    save();
+    toast(`能力值分配完成。戰鬥力 ⚡${combatPower().toLocaleString()}`);
+  }
+  closeModal('alloc-modal');
+  renderCurrent();
+}
+
+/* ═══════════════════ 任務欄 ═══════════════════ */
+function setTaskTab(tab){
+  taskTab = tab;
+  document.querySelectorAll('[data-ttab]').forEach(b=>b.classList.toggle('active', b.dataset.ttab===tab));
+  renderQuests();
+}
+function rankClass(diff){ return 'rank-'+DIFFS[diff].rank; }
+function periodNow(){ const h=new Date().getHours(); return h<12?'morning':(h<18?'afternoon':'evening'); }
+function renderRecommend(){
+  const box = document.getElementById('recommend-box');
+  const period = periodNow();
+  const label = { morning:'🌅 早晨', afternoon:'☀️ 下午', evening:'🌙 晚上' }[period];
+  const avail = state.tasks.filter(t=>t.difficulty!=='epic' && t.status==='available');
+  const sorted = [...avail].sort((a,b)=>
+    ((a.tod===period?0:1)-(b.tod===period?0:1)) || (DIFFS[a.difficulty].xp - DIFFS[b.difficulty].xp));
+  const top = sorted.slice(0,3);
+  box.innerHTML = `<div class="sys-head text-sm"><span class="sys-i">★</span>今日推薦 — ${label}適合做這些</div>
+    <div class="p-3 grid gap-2">${ top.length ? top.map(t=>`
+      <div class="flex items-center gap-2">
+        <span class="text-xl">${t.emoji}</span>
+        <div class="flex-1 min-w-0">
+          <span class="font-bold text-white text-xs">${t.name}</span>
+          <span class="chip ml-1">⏱ ${t.time||'—'}</span>
+        </div>
+        <button onclick="markDone('${t.id}', event)" class="btn-gold px-3 py-1.5 text-xs flex-none">挑戰</button>
+      </div>`).join('')
+      : '<div class="text-xs font-bold text-center py-1" style="color:var(--sys-dim);">目前沒有可挑戰的任務，太強了！</div>' }
+    </div>`;
+}
+function renderQuests(){
+  renderRecommend();
+  const daily = state.tasks.filter(t=>t.difficulty!=='epic' && t.pickedDate===todayStr());
+  const done = daily.filter(t=>t.status==='completed').length;
+  document.getElementById('quest-progress').textContent = `${done} / ${daily.length}`;
+  document.getElementById('quest-progbar').style.width = (daily.length?done/daily.length*100:0)+'%';
+
+  let tasks = state.tasks;
+  if(taskTab==='today') tasks = tasks.filter(t=>t.difficulty!=='epic');
+  else if(taskTab==='weekly') tasks = tasks.filter(t=>t.difficulty==='epic');
+  const list = document.getElementById('task-list');
+  if(!tasks.length){ list.innerHTML = `<div class="text-center font-bold py-8" style="color:var(--sys-dim);">沒有任務。</div>`; return; }
+  list.innerHTML = tasks.map(t=>{
+    const d = DIFFS[t.difficulty], c = CATS[t.category]||CATS.other;
+    const r = calcRewards(t);
+    let btn;
+    if(t.status==='available') btn = `<button onclick="markDone('${t.id}', event)" class="btn-sys px-4 py-2 text-sm flex-none">挑戰完成</button>`;
+    else if(t.status==='pending') btn = `<span class="text-xs font-bold text-amber-300 flex-none text-center">攻略確認中<br>⏳</span>`;
+    else btn = `<span class="text-xs font-bold text-emerald-400 flex-none text-center">攻略完成<br>✔</span>`;
+    return `<div class="sys-win p-3 flex items-center gap-3 ${t.status==='completed'?'opacity-50':''}" onclick="openGate('${t.id}')" style="cursor:pointer;">
+      <div class="rank-ring ${rankClass(t.difficulty)}" style="width:46px;height:46px;font-size:22px;">${d.rank}</div>
+      <div class="flex-1 min-w-0">
+        <div class="font-black text-white text-sm">${t.emoji||c.emoji} ${t.name}</div>
+        <div class="mt-1 flex flex-wrap gap-1 items-center">
+          <span class="chip">${c.name}</span>
+          <span class="chip">⏱ ${t.time||'—'}</span>
+          <span class="text-[11px] font-bold num text-cyan-300">+${r.xp} EXP</span>
+          <span class="text-[11px] font-bold num" style="color:var(--sys-gold);">+${r.coins} 🪙</span>
+        </div>
+      </div>
+      <div onclick="event.stopPropagation()">${btn}</div>
+    </div>`;
+  }).join('');
+}
+
+function markDone(id, ev){
+  if(ev) ev.stopPropagation();
+  const t = state.tasks.find(t=>t.id===id);
+  if(!t || t.status!=='available') return;
+  t.status = 'pending';
+  t.completedDate = todayStr();
+  t.doneHour = new Date().getHours();
+  save();
+  if(ev) spawnShards(ev.clientX||window.innerWidth/2, ev.clientY||window.innerHeight/2);
+  toast('攻略回報已送出。等待管理者（爸媽）確認後發放報酬。');
+  closeModal('gate-modal');
+  renderCurrent();
+}
+
+/* ═══════════════════ 傳送門地圖 ═══════════════════ */
+function setMapFilter(f){
+  mapFilter = f;
+  document.querySelectorAll('[data-mfilter]').forEach(b=>b.classList.toggle('active', b.dataset.mfilter===f));
+  renderMap();
+}
+function renderMap(){
+  const map = document.getElementById('gate-map');
+  let tasks = state.tasks;
+  if(mapFilter!=='all') tasks = tasks.filter(t=>t.difficulty===mapFilter);
+  tasks = tasks.slice(0, GATE_SLOTS.length);
+  const open = tasks.filter(t=>t.status!=='completed').length;
+  document.getElementById('map-count').textContent = `開啟中的門：${open}`;
+  map.innerHTML = tasks.map((t,i)=>{
+    const d = DIFFS[t.difficulty];
+    const slot = GATE_SLOTS[i];
+    const isEpic = t.difficulty==='epic';
+    const doneCls = t.status==='completed' ? 'gate-done' : '';
+    return `<div class="gate ${doneCls}" style="left:${slot.x}%; top:${slot.y}%;" onclick="openGate('${t.id}')">
+      <div class="gate-beam" style="background:${d.beam}; animation-delay:${(i%5)*0.4}s;"></div>
+      <div class="gate-base" style="background:${d.base};"></div>
+      <div class="gate-tag">
+        <span class="num" style="color:${d.color}; text-shadow:0 0 6px ${d.color};">${d.rank}-Rank</span><br>
+        <span class="text-white">${t.emoji} ${t.name.length>6 ? t.name.slice(0,6)+'…' : t.name}</span>
+        ${t.status==='pending'?'<br><span class="text-amber-300">⏳確認中</span>':''}
+        ${isEpic && t.status==='available' ? '<br><span class="gate-break">DUNGEON BREAK</span>':''}
+      </div>
+    </div>`;
+  }).join('') || `<div class="absolute inset-0 flex items-center justify-center font-bold" style="color:var(--sys-dim);">此等級目前沒有傳送門。</div>`;
+}
+function openGate(id){
+  const t = state.tasks.find(t=>t.id===id);
+  if(!t) return;
+  const d = DIFFS[t.difficulty], c = CATS[t.category]||CATS.other;
+  const r = calcRewards(t);
+  let action;
+  if(t.status==='available') action = `<button onclick="markDone('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">【 攻 略 開 始 】</button>`;
+  else if(t.status==='pending') action = `<div class="rounded px-3 py-2.5 text-sm font-bold mt-1" style="border:1px solid rgba(245,197,66,.5); background:rgba(120,90,10,.18); color:#ffd98a;">⏳ 攻略確認中 — 等待管理者核可</div>`;
+  else action = `<div class="rounded px-3 py-2.5 text-sm font-bold mt-1 text-emerald-300" style="border:1px solid rgba(60,200,140,.5); background:rgba(10,90,60,.18);">✔ 攻略完成</div>`;
+  document.getElementById('gate-body').innerHTML = `
+    <div class="rank-ring ${rankClass(t.difficulty)} mx-auto mb-3" style="width:64px;height:64px;font-size:32px;">${d.rank}</div>
+    <div class="text-xl font-black text-white mb-1">${t.emoji} ${t.name}</div>
+    <div class="text-xs font-bold mb-2" style="color:var(--sys-dim);">${c.name}任務・${d.name}傳送門・⏱ 預估 ${t.time||'—'}</div>
+    ${t.why?`<div class="text-xs font-bold text-cyan-200 mb-3 px-2 py-2 rounded" style="background:rgba(0,120,190,.1); border:1px solid #1c5a86;">💡 ${t.why}</div>`:''}
+    <div class="grid grid-cols-2 gap-2 mb-3 text-sm font-bold">
+      <div class="p-2 rounded" style="background:rgba(0,120,190,.15); border:1px solid #1c5a86;">報酬 EXP<br><span class="num text-lg text-cyan-300">+${r.xp}</span></div>
+      <div class="p-2 rounded" style="background:rgba(190,140,0,.12); border:1px solid #86671c;">報酬金幣<br><span class="num text-lg" style="color:var(--sys-gold);">+${r.coins}</span></div>
+    </div>
+    ${t.difficulty==='epic'?`<div class="text-xs font-bold text-fuchsia-300 mb-2">💎 S級任務有 ${Math.round(dropChance())}% 機率掉落裝備寶箱！</div>`:''}
+    ${classBonusApplies(t)?`<div class="text-xs font-bold text-purple-300 mb-2">職業加成發動中：${CLASSES[state.player.class].name} EXP ×1.5</div>`:''}
+    ${streakBonusPct()?`<div class="text-xs font-bold text-orange-300 mb-2">🔥 連續加成 +${streakBonusPct()}%</div>`:''}
+    ${action}`;
+  document.getElementById('gate-modal').classList.add('show');
+}
+
+/* ═══════════════════ 技能樹 ═══════════════════ */
+function skillState(sk){
+  const p = state.player;
+  if(p.skills.includes(sk.id)) return 'unlocked';
+  const reqOk = !sk.req || p.skills.includes(sk.req);
+  if(reqOk && p.level>=sk.lv && p.skillPoints>=sk.sp) return 'canlearn';
+  return 'locked';
+}
+function renderSkills(){
+  document.getElementById('sp-count').textContent = state.player.skillPoints;
+  const defs = skillDefs();
+  document.getElementById('skill-tree').innerHTML = defs.map((sk,i)=>{
+    const st = skillState(sk);
+    return `${i>0?`<div class="skill-link ${state.player.skills.includes(defs[i-1].id)?'on':''}"></div>`:''}
+      <div class="skill-wrap ${st} ${selectedSkill===sk.id?'selected':''}">
+        <div class="skill-hex" onclick="selectSkill('${sk.id}')">${st==='locked'?'<span style="filter:grayscale(1);">'+sk.emoji+'</span>':sk.emoji}</div>
+      </div>
+      <div class="text-[10px] font-bold mt-1 mb-1 text-center ${st==='unlocked'?'text-cyan-300':''}" style="${st!=='unlocked'?'color:var(--sys-dim);':''}">${sk.name.split('・')[0]}</div>`;
+  }).join('');
+  renderSkillInfo();
+}
+function selectSkill(id){ selectedSkill = id; renderSkills(); }
+function renderSkillInfo(){
+  const box = document.getElementById('skill-info');
+  const sk = skillDefs().find(s=>s.id===selectedSkill);
+  if(!sk){
+    box.innerHTML = `<div class="sys-head"><span class="sys-i">i</span>技能資訊</div>
+      <div class="p-4 text-sm font-bold" style="color:var(--sys-dim);">點選左側技能查看詳情。<br><br>每次升級獲得 1 技能點數。<br>依序解鎖技能，獲得永久強化效果！</div>`;
+    return;
+  }
+  const st = skillState(sk);
+  const reqSk = sk.req ? skillDefs().find(s=>s.id===sk.req) : null;
+  let btn;
+  if(st==='unlocked') btn = `<div class="rounded px-3 py-2.5 text-center text-sm font-black text-cyan-300" style="border:1px solid rgba(0,210,255,.5); background:rgba(0,120,190,.15);">✔ 已習得</div>`;
+  else if(st==='canlearn') btn = `<button onclick="learnSkill('${sk.id}')" class="btn-gold w-full py-3">習得（消耗 ${sk.sp} 技能點）</button>`;
+  else btn = `<div class="rounded px-3 py-2.5 text-center text-xs font-bold" style="border:1px solid #2c4a72; color:var(--sys-dim);">條件未達成</div>`;
+  box.innerHTML = `<div class="sys-head"><span class="sys-i">i</span>技能資訊</div>
+    <div class="p-4">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="text-4xl">${sk.emoji}</span>
+        <div><div class="font-black text-white">${sk.name}</div>
+        <div class="text-[11px] font-bold" style="color:var(--sys-dim);">被動技能</div></div>
+      </div>
+      <p class="text-sm font-bold leading-relaxed mb-3">${sk.desc}</p>
+      <div class="text-xs font-bold grid gap-1 mb-3" style="color:var(--sys-dim);">
+        <div>需求等級：<span class="num ${state.player.level>=sk.lv?'text-emerald-400':'text-red-400'}">Lv.${sk.lv}</span>（目前 Lv.${state.player.level}）</div>
+        <div>消耗技能點：<span class="num ${state.player.skillPoints>=sk.sp?'text-emerald-400':'text-red-400'}">${sk.sp}</span>（持有 ${state.player.skillPoints}）</div>
+        ${reqSk?`<div>前置技能：<span class="${state.player.skills.includes(reqSk.id)?'text-emerald-400':'text-red-400'}">${reqSk.name}</span></div>`:''}
+      </div>
+      ${btn}
+    </div>`;
+}
+function learnSkill(id){
+  const sk = skillDefs().find(s=>s.id===id);
+  if(!sk || skillState(sk)!=='canlearn') return;
+  state.player.skillPoints -= sk.sp;
+  state.player.skills.push(sk.id);
+  save();
+  spawnShards(window.innerWidth/2, window.innerHeight/2);
+  toast(`技能「${sk.name}」習得完成！`);
+  renderSkills();
+}
+
+/* ═══════════════════ 審核與獎勵發放 ═══════════════════ */
+function approveTask(id){
+  const t = state.tasks.find(t=>t.id===id);
+  if(!t || t.status!=='pending') return;
+  const d = DIFFS[t.difficulty];
+  const r = calcRewards(t);
+  t.status = 'completed';
+  awardXP(r.xp);
+  state.player.coins += r.coins;
+  state.counters.coinsEarned += r.coins;
+  state.counters.total++;
+  const cat = CATS[t.category]||CATS.other;
+  state.player.stats[cat.stat] = (state.player.stats[cat.stat]||0) + d.statGain;
+
+  if(t.doneHour!==null && t.doneHour < 8) state.counters.earlyBird = true;
+  if(t.name.includes('閱讀')) state.counters.readCount++;
+  if(t.category==='hygiene'){
+    const today = todayStr();
+    if(state.counters.hygieneLastDate === yesterdayStr()) state.counters.hygieneStreak++;
+    else if(state.counters.hygieneLastDate !== today) state.counters.hygieneStreak = 1;
+    state.counters.hygieneLastDate = today;
+  }
+  if(t.difficulty==='epic'){ state.counters.epicDone++; epicDrop(); }
+  state.history.unshift({ date:todayStr(), kind:'task', name:t.name, xpEarned:r.xp, coinsEarned:r.coins });
+  if(state.history.length>200) state.history.length = 200;
+
+  // 連續紀錄：只看「今日抽選的每日任務」，S級不影響
+  const todays = state.tasks.filter(x=>x.difficulty!=='epic' && x.pickedDate===todayStr());
+  if(todays.length && todays.every(x=>x.status==='completed')){
+    const today = todayStr();
+    if(state.player.lastAllDoneDate !== today){
+      state.player.streak = (state.player.lastAllDoneDate === yesterdayStr()) ? state.player.streak+1 : 1;
+      state.player.lastAllDoneDate = today;
+      state.counters.bestStreak = Math.max(state.counters.bestStreak, state.player.streak);
+      state.player.coins += ALL_DONE_BONUS;
+      state.counters.coinsEarned += ALL_DONE_BONUS;
+      state.history.unshift({ date:today, kind:'bonus', name:'今日攻略完成獎勵', xpEarned:0, coinsEarned:ALL_DONE_BONUS });
+      showDayClear();
+    }
+  }
+  checkAchievements();
+  save();
+  toast(`已核准「${t.name}」 +${r.xp} EXP、+${r.coins} 🪙`);
+  renderParent();
+}
+function rejectTask(id){
+  const t = state.tasks.find(t=>t.id===id);
+  if(!t || t.status!=='pending') return;
+  t.status='available'; t.completedDate=null; t.doneHour=null;
+  save();
+  toast(`已退回「${t.name}」`);
+  renderParent();
+}
+
+function awardXP(amount){
+  const p = state.player;
+  if(p.level>=50) return;
+  p.xp += amount;
+  let leveled = false, fromRank = hunterRank(p.level);
+  while(p.level<50 && p.xp >= xpNeeded(p.level)){
+    p.xp -= xpNeeded(p.level);
+    p.level++;
+    p.statPoints += 3;
+    p.skillPoints += 1;
+    leveled = true;
+  }
+  if(p.level>=50) p.xp = 0;
+  if(leveled) showLevelUp(p.level, fromRank);
+}
+
+function epicDrop(){
+  if(Math.random()*100 > dropChance()) return;
+  const pool = state.shop.filter(s=>!['title','emote','consumable'].includes(s.type) && !state.inventory.some(i=>i.id===s.id));
+  if(!pool.length) return;
+  const drop = pool[Math.floor(Math.random()*pool.length)];
+  state.inventory.push({ id:drop.id, name:drop.name, emoji:drop.emoji, type:drop.type, rarity:drop.rarity, equipped:false });
+  state.history.unshift({ date:todayStr(), kind:'drop', name:`寶箱掉落：${drop.name}`, xpEarned:0, coinsEarned:0 });
+  toast(`💎 S級寶箱開啟！獲得 ${drop.emoji}「${drop.name}」（${RARITY[drop.rarity]}）`);
+}
+
+/* ═══════════════════ 成就 ═══════════════════ */
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(def=>{
+    const rec = state.achievements.find(a=>a.id===def.id);
+    if(!rec || rec.unlocked) return;
+    if(def.val(state) >= def.target){
+      rec.unlocked = true;
+      state.player.coins += def.coins;
+      state.counters.coinsEarned += def.coins;
+      if(def.ticket) state.player.streakTickets = (state.player.streakTickets||0) + def.ticket;
+      state.history.unshift({ date:todayStr(), kind:'achievement', name:`解鎖成就：${def.name}`, xpEarned:0, coinsEarned:def.coins });
+      toast(`🏆 成就解鎖「${def.name}」 +${def.coins} 🪙${def.ticket?`、保護券 ×${def.ticket}`:''}`);
+    }
+  });
+}
+function renderAchievements(){
+  const n = state.achievements.filter(a=>a.unlocked).length;
+  document.getElementById('ach-count').textContent = `${n} / ${ACHIEVEMENTS.length}`;
+  document.getElementById('ach-list').innerHTML = ACHIEVEMENTS.map(def=>{
+    const rec = state.achievements.find(a=>a.id===def.id) || {unlocked:false};
+    const cur = Math.min(def.target, def.val(state));
+    const pct = Math.round(cur/def.target*100);
+    return `<div class="sys-win p-3 text-center ${rec.unlocked?'':'opacity-60'}">
+      <div class="text-3xl mb-1" style="${rec.unlocked?'filter:drop-shadow(0 0 8px rgba(0,210,255,.7));':'filter:grayscale(1) brightness(.6);'}">${def.emoji}</div>
+      <div class="font-black text-white text-xs">${def.name}</div>
+      <div class="text-[10px] font-bold mb-1.5" style="color:var(--sys-dim);">${def.desc}</div>
+      ${rec.unlocked
+        ? '<div class="text-[11px] font-black text-cyan-300">✔ 已解鎖</div>'
+        : `<div class="bar-track h-1.5"><div class="h-full" style="width:${pct}%; background:#b06bff; box-shadow:0 0 6px #b06bff;"></div></div>
+           <div class="text-[10px] num font-bold mt-1" style="color:var(--sys-dim);">${cur} / ${def.target}</div>`}
+      <div class="text-[10px] num font-bold mt-1" style="color:var(--sys-gold);">+${def.coins} 🪙</div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════ 商店 ═══════════════════ */
+const SHOP_FILTERS = [ ['all','全部'],['hat','頭部'],['outfit','服裝'],['weapon','武器'],['accessory','飾品'],['pet','隨從'],['title','稱號'],['consumable','特殊'] ];
+function setShopTab(tab){
+  shopTab = tab;
+  document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('active', b.dataset.stab===tab));
+  renderShop();
+}
+function setShopFilter(f){ shopFilter = f; renderShop(); }
+function renderShop(){
+  document.getElementById('shop-coins').textContent = state.player.coins;
+  const disc = shopDiscount();
+  document.getElementById('shop-discount-line').innerHTML = disc>0
+    ? `感知與技能加成：全道具 <span class="text-emerald-400">−${disc.toFixed(1)}%</span> 折扣中`
+    : '提升「感知」能力值可獲得商店折扣。';
+  const filterRow = document.getElementById('shop-filter-row');
+  const list = document.getElementById('shop-list');
+  if(shopTab==='virtual'){
+    filterRow.innerHTML = SHOP_FILTERS.map(([k,n])=>
+      `<button class="tab-btn ${shopFilter===k?'active':''} px-3 py-1 text-xs" onclick="setShopFilter('${k}')">${n}</button>`).join('');
+    let items = state.shop;
+    if(shopFilter!=='all') items = items.filter(s=>s.type===shopFilter);
+    list.innerHTML = items.map(s=>{
+      const isConsumable = s.type==='consumable';
+      const owned = !isConsumable && state.inventory.some(i=>i.id===s.id);
+      const price = discounted(s.cost);
+      return `<div class="sys-win rar-${s.rarity} p-3 text-center" style="border-width:1px;">
+        <span class="rar-tag text-[10px] font-black px-2 py-0.5 rounded">${RARITY[s.rarity]}</span>
+        <div class="text-4xl my-2">${s.emoji}</div>
+        <div class="font-black text-white text-xs leading-tight">${s.name}</div>
+        <div class="text-[10px] font-bold mb-1" style="color:var(--sys-dim);">${SLOT_NAMES[s.type]}${['title','emote','consumable'].includes(s.type)?'':'・戰鬥力+'+RAR_POWER[s.rarity]}</div>
+        ${s.set?`<div class="chip mb-1.5">🧩 ${s.set}套裝</div>`:''}
+        ${isConsumable?`<div class="text-[10px] font-bold text-cyan-300 mb-1.5">持有 ×${state.player.streakTickets||0}・連續中斷時可抵消一次（需家長核可）</div>`:''}
+        ${owned
+          ? '<div class="py-1.5 rounded text-xs font-black" style="background:rgba(20,35,60,.8); color:var(--sys-dim);">已持有 ✔</div>'
+          : `<button onclick="askBuy('${s.id}','virtual')" class="btn-sys w-full py-1.5 text-xs num ${state.player.coins>=price?'':'opacity-40'}">🪙 ${price}${price<s.cost?` <s class="opacity-50">${s.cost}</s>`:''}</button>`}
+      </div>`;
+    }).join('');
+  }else{
+    filterRow.innerHTML = '';
+    const rewards = state.parentConfig.customRewards;
+    list.innerHTML = rewards.length ? rewards.map(r=>`
+      <div class="sys-win gold-win p-3 text-center">
+        <span class="text-[10px] font-black px-2 py-0.5 rounded" style="background:#a87b14; color:#fff3cf;">真實獎勵</span>
+        <div class="text-4xl my-2">${r.emoji||'🎁'}</div>
+        <div class="font-black text-white text-xs leading-tight mb-2">${r.name}</div>
+        <button onclick="askBuy('${r.id}','real')" class="btn-gold w-full py-1.5 text-xs num ${state.player.coins>=r.cost?'':'opacity-40'}">🪙 ${r.cost}</button>
+      </div>`).join('')
+      : `<div class="col-span-2 lg:col-span-4 text-center font-bold py-8" style="color:var(--sys-dim);">管理者尚未設定真實獎勵。</div>`;
+  }
+}
+function askBuy(id, kind){
+  const item = kind==='virtual' ? state.shop.find(s=>s.id===id) : state.parentConfig.customRewards.find(r=>r.id===id);
+  if(!item) return;
+  const price = kind==='virtual' ? discounted(item.cost) : item.cost;
+  if(state.player.coins < price){ toast('金幣不足。完成更多任務累積資金吧。'); return; }
+  buyTarget = { item, kind, price };
+  document.getElementById('buy-emoji').textContent = item.emoji||'🎁';
+  document.getElementById('buy-name').textContent = item.name;
+  document.getElementById('buy-cost').textContent = `花費 🪙 ${price}（剩餘 ${state.player.coins - price}）`;
+  document.getElementById('buy-modal').classList.add('show');
+}
+function closeBuy(){ document.getElementById('buy-modal').classList.remove('show'); buyTarget=null; }
+document.getElementById('buy-confirm').onclick = function(){
+  if(!buyTarget) return;
+  const { item, kind, price } = buyTarget;
+  if(state.player.coins < price){ closeBuy(); return; }
+  state.player.coins -= price;
+  if(kind==='virtual'){
+    if(item.type==='consumable'){
+      state.player.streakTickets = (state.player.streakTickets||0) + 1;
+      state.counters.purchases++;
+      state.history.unshift({ date:todayStr(), kind:'buy', name:`購買：${item.name}`, xpEarned:0, coinsEarned:-price });
+      toast(`🎟️「${item.name}」入手！目前持有 ×${state.player.streakTickets}。連續中斷時請爸媽到管理者模式核可使用。`);
+    }else{
+      state.inventory.push({ id:item.id, name:item.name, emoji:item.emoji, type:item.type, rarity:item.rarity, equipped:false });
+      state.counters.purchases++;
+      state.history.unshift({ date:todayStr(), kind:'buy', name:`購買：${item.name}`, xpEarned:0, coinsEarned:-price });
+      toast(`「${item.name}」入手！到背包裝備，提升戰鬥力。`);
+    }
+  }else{
+    state.history.unshift({ date:todayStr(), kind:'redeem', name:`兌換真實獎勵：${item.name}`, xpEarned:0, coinsEarned:-price });
+    toast(`兌換完成！拿著這則通知去找管理者（爸媽）領取「${item.name}」。`);
+  }
+  checkAchievements();
+  save();
+  closeBuy();
+  spawnShards(window.innerWidth/2, window.innerHeight/2);
+  renderShop(); renderTop();
+};
+
+/* ═══════════════════ 背包 ═══════════════════ */
+function renderInventory(){
+  const list = document.getElementById('inv-list');
+  const empty = document.getElementById('inv-empty');
+  if(!state.inventory.length){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  list.innerHTML = state.inventory.map(i=>{
+    const catalog = state.shop.find(s=>s.id===i.id);
+    return `<button onclick="toggleEquip('${i.id}')" class="sys-win rar-${i.rarity} p-3 text-center" style="border-width:1px; ${i.equipped?'box-shadow:0 0 16px rgba(0,210,255,.5) !important;':''}">
+      <div class="text-3xl mb-1">${i.emoji}</div>
+      <div class="font-black text-white text-[11px] leading-tight">${i.name}</div>
+      <div class="text-[10px] font-bold" style="color:var(--sys-dim);">${SLOT_NAMES[i.type]}・${RARITY[i.rarity]}</div>
+      ${catalog&&catalog.set?`<div class="chip mt-0.5" style="font-size:9px;">🧩 ${catalog.set}</div>`:''}
+      <div class="text-[11px] font-black mt-1 ${i.equipped?'text-cyan-300':''}" style="${i.equipped?'':'color:#33506e;'}">${i.equipped?'✔ 裝備中':'點擊裝備'}</div>
+    </button>`;
+  }).join('');
+}
+function toggleEquip(id){
+  const item = state.inventory.find(i=>i.id===id);
+  if(!item) return;
+  if(item.equipped){ item.equipped=false; }
+  else{
+    state.inventory.forEach(i=>{ if(i.type===item.type) i.equipped=false; });
+    item.equipped = true;
+    state.counters.equippedOnce = true;
+    toast(`已裝備 ${item.emoji}「${item.name}」 戰鬥力 ⚡${combatPower().toLocaleString()}`);
+    checkAchievements();
+  }
+  save();
+  renderInventory();
+}
+
+/* ═══════════════════ 家長模式 ═══════════════════ */
+function tryParent(){
+  if(parentUnlocked){ goScreen('parent'); return; }
+  pinBuffer='';
+  renderPinDots();
+  document.getElementById('pin-modal').classList.add('show');
+}
+function closePin(){ document.getElementById('pin-modal').classList.remove('show'); }
+function lockParent(){ parentUnlocked=false; goScreen('status'); toast('管理者模式已鎖定。'); }
+function renderPinDots(){
+  document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>d.classList.toggle('fill', i<pinBuffer.length));
+}
+function pinPress(n){
+  if(n==='⌫'){ pinBuffer = pinBuffer.slice(0,-1); renderPinDots(); return; }
+  if(pinBuffer.length>=4) return;
+  pinBuffer += n;
+  renderPinDots();
+  if(pinBuffer.length===4){
+    setTimeout(()=>{
+      if(pinBuffer === state.parentConfig.pin){
+        parentUnlocked = true;
+        closePin();
+        goScreen('parent');
+      }else{
+        toast('PIN 碼錯誤。');
+        pinBuffer='';
+        renderPinDots();
+      }
+    }, 150);
+  }
+}
+(function buildPinPad(){
+  const pad = document.getElementById('pin-pad');
+  ['1','2','3','4','5','6','7','8','9','','0','⌫'].forEach(k=>{
+    if(k===''){ pad.insertAdjacentHTML('beforeend','<div></div>'); return; }
+    pad.insertAdjacentHTML('beforeend',
+      `<button onclick="pinPress('${k}')" class="btn-dark py-3 text-lg num font-bold">${k}</button>`);
+  });
+})();
+
+function renderParent(){
+  if(!parentUnlocked){ goScreen('status'); return; }
+  const pending = state.tasks.filter(t=>t.status==='pending');
+  document.getElementById('pending-count').textContent = pending.length ? pending.length+' 筆' : '';
+  document.getElementById('pending-list').innerHTML = pending.length ? pending.map(t=>{
+    const d = DIFFS[t.difficulty];
+    const r = calcRewards(t);
+    return `<div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(120,90,10,.12); border:1px solid rgba(245,197,66,.3);">
+      <span class="text-xl">${t.emoji}</span>
+      <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${t.name}</div>
+      <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${d.name}　+${r.xp} EXP / +${r.coins} 🪙　${t.completedDate||''}</div></div>
+      <button onclick="approveTask('${t.id}')" class="btn-sys px-3 py-2 text-sm">核准 ✔</button>
+      <button onclick="rejectTask('${t.id}')" class="btn-red px-3 py-2 text-sm">退回 ✖</button>
+    </div>`;
+  }).join('') : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">目前沒有待審核的任務。</div>`;
+
+  // 連續紀錄保護
+  const tickets = state.player.streakTickets||0;
+  let protectHtml = `<div class="text-xs font-bold" style="color:var(--sys-dim);">🎟️ 目前持有保護券：<span class="num text-cyan-300">×${tickets}</span>（商店可購買，部分成就也會贈送）</div>`;
+  if(state.brokenStreak){
+    protectHtml += `<div class="alert-line rounded px-3 py-2.5 text-xs font-bold mt-2">
+      ⚠ 偵測到連續紀錄中斷：原本 🔥${state.brokenStreak.value} 天已歸零。
+      ${tickets>0 ? '可使用 1 張保護券恢復。' : '沒有保護券可用。'}</div>
+      <div class="flex gap-2 mt-2">
+        ${tickets>0?`<button onclick="useProtection()" class="btn-gold flex-1 py-2 text-sm">🎟️ 同意使用保護券恢復</button>`:''}
+        <button onclick="dismissProtection()" class="btn-dark flex-1 py-2 text-sm">不使用，重新開始</button>
+      </div>`;
+  }
+  document.getElementById('parent-protect').innerHTML = protectHtml;
+
+  const wk = weekKey();
+  const weekDone = state.history.filter(h=>h.kind==='task' && h.date>=wk).length;
+  const statBox = (val,label,color)=>`<div class="p-2.5 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-xl font-bold" style="color:${color};">${val}</div><div class="text-[11px] font-bold" style="color:var(--sys-dim);">${label}</div></div>`;
+  document.getElementById('parent-stats').innerHTML =
+    statBox(weekDone,'本週完成任務','#5cb8ff') + statBox('🔥 '+state.player.streak,'連續天數','#ff9d5c') +
+    statBox('Lv.'+state.player.level,'目前等級','#c98aff') + statBox('🪙 '+state.player.coins,'金幣餘額','#ffd25c');
+
+  document.getElementById('pf-dailycount').value = state.parentConfig.dailyCount||8;
+  document.getElementById('pf-age').value = state.parentConfig.ageGroup||'all';
+
+  // 任務池管理
+  document.getElementById('pool-count').textContent = `（共 ${state.taskPool.length} 個）`;
+  document.getElementById('parent-pool').innerHTML = state.taskPool.map(p=>{
+    const d = DIFFS[p.difficulty], c = CATS[p.category]||CATS.other;
+    const on = p.enabled!==false;
+    return `<div class="p-2 rounded grid gap-1.5" style="background:rgba(12,26,50,.7); border:1px solid ${on?'#1c3a60':'#3a2030'}; ${on?'':'opacity:.55;'}">
+      <div class="flex items-center gap-2">
+        <span>${p.emoji}</span>
+        <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${p.name}</div>
+        <span class="num text-xs font-bold flex-none" style="color:${d.color};">${d.rank}</span>
+        <button onclick="poolToggle('${p.id}')" class="${on?'btn-sys':'btn-red'} px-2 py-1 text-[10px] flex-none">${on?'啟用中':'已停用'}</button>
+        <button onclick="openTaskForm('${p.id}')" class="btn-dark px-2 py-1 text-[10px] flex-none">✏️</button>
+        <button onclick="deleteTask('${p.id}')" class="btn-red px-2 py-1 text-[10px] flex-none">🗑️</button>
+      </div>
+      <div class="flex items-center gap-1.5 text-[10px] font-bold flex-wrap">
+        <span style="color:var(--sys-dim);">${c.name}・⏱${p.time||'—'}</span>
+        <select onchange="poolSet('${p.id}','schedule',this.value)" class="inp-mini">
+          ${Object.entries(SCHEDULE_NAMES).map(([k,n])=>`<option value="${k}" ${p.schedule===k?'selected':''}>${n}</option>`).join('')}
+        </select>
+        <select onchange="poolSet('${p.id}','age',this.value)" class="inp-mini">
+          ${Object.entries(AGE_NAMES).map(([k,n])=>`<option value="${k}" ${(p.age||'all')===k?'selected':''}>${n}</option>`).join('')}
+        </select>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('parent-rewards').innerHTML = state.parentConfig.customRewards.length
+    ? state.parentConfig.customRewards.map(r=>`
+      <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
+        <span class="text-lg">${r.emoji||'🎁'}</span>
+        <div class="flex-1 font-bold text-white text-xs">${r.name}</div>
+        <span class="num font-bold text-xs" style="color:var(--sys-gold);">🪙${r.cost}</span>
+        <button onclick="deleteReward('${r.id}')" class="btn-red px-2.5 py-1.5 text-xs">🗑️</button>
+      </div>`).join('')
+    : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">尚未設定真實獎勵。</div>`;
+
+  const kindEmoji = { task:'✔', buy:'🛒', redeem:'🎁', achievement:'🏆', drop:'💎', bonus:'🎉' };
+  document.getElementById('parent-history').innerHTML = state.history.length
+    ? state.history.slice(0,50).map(h=>`
+      <div class="flex justify-between gap-2 px-2.5 py-1.5 rounded" style="background:rgba(12,26,50,.7);">
+        <span class="font-bold truncate">${kindEmoji[h.kind]||'•'} ${h.name}</span>
+        <span class="num font-bold whitespace-nowrap" style="color:var(--sys-dim);">${h.date.slice(5)}${h.coinsEarned?`　${h.coinsEarned>0?'+':''}${h.coinsEarned}🪙`:''}</span>
+      </div>`).join('')
+    : `<div class="font-bold text-center py-2" style="color:var(--sys-dim);">還沒有任何紀錄。</div>`;
+}
+
+/* ── 家長：設定與任務池操作 ── */
+function setDailyCount(v){
+  const n = parseInt(v,10);
+  if(!n || n<4 || n>12){ toast('每日任務數量需為 4–12。'); renderParent(); return; }
+  state.parentConfig.dailyCount = n;
+  save();
+  toast(`每日任務數量已設為 ${n}。可按「重新抽選」立即套用。`);
+}
+function setAgeGroup(v){
+  state.parentConfig.ageGroup = v;
+  save();
+  toast(`年齡層已設為 ${AGE_NAMES[v]||v}。可按「重新抽選」立即套用。`);
+}
+function poolToggle(id){
+  const p = state.taskPool.find(t=>t.id===id);
+  if(!p) return;
+  p.enabled = p.enabled===false;
+  save();
+  renderParent();
+}
+function poolSet(id, field, value){
+  const p = state.taskPool.find(t=>t.id===id);
+  if(!p) return;
+  p[field] = value;
+  save();
+}
+function useProtection(){
+  if(!state.brokenStreak || (state.player.streakTickets||0)<1) return;
+  state.player.streak = state.brokenStreak.value;
+  state.player.lastAllDoneDate = yesterdayStr();
+  state.player.streakTickets--;
+  state.history.unshift({ date:todayStr(), kind:'bonus', name:`使用保護券恢復連續紀錄 🔥${state.player.streak}`, xpEarned:0, coinsEarned:0 });
+  state.brokenStreak = null;
+  save();
+  toast(`🎟️ 已使用保護券，連續紀錄恢復為 🔥${state.player.streak} 天。`);
+  renderParent();
+}
+function dismissProtection(){
+  state.brokenStreak = null;
+  save();
+  renderParent();
+}
+
+/* ── 任務池編輯表單 ── */
+function openTaskForm(id){
+  editingTaskId = id || null;
+  document.getElementById('taskform-title').textContent = id ? '編輯任務' : '新增任務';
+  const catSel = document.getElementById('tf-cat');
+  catSel.innerHTML = Object.entries(CATS).filter(([k])=>k!=='other').map(([k,c])=>`<option value="${k}">${c.emoji} ${c.name}</option>`).join('');
+  const diffSel = document.getElementById('tf-diff');
+  diffSel.innerHTML = Object.entries(DIFFS).map(([k,d])=>`<option value="${k}">${d.name}（${d.xp} EXP / ${d.coins} 🪙）</option>`).join('');
+  if(id){
+    const t = state.taskPool.find(t=>t.id===id);
+    if(!t) return;
+    document.getElementById('tf-name').value = t.name;
+    document.getElementById('tf-emoji').value = t.emoji||'';
+    document.getElementById('tf-time').value = t.time||'';
+    document.getElementById('tf-why').value = t.why||'';
+    catSel.value = CATS[t.category]&&t.category!=='other' ? t.category : 'chore';
+    diffSel.value = t.difficulty;
+    document.getElementById('tf-schedule').value = t.schedule||'daily';
+    document.getElementById('tf-age').value = t.age||'all';
+  }else{
+    document.getElementById('tf-name').value='';
+    document.getElementById('tf-emoji').value='';
+    document.getElementById('tf-time').value='';
+    document.getElementById('tf-why').value='';
+    catSel.value='chore'; diffSel.value='easy';
+    document.getElementById('tf-schedule').value='daily';
+    document.getElementById('tf-age').value='all';
+  }
+  document.getElementById('taskform-modal').classList.add('show');
+}
+function saveTaskForm(){
+  const name = document.getElementById('tf-name').value.trim();
+  if(!name){ toast('請輸入任務名稱。'); return; }
+  const fields = {
+    name,
+    emoji: document.getElementById('tf-emoji').value.trim() || '📌',
+    time: document.getElementById('tf-time').value.trim(),
+    why: document.getElementById('tf-why').value.trim(),
+    category: document.getElementById('tf-cat').value,
+    difficulty: document.getElementById('tf-diff').value,
+    schedule: document.getElementById('tf-schedule').value,
+    age: document.getElementById('tf-age').value,
+  };
+  if(editingTaskId){
+    const p = state.taskPool.find(t=>t.id===editingTaskId);
+    if(p) Object.assign(p, fields);
+    const inst = state.tasks.find(t=>t.id===editingTaskId);
+    if(inst) Object.assign(inst, { name:fields.name, emoji:fields.emoji, time:fields.time, why:fields.why, category:fields.category, difficulty:fields.difficulty });
+  }else{
+    state.taskPool.push({ id:uid(), ...fields, tod:null, enabled:true, custom:true });
+  }
+  save();
+  closeModal('taskform-modal');
+  toast('任務已儲存至任務池。');
+  renderParent();
+}
+function deleteTask(id){
+  const p = state.taskPool.find(t=>t.id===id);
+  if(!p) return;
+  if(!confirm(`確定要從任務池刪除「${p.name}」嗎？`)) return;
+  state.taskPool = state.taskPool.filter(t=>t.id!==id);
+  state.tasks = state.tasks.filter(t=>t.id!==id);
+  save();
+  renderParent();
+}
+
+/* ── 真實獎勵 ── */
+function openRewardForm(){
+  document.getElementById('rf-name').value='';
+  document.getElementById('rf-emoji').value='';
+  document.getElementById('rf-cost').value='100';
+  document.getElementById('rewardform-modal').classList.add('show');
+}
+function saveRewardForm(){
+  const name = document.getElementById('rf-name').value.trim();
+  const cost = parseInt(document.getElementById('rf-cost').value, 10);
+  if(!name || !cost || cost<1){ toast('請填寫名稱與有效的金幣數。'); return; }
+  state.parentConfig.customRewards.push({ id:uid(), name, emoji:document.getElementById('rf-emoji').value.trim()||'🎁', cost });
+  save();
+  closeModal('rewardform-modal');
+  toast('獎勵已新增。');
+  renderParent();
+}
+function deleteReward(id){
+  state.parentConfig.customRewards = state.parentConfig.customRewards.filter(r=>r.id!==id);
+  save();
+  renderParent();
+}
+function resetPin(){
+  const np = prompt('請輸入新的 4 位數 PIN 碼：');
+  if(np===null) return;
+  if(!/^\d{4}$/.test(np)){ toast('PIN 碼必須是 4 位數字。'); return; }
+  state.parentConfig.pin = np;
+  save();
+  toast('PIN 碼已更新。');
+}
+function resetData(){
+  if(!confirm('⚠️ 確定要重置所有資料嗎？角色、進度、道具都會消失！')) return;
+  if(!confirm('再次確認：這個動作無法復原！')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+/* ═══════════════════ 特效 ═══════════════════ */
+function toast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toast-inner').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function spawnShards(x, y){
+  const colors = ['#00d2ff','#7fb4e8','#b06bff','#ffd24a','#ffffff'];
+  for(let i=0;i<24;i++){
+    const s = document.createElement('div');
+    s.className = 'shard';
+    s.style.left = x+'px'; s.style.top = y+'px';
+    s.style.background = colors[i%colors.length];
+    s.style.boxShadow = `0 0 6px ${colors[i%colors.length]}`;
+    s.style.setProperty('--dx', (Math.random()*260-130)+'px');
+    s.style.setProperty('--dy', (Math.random()*260-130)+'px');
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(), 1300);
+  }
+}
+function showLevelUp(level, fromRank){
+  document.getElementById('lv-num').textContent = level;
+  const newRank = hunterRank(level);
+  const ru = document.getElementById('lv-rankup');
+  if(newRank !== fromRank){
+    ru.innerHTML = `🎖️ 獵人等級升格：<span class="num" style="color:var(--sys-gold); text-shadow:0 0 12px rgba(245,197,66,.8);">${fromRank} → ${newRank}</span>`;
+    ru.classList.remove('hidden');
+  }else ru.classList.add('hidden');
+  document.getElementById('levelup-overlay').classList.add('show');
+  spawnShards(window.innerWidth/2, window.innerHeight/2);
+}
+function hideLevelUp(){
+  document.getElementById('levelup-overlay').classList.remove('show');
+  renderCurrent();
+}
+function showDayClear(){
+  document.getElementById('dayclear-streak').textContent = state.player.streak;
+  document.getElementById('dayclear-overlay').classList.add('show');
+  spawnShards(window.innerWidth/2, window.innerHeight/2);
+}
+function closeModal(id){ document.getElementById(id).classList.remove('show'); }
+
+/* ═══════════════════ 啟動 ═══════════════════ */
+load();
+dailyReset();
+ensureToday();
+if(!state.player.name){
+  document.getElementById('onboarding').classList.add('active');
+  renderOnboarding();
+}else{
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('game').classList.remove('hidden');
+  goScreen('status');
+}
+setInterval(()=>{ if(state.meta.lastDay !== todayStr()){ dailyReset(); ensureToday(); renderCurrent(); } }, 60000);
+</script>
+</body>
+</html>
