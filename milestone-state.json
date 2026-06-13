@@ -2,7 +2,7 @@
   "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
   "version": "2.0",
   "created_at": "2026-06-13T00:00:00Z",
-  "current_milestone_id": 11,
+  "current_milestone_id": 13,
   "planning_complete": true,
   "budget": {
     "used_usd": 0.0,
@@ -220,12 +220,12 @@
       "title": "本地多帳號登入／登出／切換（密碼）",
       "spec_file": "milestones/m11-local-accounts.md",
       "spec_summary": "本機多帳號系統：每個帳號各自進度、可設密碼，啟動顯示登入閘門，遊戲內可登出與切換帳號。全部存本地（kidquest-accounts.json + 各帳號存檔），不影響既有單存檔與測試。",
-      "status": "pending",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
       "depends_on": [10],
-      "human_feedback": "暫緩：使用者改優先做經濟系統重整（M12）。已完成可攜的『帶 key 存檔橋接』地基（index.html kqStorage + preload 鍵控檔案），登入 UI 待續。",
+      "human_feedback": null,
       "acceptance_criteria": [
         "啟動時若已有帳號則顯示登入畫面，可選帳號並用密碼登入",
         "可建立多個帳號，各帳號進度互相獨立",
@@ -233,7 +233,9 @@
         "可設定／變更帳號密碼；空密碼帳號可直接登入",
         "無帳號時沿用原本流程；node test/smoke.js 維持綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 新增登入閘門 + 帳號系統（建立/登入/登出/切換/密碼雜湊/刪除），活躍帳號資料留在 kidquest_data、帳號清單與快照存 kidquest_accounts。切換時先快照再載入，進度互相隔離。新增 test/accounts.test.js（10/10）；smoke 69/69、desktop-save 4/4；桌面 exe 重新打包並實機啟動成功。" }
+      ]
     },
     {
       "id": 12,

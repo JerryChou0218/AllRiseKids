@@ -256,6 +256,21 @@
   </div>
 </div>
 
+<!-- ════════ 帳號登入閘門 ════════ -->
+<div id="account-gate" class="screen fixed inset-0 z-50 overflow-y-auto" style="display:none;">
+  <div class="max-w-md mx-auto px-5 py-8">
+    <div class="text-center mb-5">
+      <div class="lv-arise text-xl font-bold mb-1">SYSTEM</div>
+      <div class="text-3xl font-black text-white" style="text-shadow:0 0 18px rgba(0,210,255,.8);">👤 選擇獵人帳號</div>
+      <div class="text-xs font-bold mt-1" style="color:var(--sys-dim);">每個帳號進度各自獨立，全部存在這台裝置</div>
+    </div>
+    <div class="sys-win scanline mb-4">
+      <div class="sys-head"><span class="sys-i">i</span>本機帳號</div>
+      <div class="p-4 grid gap-3" id="account-gate-body"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════ 主遊戲 ════════ -->
 <div id="game" class="hidden">
   <div class="max-w-md mx-auto pb-24 lg:max-w-3xl px-3 pt-3 relative z-10">
@@ -475,6 +490,11 @@
       <div class="sys-win mb-3">
         <div class="sys-head text-sm"><span class="sys-i">i</span>紀錄</div>
         <div class="p-3 grid gap-1.5 max-h-60 overflow-y-auto text-xs" id="parent-history"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">i</span>帳號管理</div>
+        <div class="p-3 grid gap-2" id="parent-accounts"></div>
       </div>
 
       <div class="sys-win mb-4">
@@ -1967,6 +1987,8 @@ function renderParent(){
         <span class="num font-bold whitespace-nowrap" style="color:var(--sys-dim);">${h.date.slice(5)}${h.coinsEarned?`　${h.coinsEarned>0?'+':''}${h.coinsEarned}🪙`:''}</span>
       </div>`).join('')
     : `<div class="font-bold text-center py-2" style="color:var(--sys-dim);">還沒有任何紀錄。</div>`;
+
+  renderAccounts();
 }
 
 /* ── 家長：設定與任務池操作 ── */
@@ -2204,18 +2226,192 @@ function showDayClear(){
 }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 
+/* ═══════════════════ 本機多帳號（登入 / 登出 / 切換 / 密碼）═══════════════════
+   設計：活躍帳號的即時資料仍存於 STORAGE_KEY（save/load 不變）；帳號清單與各帳號
+   存檔快照存於 ACCOUNTS_KEY。切換時先把目前 STORAGE_KEY 快照回帳號，再載入目標帳號。
+   無帳號時完全沿用原本單人流程。 */
+const ACCOUNTS_KEY = 'kidquest_accounts';
+const AVATARS = ['🦊','🐺','🦅','🐯','🦁','🐉','🦉','🐱','🐲','🦄'];
+let currentAccountId = null;
+let gateMode = 'list';
+let gateSel = null;
+
+function hashPass(s){
+  if(!s) return '';
+  let h = 2166136261 >>> 0;
+  for(let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return 'h' + h.toString(16);
+}
+function accountsLoad(){
+  try{ const raw = kqStorage.read(ACCOUNTS_KEY); if(raw){ const c = JSON.parse(raw); if(c && Array.isArray(c.accounts)) return c; } }catch(e){}
+  return { accounts:[], activeId:null };
+}
+function accountsSave(c){ kqStorage.write(JSON.stringify(c), ACCOUNTS_KEY); }
+function avatarFor(a){ let h=0; for(const ch of (a.name||'')) h=(h+ch.charCodeAt(0))%AVATARS.length; return a.avatar || AVATARS[h]; }
+function snapshotActive(c){
+  if(c.activeId){ const a = c.accounts.find(x=>x.id===c.activeId); if(a){ const blob = kqStorage.read(); if(blob) a.blob = blob; } }
+}
+function seedAccountFromCurrent(name){
+  const c = accountsLoad();
+  const id = uid();
+  c.accounts.push({ id, name: name||'玩家', pass:'', blob: kqStorage.read() || JSON.stringify(state), createdAt: todayStr() });
+  c.activeId = id; accountsSave(c); currentAccountId = id;
+}
+function enterGame(){
+  const ob = document.getElementById('onboarding'); ob.classList.remove('active'); ob.style.display='none';
+  const g = document.getElementById('account-gate'); g.classList.remove('active'); g.style.display='none';
+  document.getElementById('game').classList.remove('hidden');
+  goScreen('status');
+}
+function showAccountGate(){
+  parentUnlocked = false;
+  document.getElementById('game').classList.add('hidden');
+  const ob = document.getElementById('onboarding'); ob.classList.remove('active'); ob.style.display='none';
+  const g = document.getElementById('account-gate'); g.style.display='block'; g.classList.add('active');
+  gateMode = 'list'; renderAccountGate();
+}
+function renderAccountGate(){
+  const c = accountsLoad();
+  const body = document.getElementById('account-gate-body');
+  if(gateMode === 'create'){
+    body.innerHTML = `
+      <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">建立新帳號（密碼可留空）</div>
+      <input id="acc-new-name" maxlength="12" placeholder="帳號名稱（孩子的名字）" class="inp">
+      <input id="acc-new-pass" type="password" maxlength="20" placeholder="密碼（可留空）" class="inp">
+      <button onclick="createAccountSubmit()" class="btn-gold w-full py-3 text-base">建立並開始</button>
+      <button onclick="gateBack()" class="btn-dark w-full py-2 text-sm">返回</button>`;
+    return;
+  }
+  const cards = c.accounts.map(a=>{
+    const sel = a.id===gateSel;
+    return `<button onclick="gatePick('${a.id}')" class="flex items-center gap-3 p-3 rounded text-left transition-all"
+      style="border:1px solid ${sel?'var(--sys-cyan)':'#1c3a60'}; background:${sel?'rgba(0,210,255,.12)':'rgba(12,24,46,.6)'}; ${sel?'box-shadow:0 0 12px rgba(0,210,255,.3);':''}">
+      <span class="text-3xl">${avatarFor(a)}</span>
+      <span class="flex-1 font-black text-white">${a.name} ${a.pass?'🔒':''}</span>
+      ${sel?'<span class="text-cyan-300 font-black">✓</span>':''}
+    </button>`;
+  }).join('');
+  let action = '';
+  if(gateSel){
+    const a = c.accounts.find(x=>x.id===gateSel);
+    if(a){
+      action = `${a.pass?`<input id="acc-pass" type="password" maxlength="20" placeholder="輸入密碼" class="inp">`:''}
+        <button onclick="loginSubmit()" class="btn-gold w-full py-3 text-base">登入「${a.name}」</button>`;
+    }
+  }
+  body.innerHTML = cards + action + `<button onclick="gateCreate()" class="btn-sys w-full py-2.5 text-sm mt-1">➕ 建立新帳號</button>`;
+}
+function gatePick(id){ gateSel = id; renderAccountGate(); }
+function gateCreate(){ gateMode = 'create'; renderAccountGate(); }
+function gateBack(){ gateMode = 'list'; renderAccountGate(); }
+function loginSubmit(){
+  const c = accountsLoad();
+  const a = c.accounts.find(x=>x.id===gateSel);
+  if(!a) return;
+  if(a.pass){
+    const inp = (document.getElementById('acc-pass')||{}).value || '';
+    if(hashPass(inp) !== a.pass){ toast('密碼不正確。'); return; }
+  }
+  doLogin(a.id);
+}
+function doLogin(id){
+  const c = accountsLoad();
+  snapshotActive(c);                 // 先把目前活躍帳號的最新進度存回
+  c.activeId = id; accountsSave(c);
+  currentAccountId = id;
+  const a = c.accounts.find(x=>x.id===id);
+  kqStorage.write(a.blob || JSON.stringify(defaultData()));   // 載入該帳號進度到活躍槽
+  load(); dailyReset(); ensureToday();
+  enterGame(); renderCurrent();
+  toast(`歡迎回來，${a.name}！`);
+}
+function createAccountSubmit(){
+  const name = (document.getElementById('acc-new-name')||{}).value;
+  const pass = (document.getElementById('acc-new-pass')||{}).value || '';
+  const nm = (name||'').trim();
+  if(!nm){ toast('請輸入帳號名稱。'); return; }
+  const c = accountsLoad();
+  snapshotActive(c);
+  const id = uid();
+  const fresh = JSON.stringify(defaultData());
+  c.accounts.push({ id, name:nm, pass:hashPass(pass), blob:fresh, createdAt: todayStr() });
+  c.activeId = id; accountsSave(c); currentAccountId = id;
+  kqStorage.write(fresh);
+  load(); dailyReset(); ensureToday();
+  // 新帳號 → 進入覺醒引導（選職業、設定獵人名稱，預填帳號名稱）
+  document.getElementById('account-gate').style.display='none';
+  document.getElementById('game').classList.add('hidden');
+  const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
+  document.getElementById('ob-name').value = nm; obClass = 'warrior'; renderOnboarding();
+}
+function switchAccount(){
+  const c = accountsLoad();
+  snapshotActive(c); accountsSave(c);
+  gateSel = c.activeId;
+  showAccountGate();
+}
+function setAccountPassword(){
+  const c = accountsLoad();
+  if(!c.activeId){ toast('目前為單人模式，尚未建立帳號。'); return; }
+  const np = prompt('設定本帳號密碼（留空表示不設密碼）：');
+  if(np===null) return;
+  const a = c.accounts.find(x=>x.id===c.activeId);
+  if(!a) return;
+  a.pass = hashPass(np.trim());
+  accountsSave(c);
+  toast(np.trim() ? '本帳號密碼已設定。' : '已清除本帳號密碼。');
+  renderAccounts();
+}
+function deleteAccount(id){
+  const c = accountsLoad();
+  const a = c.accounts.find(x=>x.id===id); if(!a) return;
+  if(id===c.activeId){ toast('無法刪除目前登入中的帳號，請先切換。'); return; }
+  if(!confirm(`確定刪除帳號「${a.name}」？該帳號的進度將永久消失！`)) return;
+  c.accounts = c.accounts.filter(x=>x.id!==id);
+  accountsSave(c);
+  toast(`已刪除帳號「${a.name}」。`);
+  renderAccounts();
+}
+function renderAccounts(){
+  const box = document.getElementById('parent-accounts');
+  if(!box) return;
+  const c = accountsLoad();
+  const active = c.accounts.find(x=>x.id===c.activeId);
+  if(!c.accounts.length){
+    box.innerHTML = `<p class="text-xs font-bold" style="color:var(--sys-dim);">目前為單人模式（尚未建立帳號）。在登入畫面建立帳號後，即可多人各自存進度、登入登出與切換。</p>`;
+    return;
+  }
+  const list = c.accounts.map(a=>`
+    <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
+      <span class="text-lg">${avatarFor(a)}</span>
+      <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${a.name} ${a.pass?'🔒':''}${a.id===c.activeId?'　<span class="text-cyan-300">（登入中）</span>':''}</div>
+      ${a.id===c.activeId?'':`<button onclick="deleteAccount('${a.id}')" class="btn-red px-2.5 py-1.5 text-xs">🗑️</button>`}
+    </div>`).join('');
+  box.innerHTML = `
+    <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前登入：<span class="text-white">${active?active.name:'—'}</span></div>
+    ${list}
+    <button onclick="setAccountPassword()" class="btn-sys py-2.5 text-sm mt-1">🔑 設定 / 變更本帳號密碼</button>
+    <button onclick="switchAccount()" class="btn-gold py-2.5 text-sm">🚪 登出 / 切換帳號</button>`;
+}
+
 /* ═══════════════════ 啟動 ═══════════════════ */
 load();
 dailyReset();
 ensureToday();
-if(!state.player.name){
-  document.getElementById('onboarding').classList.add('active');
-  renderOnboarding();
-}else{
-  document.getElementById('onboarding').style.display='none';
-  document.getElementById('game').classList.remove('hidden');
-  goScreen('status');
-}
+(function boot(){
+  const acc = accountsLoad();
+  if(acc.accounts.length > 0){
+    currentAccountId = acc.activeId;
+    gateSel = acc.activeId;
+    showAccountGate();                         // 有帳號 → 需登入
+  }else if(state.player.name){
+    seedAccountFromCurrent(state.player.name); // 既有單人存檔 → 自動建立第一個帳號，直接進遊戲
+    enterGame();
+  }else{
+    document.getElementById('onboarding').classList.add('active');  // 全新、無帳號 → 原本覺醒引導
+    renderOnboarding();
+  }
+})();
 setInterval(()=>{ if(state.meta.lastDay !== todayStr()){ dailyReset(); ensureToday(); renderCurrent(); } }, 60000);
 </script>
 <!-- PWA：service worker 註冊（獨立區塊，不影響 smoke 測試擷取的主腳本） -->
