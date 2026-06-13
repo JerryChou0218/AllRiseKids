@@ -748,6 +748,24 @@
   </div>
 </div>
 
+<!-- ════════ 設定密碼 ════════ -->
+<div id="setpass-modal" class="modal-bg">
+  <div class="modal-card sys-win max-w-xs">
+    <div class="sys-head"><span class="sys-i">i</span>設定密碼
+      <button onclick="closeModal('setpass-modal')" class="ml-auto text-cyan-300 font-black px-2">✕</button>
+    </div>
+    <div class="p-5">
+      <p id="setpass-label" class="text-sm font-bold mb-3" style="color:var(--sys-dim);"></p>
+      <input id="setpass-inp" type="password" maxlength="20" placeholder="新密碼（留空表示清除密碼）" class="inp mb-4"
+        onkeydown="if(event.key==='Enter') submitSetPass()">
+      <div class="flex gap-3">
+        <button onclick="closeModal('setpass-modal')" class="btn-dark flex-1 py-2.5">取消</button>
+        <button onclick="submitSetPass()" class="btn-gold flex-1 py-2.5">確認</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ════════ 吐司 ════════ -->
 <div id="toast">
   <div class="sys-win">
@@ -2585,16 +2603,28 @@ function switchAccount(){
   gateSel = c.activeId;
   showAccountGate();
 }
-// 家長：變更「指定帳號」的密碼（可改任何帳號）
+// 變更「指定帳號」的密碼（家長 / 使用者皆可呼叫）
+let _setpassId = null;
 function setAccountPassword(id){
   const c = accountsLoad();
   const a = c.accounts.find(x=>x.id===id); if(!a) return;
-  const np = prompt(`設定「${a.name}」的密碼（留空表示不設密碼）：`);
-  if(np===null) return;
+  _setpassId = id;
+  document.getElementById('setpass-label').textContent = `設定「${a.name}」的密碼（留空表示清除密碼）`;
+  document.getElementById('setpass-inp').value = '';
+  document.getElementById('setpass-modal').classList.add('show');
+  setTimeout(()=>document.getElementById('setpass-inp').focus(), 80);
+}
+function submitSetPass(){
+  const np = document.getElementById('setpass-inp').value;
+  closeModal('setpass-modal');
+  if(_setpassId === null) return;
+  const c = accountsLoad();
+  const a = c.accounts.find(x=>x.id===_setpassId); if(!a) return;
   a.pass = hashPass(np.trim());
   accountsSave(c);
   toast(np.trim() ? `已設定「${a.name}」的密碼。` : `已清除「${a.name}」的密碼。`);
   renderAccounts();
+  _setpassId = null;
 }
 // 使用者：設定自己（登入中帳號）的密碼
 function setMyPassword(){
