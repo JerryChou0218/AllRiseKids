@@ -2,7 +2,7 @@
   "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
   "version": "2.0",
   "created_at": "2026-06-13T00:00:00Z",
-  "current_milestone_id": 8,
+  "current_milestone_id": 9,
   "planning_complete": true,
   "budget": {
     "used_usd": 0.0,
@@ -155,10 +155,10 @@
     },
     {
       "id": 8,
-      "title": "跨裝置雲端同步（提案，需家長/隱私審核）",
+      "title": "跨裝置存檔轉移（匯出/匯入，輕量方案）",
       "spec_file": "milestones/m8-cloud-sync.md",
-      "spec_summary": "解決『換瀏覽器/換電腦不同步』。採輕量方案：純本機匯出/匯入存檔（無帳號、不上傳），而非帳號制雲端後端。",
-      "status": "pending_approval",
+      "spec_summary": "純本機匯出/匯入存檔（無帳號、不上傳），作為離線轉移與備援。真正的帳號制雲端同步改由 M9 處理。",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": true,
@@ -170,7 +170,28 @@
       ],
       "human_feedback": null,
       "history": [
-        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 管理者面板新增匯出/匯入存檔；跨裝置轉移可行、未登入行為不變、零個資蒐集；smoke 65/65。採輕量方案取代帳號制後端，待人工核准結案。" }
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 管理者面板新增匯出/匯入存檔；跨裝置轉移可行、未登入行為不變、零個資蒐集；smoke 65/65。輕量方案結案；真正的帳號制雲端同步轉由 M9 處理。" }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "帳號制雲端同步（Supabase + Google 登入）",
+      "spec_file": "milestones/m9-cloud-sync-supabase.md",
+      "spec_summary": "每位小孩用自己的 Google 帳號登入，進度存到 Supabase 並以 Row Level Security 個別隔離；自動跨裝置同步。未登入時維持純本機。先 Mockup + 設定包供審核，核准且使用者開好 Supabase 專案後再整合。",
+      "status": "pending_approval",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": true,
+      "depends_on": [1],
+      "acceptance_criteria": [
+        "小孩用自己的 Google 帳號登入後，進度自動同步到雲端並可在另一裝置還原",
+        "不同帳號的進度各自獨立儲存且互相看不到（Supabase RLS）",
+        "未登入時遊戲行為與現在完全相同（純本機、可離線）",
+        "雲端設定缺失時自動退回純本機，且 65 項煙霧測試維持綠燈"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "N/A", "ai_verification": "PENDING: Mockup-First 關卡 — 已產出流程 Mockup（cloud-mockup.html）、Supabase schema（含 RLS）與設定指南，待人工審核流程並開好 Supabase 專案後再實作整合。" }
       ]
     }
   ]

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KidQuest ☁️ 雲端存檔 — 流程 Mockup（M9）</title>
+<style>
+  :root{ --cyan:#00d2ff; --blue:#1e4976; --purple:#a855f7; --gold:#f5c542;
+    --bg:#060b18; --panel:rgba(8,18,38,.92); --text:#cfe8ff; --dim:#6b8cae; --green:#3ddc97; --red:#ff6b6b; }
+  *{ box-sizing:border-box; font-family:'Segoe UI','Noto Sans TC',sans-serif; }
+  body{ margin:0; min-height:100vh; color:var(--text);
+    background:#060b18 radial-gradient(ellipse at 50% -10%, #0e2a52 0%, #060b18 55%); padding:24px; }
+  .wrap{ max-width:460px; margin:0 auto; }
+  h1{ font-size:18px; text-align:center; letter-spacing:1px; }
+  .note{ text-align:center; color:var(--dim); font-size:12px; margin-bottom:18px; }
+  .win{ background:var(--panel); border:1px solid rgba(0,210,255,.35); border-radius:12px;
+    box-shadow:0 0 22px rgba(0,210,255,.10); margin-bottom:16px; overflow:hidden; }
+  .head{ padding:10px 14px; font-size:13px; font-weight:700; letter-spacing:1px;
+    border-bottom:1px solid rgba(0,210,255,.25); background:rgba(0,210,255,.06); }
+  .body{ padding:16px; }
+  .state{ display:none; } .state.active{ display:block; animation:in .2s ease; }
+  @keyframes in{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+  button{ width:100%; padding:12px; margin-top:10px; border-radius:9px; cursor:pointer;
+    font-size:14px; font-weight:700; border:1px solid rgba(0,210,255,.5);
+    background:rgba(0,210,255,.10); color:var(--text); }
+  button:hover{ background:rgba(0,210,255,.20); }
+  .g-btn{ background:#fff; color:#202124; border:none; display:flex; align-items:center; justify-content:center; gap:8px; }
+  .ghost{ background:transparent; border-color:rgba(107,140,174,.5); color:var(--dim); }
+  .danger{ border-color:rgba(255,107,107,.6); background:rgba(255,107,107,.10); color:#ffd2d2; }
+  .row{ display:flex; align-items:center; gap:10px; padding:8px 0; }
+  .ava{ width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,var(--purple),var(--blue));
+    display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .badge{ display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; font-weight:700; }
+  .b-on{ background:rgba(61,220,151,.15); color:var(--green); border:1px solid rgba(61,220,151,.5); }
+  .b-off{ background:rgba(107,140,174,.15); color:var(--dim); border:1px solid rgba(107,140,174,.4); }
+  .small{ font-size:12px; color:var(--dim); }
+  .kv{ font-size:13px; } .kv b{ color:#fff; }
+  .pill-nav{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; margin-top:8px; }
+  .pill-nav button{ width:auto; padding:6px 10px; margin:0; font-size:11px; font-weight:600; }
+  .compare{ display:flex; gap:10px; }
+  .compare > div{ flex:1; border:1px solid rgba(0,210,255,.3); border-radius:9px; padding:10px; font-size:12px; }
+  .hint{ background:rgba(245,197,66,.08); border:1px solid rgba(245,197,66,.4); border-radius:9px;
+    padding:10px; font-size:12px; color:#ffe9a8; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>☁️ 雲端存檔 — 流程 Mockup</h1>
+  <div class="note">M9 提案介面（管理者模式內）· 純示意、未接後端 · 點按鈕走流程</div>
+
+  <div class="win">
+    <div class="head">☁️ 雲端存檔</div>
+    <div class="body">
+
+      <!-- 狀態 1：未登入 -->
+      <div class="state active" id="s-out">
+        <div class="kv">狀態：<span class="badge b-off">未登入（純本機）</span></div>
+        <p class="small">登入後，這個小孩的進度會自動同步到雲端，換手機/電腦用同一個 Google 帳號登入就能延續。每個小孩用自己的帳號，進度各自獨立。</p>
+        <button class="g-btn" onclick="go('s-in')">🔵 用 Google 登入</button>
+        <p class="small" style="text-align:center;margin-top:10px">不登入也能玩 — 進度留在這台裝置。</p>
+      </div>
+
+      <!-- 狀態 2：已登入 / 已同步 -->
+      <div class="state" id="s-in">
+        <div class="row">
+          <div class="ava">🦊</div>
+          <div>
+            <div class="kv"><b>小宇</b> <span class="badge b-on">已同步</span></div>
+            <div class="small">xiaoyu@gmail.com</div>
+          </div>
+        </div>
+        <div class="kv" style="margin-top:6px">最後同步：<b>剛剛</b> · 等級 9 · 🪙 333</div>
+        <div class="hint">這個帳號的進度單獨儲存，別的小孩登入看到的是他自己的存檔。</div>
+        <button onclick="flash('已同步到雲端 ☁️'); go('s-in')">🔄 立即同步</button>
+        <button class="ghost" onclick="go('s-conflict')">（示範）模擬兩台裝置進度不同</button>
+        <button class="danger" onclick="go('s-out')">登出</button>
+      </div>
+
+      <!-- 狀態 3：衝突選擇 -->
+      <div class="state" id="s-conflict">
+        <div class="kv">⚠️ 偵測到雲端與本機進度不同</div>
+        <p class="small">這台裝置和雲端的存檔不一樣，請選一邊保留：</p>
+        <div class="compare">
+          <div>
+            <div class="badge b-off">這台裝置</div>
+            <div style="margin-top:6px">等級 <b>9</b><br>🪙 333<br><span class="small">更新：今天 14:20</span></div>
+            <button onclick="flash('已用本機覆蓋雲端'); go('s-in')">用這台</button>
+          </div>
+          <div>
+            <div class="badge b-on">雲端</div>
+            <div style="margin-top:6px">等級 <b>11</b><br>🪙 540<br><span class="small">更新：今天 18:05</span></div>
+            <button onclick="flash('已用雲端覆蓋本機'); go('s-in')">用雲端</button>
+          </div>
+        </div>
+        <p class="small" style="margin-top:8px">預設規則：以「最後更新時間較新」者為準，仍可手動選擇。</p>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="small" style="text-align:center">快速跳到任一狀態檢視：</div>
+  <div class="pill-nav">
+    <button onclick="go('s-out')">未登入</button>
+    <button onclick="go('s-in')">已同步</button>
+    <button onclick="go('s-conflict')">衝突選擇</button>
+  </div>
+
+  <div id="toast" style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);
+    background:rgba(0,210,255,.15);border:1px solid var(--cyan);border-radius:24px;
+    padding:10px 18px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;"></div>
+</div>
+<script>
+  function go(id){
+    document.querySelectorAll('.state').forEach(function(e){ e.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+  }
+  var t;
+  function flash(msg){
+    var el = document.getElementById('toast');
+    el.textContent = msg; el.style.opacity = 1;
+    clearTimeout(t); t = setTimeout(function(){ el.style.opacity = 0; }, 1800);
+  }
+</script>
+</body>
+</html>
