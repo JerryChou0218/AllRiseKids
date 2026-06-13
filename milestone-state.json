@@ -2,7 +2,7 @@
   "goal": "KidQuest：給 8–12 歲孩子的每日任務 RPG 網頁遊戲（《我獨自升級》暗黑系統風格）— 完成現實任務換 EXP/金幣，升級配點、技能樹、傳送門、商店與真實獎勵",
   "version": "2.0",
   "created_at": "2026-06-13T00:00:00Z",
-  "current_milestone_id": 14,
+  "current_milestone_id": 15,
   "planning_complete": true,
   "budget": {
     "used_usd": 0.0,
@@ -279,6 +279,28 @@
       "human_feedback": null,
       "history": [
         { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 重建 TASK_POOL 為 100 個適齡任務（8 分類、6 難度、ageRange/estimatedMinutes/why/repeatRule）；新增 normal(D)/super(S) 難度與 CHALLENGE 集合；ageMatch 改用 ageRange+gender；玩家加 age/gender 並可於覺醒與家長頁設定；每日抽選改 E/D/C/B 平均分配、A/S 每週挑戰；地圖/分頁/成就/職業加成同步更新；Electron 視窗改 1920×1080。smoke 75/75、desktop-save 4/4、accounts 10/10，exe 重新打包並啟動成功。" }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "寬版 PC 佈局 + 頂部帳號/家長列 + 隱藏孩子台幣 + 擴充裝備獎勵",
+      "spec_file": "milestones/m14-pc-layout-topbar.md",
+      "spec_summary": "桌面採左側欄導覽 + 寬版內容（行動仍為底部導覽）；視窗頂部常駐帳號(登出/切換)與家長登入，不需從家長功能進入；孩子畫面移除台幣金額（NT 估值僅家長可見）；商店裝備 43→58、真實獎勵 15→25。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [11, 12, 13],
+      "acceptance_criteria": [
+        "桌面（≥1024px）採左側欄主導覽 + 寬版內容區（max-w-5xl/6xl）；行動裝置維持底部導覽直式佈局",
+        "視窗頂部列常駐帳號（點擊登出/切換）與家長登入；切換帳號不再需要從家長功能進入",
+        "孩子畫面不顯示任何台幣金額；本月已核准真實獎勵 NT$ 僅家長模式可見（= 家長核准的兌換申請 estimatedTwd 總和）",
+        "商店虛擬道具擴充至 58 項、真實獎勵擴充至 25 項",
+        "桌面 exe 重新打包並啟動成功；smoke 75/75、desktop-save 4/4、accounts 10/10"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 新增固定頂部列（帳號切換/家長登入）與桌面左側欄導覽 + 寬版內容（CSS @media ≥1024px）；renderTop 同步頂部列；孩子狀態頁第三格由 NT$ 改為『本月已兌換獎勵』次數（台幣僅家長頁）；SHOP_ITEMS 加 15 件(共58)、DEFAULT_REWARDS 加 10 個(共25)；smoke/desktop/accounts 全綠，exe 1080p 寬版啟動成功。" }
       ]
     }
   ]

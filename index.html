@@ -224,6 +224,32 @@
   .inp-mini{ background:rgba(8,18,38,.9); border:1px solid #2c4a72; border-radius:3px; color:var(--sys-text);
     padding:2px 4px; outline:none; font-weight:700; font-size:10px; }
   ::-webkit-scrollbar{ width:6px; height:6px; } ::-webkit-scrollbar-thumb{ background:#1c3a60; border-radius:3px; }
+
+  /* ═══ 視窗頂部列（帳號 / 標題 / 家長）═══ */
+  .topbar{ position:fixed; top:0; left:0; right:0; height:52px; z-index:46;
+    display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 12px;
+    background:rgba(4,9,20,.97); border-bottom:1px solid rgba(0,210,255,.35); box-shadow:0 4px 20px rgba(0,210,255,.12); }
+  .topbar .tb-title{ font-weight:900; letter-spacing:1px; color:#cfe8ff; font-size:16px; text-shadow:0 0 10px rgba(0,210,255,.5); white-space:nowrap; }
+  .tb-btn{ display:flex; align-items:center; gap:6px; padding:6px 12px; border-radius:8px; cursor:pointer;
+    border:1px solid rgba(0,210,255,.45); background:rgba(0,210,255,.08); color:var(--sys-text); font-weight:700; font-size:13px; }
+  .tb-btn:hover{ background:rgba(0,210,255,.20); }
+  .tb-btn .tb-name{ max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .tb-btn .tb-sub{ font-size:11px; color:var(--sys-dim); }
+
+  /* ═══ 主導覽：行動=底部列；桌面(≥1024)=左側欄 ═══ */
+  .app-nav{ position:fixed; bottom:0; left:0; right:0; z-index:40;
+    background:rgba(4,9,20,.96); border-top:1px solid rgba(0,210,255,.35); box-shadow:0 -4px 20px rgba(0,210,255,.12); }
+  .app-nav .nav-inner{ display:flex; justify-content:space-around; max-width:28rem; margin:0 auto; }
+  .app-content{ padding-top:60px; padding-bottom:86px; }
+  @media (min-width:1024px){
+    .app-nav{ top:52px; right:auto; bottom:0; width:208px; border-top:none;
+      border-right:1px solid rgba(0,210,255,.35); box-shadow:4px 0 22px rgba(0,210,255,.10); }
+    .app-nav .nav-inner{ flex-direction:column; justify-content:flex-start; gap:6px; max-width:none; height:100%; padding:16px 12px; }
+    .app-nav .nav-btn{ flex:none; display:flex; flex-direction:row; align-items:center; gap:14px; text-align:left; padding:13px 16px; border-radius:10px; }
+    .app-nav .nav-btn > div:first-child{ font-size:22px; }
+    .app-nav .nav-btn > div:last-child{ font-size:14px; }
+    .app-content{ padding-top:66px; padding-bottom:28px; padding-left:228px; }
+  }
 </style>
 </head>
 <body>
@@ -286,7 +312,18 @@
 
 <!-- ════════ 主遊戲 ════════ -->
 <div id="game" class="hidden">
-  <div class="max-w-md mx-auto pb-24 lg:max-w-3xl px-3 pt-3 relative z-10">
+
+  <header class="topbar">
+    <button id="tb-account" class="tb-btn" onclick="switchAccount()" style="display:none;">
+      <span id="tb-account-ava">👤</span>
+      <span id="tb-account-name" class="tb-name"></span>
+      <span class="tb-sub">⇄ 切換</span>
+    </button>
+    <div class="tb-title">⚔️ KidQuest</div>
+    <button id="tb-parent" class="tb-btn" onclick="tryParent()">🔒 家長</button>
+  </header>
+
+  <div class="app-content max-w-md mx-auto lg:max-w-5xl xl:max-w-6xl px-3 relative z-10">
 
     <div class="flex justify-between items-center mb-3 text-sm font-bold">
       <div class="sys-win px-3 py-1.5 num text-base" style="color:var(--sys-gold);">🪙 <span id="top-coins">0</span></div>
@@ -374,7 +411,7 @@
         <button class="tab-btn flex-1 py-2 text-sm" data-ttab="weekly" onclick="setTaskTab('weekly')">A/S 挑戰</button>
         <button class="tab-btn flex-1 py-2 text-sm" data-ttab="all" onclick="setTaskTab('all')">全部</button>
       </div>
-      <div id="task-list" class="grid gap-2.5 mb-4"></div>
+      <div id="task-list" class="grid gap-2.5 mb-4 lg:grid-cols-2"></div>
     </div>
 
     <!-- 3. 傳送門地圖 -->
@@ -424,7 +461,7 @@
         <button class="tab-btn flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')">🎁 真實獎勵</button>
       </div>
       <div class="flex gap-1.5 mb-3 flex-wrap" id="shop-filter-row"></div>
-      <div id="shop-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4"></div>
+      <div id="shop-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
     </div>
 
     <!-- 6. 背包 -->
@@ -437,7 +474,7 @@
     <!-- 7. 成就 -->
     <div id="screen-achievements" class="screen">
       <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>成就紀錄<span class="ml-auto text-xs num" id="ach-count"></span></div></div>
-      <div id="ach-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4"></div>
+      <div id="ach-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
     </div>
 
     <!-- 8. 家長後台 -->
@@ -531,8 +568,8 @@
   </div>
 
   <!-- 底部導覽 -->
-  <nav class="fixed bottom-0 left-0 right-0 z-40" style="background:rgba(4,9,20,.96); border-top:1px solid rgba(0,210,255,.35); box-shadow:0 -4px 20px rgba(0,210,255,.12);">
-    <div class="max-w-md mx-auto lg:max-w-3xl flex justify-around">
+  <nav class="app-nav">
+    <div class="nav-inner">
       <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="status" onclick="goScreen('status')"><div class="text-xl">👤</div><div class="text-[11px] font-bold">狀態</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="map" onclick="goScreen('map')"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">地圖</div></button>
@@ -970,6 +1007,22 @@ const SHOP_ITEMS = [
   /* 徽記 */
   { id:'s20', name:'勝利徽記',     emoji:'🏵️', type:'emote',     cost:150,  rarity:'common' },
   { id:'s21', name:'王者徽記',     emoji:'♠️', type:'emote',     cost:150,  rarity:'common' },
+  /* ── 擴充裝備 ── */
+  { id:'x1',  name:'流星護目鏡',   emoji:'🥽', type:'hat',       cost:180,  rarity:'common' },
+  { id:'x2',  name:'蒼穹龍角盔',   emoji:'🐲', type:'hat',       cost:2800, rarity:'legendary' },
+  { id:'x3',  name:'疾風輕甲',     emoji:'🧥', type:'outfit',    cost:520,  rarity:'rare' },
+  { id:'x4',  name:'熾炎戰袍',     emoji:'🔥', type:'outfit',    cost:1300, rarity:'epic' },
+  { id:'x5',  name:'青銅匕首',     emoji:'🔪', type:'weapon',    cost:180,  rarity:'common' },
+  { id:'x6',  name:'雙生短弓',     emoji:'🏹', type:'weapon',    cost:560,  rarity:'rare' },
+  { id:'x7',  name:'破曉聖劍',     emoji:'🗡️', type:'weapon',    cost:3000, rarity:'legendary' },
+  { id:'x8',  name:'敏捷之鈴',     emoji:'🔔', type:'accessory', cost:500,  rarity:'rare' },
+  { id:'x9',  name:'賢者懷錶',     emoji:'⏱️', type:'accessory', cost:2700, rarity:'legendary' },
+  { id:'x10', name:'烈焰狐火',     emoji:'🦊', type:'pet',       cost:1300, rarity:'epic' },
+  { id:'x11', name:'極光鳳凰',     emoji:'🦅', type:'pet',       cost:3500, rarity:'legendary' },
+  { id:'x12', name:'稱號：晨光行者',   emoji:'🌄', type:'title', cost:450,  rarity:'rare' },
+  { id:'x13', name:'稱號：傳說締造者', emoji:'🏆', type:'title', cost:2600, rarity:'legendary' },
+  { id:'x14', name:'星塵徽記',     emoji:'✨', type:'emote',     cost:150,  rarity:'common' },
+  { id:'x15', name:'王冠徽記',     emoji:'👑', type:'emote',     cost:150,  rarity:'common' },
 ];
 
 /* 真實獎勵：以台灣家庭預算定價，cost = estimatedTwd × ECONOMY.coinsPerTwd。
@@ -994,6 +1047,17 @@ const DEFAULT_REWARDS = [
   RWD('r13', '親子約會 1 小時',         '☕', 300, 'large'),
   RWD('r14', '選一次週末家庭活動',     '🚗', 500, 'large'),
   RWD('r15', '神秘寶箱獎勵',           '🎁', 600, 'large'),
+  /* ── 擴充真實獎勵 ── */
+  RWD('r16', '貼紙 / 小獎勵一份',       '🌟', 20,  'small'),
+  RWD('r17', '多 15 分鐘遊戲時間',     '🎮', 35,  'small'),
+  RWD('r18', '選一個小點心',           '🍩', 45,  'small'),
+  RWD('r19', '週末晚起 30 分鐘',       '😴', 40,  'small'),
+  RWD('r20', '和朋友視訊 30 分鐘',     '📞', 60,  'mid'),
+  RWD('r21', '選一次外送餐點',         '🍔', 150, 'mid'),
+  RWD('r22', '買一個小玩具',           '🧩', 180, 'mid'),
+  RWD('r23', '家庭桌遊之夜',           '🎲', 120, 'mid'),
+  RWD('r24', '去一次圖書館',           '📖', 100, 'mid'),
+  RWD('r25', '一日小旅行',             '🚆', 700, 'large'),
 ];
 
 /* ═══════════════════ 技能樹 ═══════════════════ */
@@ -1370,6 +1434,19 @@ function renderTop(){
   document.getElementById('top-coins').textContent = state.player.coins;
   document.getElementById('top-streak').textContent = state.player.streak;
   document.getElementById('top-level').textContent = state.player.level;
+  // 頂部列：帳號（有帳號才顯示）＋ 家長
+  const c = accountsLoad();
+  const accBtn = document.getElementById('tb-account');
+  if(accBtn){
+    if(c.accounts.length>0){
+      const a = c.accounts.find(x=>x.id===c.activeId);
+      accBtn.style.display = '';
+      document.getElementById('tb-account-ava').textContent = a ? avatarFor(a) : '👤';
+      document.getElementById('tb-account-name').textContent = a ? a.name : '';
+    }else accBtn.style.display = 'none';
+  }
+  const pBtn = document.getElementById('tb-parent');
+  if(pBtn) pBtn.textContent = parentUnlocked ? '🔓 家長中' : '🔒 家長';
 }
 
 /* ═══════════════════ 覺醒引導 ═══════════════════ */
@@ -1457,13 +1534,14 @@ function renderStatus(){
   document.getElementById('status-dayprog').style.width = (daily.length?done/daily.length*100:0)+'%';
   document.getElementById('status-daytext').textContent = `已完成 ${done} / ${daily.length}${done===daily.length&&daily.length?' — 每日任務全數攻略完成。':''}`;
 
-  // 金幣與獎勵概況：今日 / 本週金幣、本月已核准真實獎勵估值
+  // 金幣與獎勵概況（孩子畫面只顯示金幣與兌換次數，不顯示台幣金額）
   const today = todayStr(), wk = weekKey();
   const todayCoins = state.history.filter(h=>h.date===today).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
   const weekCoins = state.history.filter(h=>h.date>=wk).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
+  const monthRewards = (state.rewardRequests||[]).filter(r=>r.status==='approved' && (r.approvedDate||r.date||'').slice(0,7)===monthKey()).length;
   const ecoBox = (v,l,c)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-lg font-bold" style="color:${c};">${v}</div><div class="text-[10px] font-bold" style="color:var(--sys-dim);">${l}</div></div>`;
   document.getElementById('status-economy').innerHTML =
-    ecoBox('🪙'+todayCoins,'今日金幣','#ffd25c') + ecoBox('🪙'+weekCoins,'本週金幣','#5cb8ff') + ecoBox('NT$'+monthlyApprovedTwd(),'本月已核准獎勵','#5cffb8');
+    ecoBox('🪙'+todayCoins,'今日金幣','#ffd25c') + ecoBox('🪙'+weekCoins,'本週金幣','#5cb8ff') + ecoBox('🎁'+monthRewards,'本月已兌換獎勵','#5cffb8');
 }
 function renderEquipSummary(){
   const slots = ['hat','outfit','weapon','accessory','pet','title','emote'];

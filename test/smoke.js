@@ -135,11 +135,11 @@ assert(state.rewardRequests.find(r=>r.id===rej.id).status==='rejected', '退回 
 
 /* 9. 商店篩選 */
 setShopFilter('weapon'); renderShop();
-assert(state.shop.filter(s=>s.type==='weapon').length===6, '武器篩選：目錄 6 把武器');
+assert(state.shop.filter(s=>s.type==='weapon').length===9, '武器篩選：目錄 9 把武器');
 setShopFilter('title');
-assert(state.shop.filter(s=>s.type==='title').length===7, '稱號篩選：目錄 7 個稱號');
+assert(state.shop.filter(s=>s.type==='title').length===9, '稱號篩選：目錄 9 個稱號');
 setShopFilter('all');
-assert(state.shop.length===43, '商店目錄共 43 項（移除保護券後）');
+assert(state.shop.length===58, '商店目錄共 58 項（含擴充裝備）');
 
 /* 10. 能力值 / 技能樹不壞 */
 awardXP(1000);
@@ -235,7 +235,7 @@ assert(state.version===4, 'v2 → v4 遷移：版本升級');
 assert(state.player.name==='老玩家' && state.player.level===9 && state.player.coins===333, '等級 / 金幣保留');
 assert(state.player.statPoints===6 && state.player.skillPoints===3 && state.player.skills.includes('g1'), '能力點 / 技能點 / 已學技能保留');
 assert(state.parentConfig.pin==='9999', '家長 PIN 保留');
-assert(state.parentConfig.customRewards.length===16, '真實獎勵 = 15 預設 + 1 自訂（實際 '+state.parentConfig.customRewards.length+'）');
+assert(state.parentConfig.customRewards.length===26, '真實獎勵 = 25 預設 + 1 自訂（實際 '+state.parentConfig.customRewards.length+'）');
 assert(state.parentConfig.customRewards.some(r=>r.name==='去動物園'), '自訂真實獎勵保留');
 assert(state.taskPool.some(t=>t.id==='xcustom1' && t.custom), '自訂任務移入任務池');
 assert(state.tasks.some(t=>t.id==='t7' && t.status==='pending'), '待審核任務保留為實例');
