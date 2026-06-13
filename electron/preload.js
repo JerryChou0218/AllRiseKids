@@ -15,20 +15,31 @@ function saveDir(){
   return process.cwd();
 }
 
-const SAVE_FILE = path.join(saveDir(), 'kidquest-save.json');
+const DIR = saveDir();
+// 主存檔沿用既有檔名；帳號清單另存一檔；其餘 key 以 key 名成檔。
+const FILE_NAMES = {
+  kidquest_data: 'kidquest-save.json',
+  kidquest_accounts: 'kidquest-accounts.json',
+};
+function fileFor(key){
+  const name = FILE_NAMES[key] || (String(key).replace(/[^a-z0-9_\-]/gi, '_') + '.json');
+  return path.join(DIR, name);
+}
 
 contextBridge.exposeInMainWorld('kqStore', {
-  read(){
-    try { return fs.existsSync(SAVE_FILE) ? fs.readFileSync(SAVE_FILE, 'utf8') : null; }
+  read(key){
+    const f = fileFor(key);
+    try { return fs.existsSync(f) ? fs.readFileSync(f, 'utf8') : null; }
     catch (e) { return null; }
   },
-  write(str){
-    try { fs.writeFileSync(SAVE_FILE, str, 'utf8'); }
+  write(key, str){
+    try { fs.writeFileSync(fileFor(key), str, 'utf8'); }
     catch (e) { /* 唯讀媒體等情況靜默失敗，避免中斷遊戲 */ }
   },
-  remove(){
-    try { if (fs.existsSync(SAVE_FILE)) fs.unlinkSync(SAVE_FILE); }
+  remove(key){
+    const f = fileFor(key);
+    try { if (fs.existsSync(f)) fs.unlinkSync(f); }
     catch (e) {}
   },
-  path(){ return SAVE_FILE; },
+  path(key){ return fileFor(key); },
 });

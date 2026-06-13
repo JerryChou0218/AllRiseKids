@@ -214,6 +214,48 @@
       "history": [
         { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: Electron 桌面外殼 + 檔案式存檔橋接（preload window.kqStore）。已打包 dist/KidQuest-win32-x64/KidQuest.exe 並實機啟動成功（4 進程）；新增 test/desktop-save.test.js 驗證存檔寫入資料夾並於『搬到另一資料夾』後接續（4/4）；smoke 維持 65/65。註：桌面版樣式仍走 CDN，完全離線需在地化資源（可另立里程碑）。" }
       ]
+    },
+    {
+      "id": 11,
+      "title": "本地多帳號登入／登出／切換（密碼）",
+      "spec_file": "milestones/m11-local-accounts.md",
+      "spec_summary": "本機多帳號系統：每個帳號各自進度、可設密碼，啟動顯示登入閘門，遊戲內可登出與切換帳號。全部存本地（kidquest-accounts.json + 各帳號存檔），不影響既有單存檔與測試。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [10],
+      "human_feedback": "暫緩：使用者改優先做經濟系統重整（M12）。已完成可攜的『帶 key 存檔橋接』地基（index.html kqStorage + preload 鍵控檔案），登入 UI 待續。",
+      "acceptance_criteria": [
+        "啟動時若已有帳號則顯示登入畫面，可選帳號並用密碼登入",
+        "可建立多個帳號，各帳號進度互相獨立",
+        "遊戲內可登出並切換到另一帳號，進度不混淆",
+        "可設定／變更帳號密碼；空密碼帳號可直接登入",
+        "無帳號時沿用原本流程；node test/smoke.js 維持綠燈"
+      ],
+      "history": []
+    },
+    {
+      "id": 12,
+      "title": "經濟系統重整（金錢／真實獎勵換算／RPG 平衡）",
+      "spec_file": "milestones/m12-economy-overhaul.md",
+      "spec_summary": "集中 ECONOMY 設定；真實獎勵以台幣家庭預算定價（5🪙≈NT$1）並改為申請→家長核准/退回退款；虛擬道具改 RPG 稀有度定價；重調 DIFFS 與升級曲線；連續加成拆 EXP/金幣兩套；完全移除連續紀錄保護券。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [3, 4],
+      "acceptance_criteria": [
+        "新增 ECONOMY 設定；DIFFS 改 E12/8、C28/18、B60/35、S140/100；每日 3E3C2B 基礎約 148 金幣",
+        "連續加成拆開：EXP +10%/天（上限+100%）、金幣 +5%/天（上限+50%）；今日全完成 +25 金幣 +20% EXP",
+        "真實獎勵 estimatedTwd/cost=twd×5/tier；兌換為 requested→approved/rejected（退回退還金幣）；家長見台幣估值與月預算提醒，孩子只見金幣與約需天數",
+        "虛擬道具改 RPG 稀有度定價（common/rare/epic/legendary），不顯示台幣；升級曲線改 xpNeed(level)",
+        "完全移除連續紀錄保護券（商品/邏輯/成就/UI/測試）；smoke 69/69 + 桌面存檔測試通過"
+      ],
+      "human_feedback": null,
+      "history": [
+        { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 全面重整經濟（ECONOMY 設定、DIFFS、xpNeed 曲線、拆分連續加成、真實獎勵申請/核准/退款流程、RPG 商店定價、狀態頁與家長頁經濟面板），並徹底移除保護券。新增遷移 v3→v4。smoke 69/69、desktop-save 4/4 通過。" }
+      ]
     }
   ]
 }

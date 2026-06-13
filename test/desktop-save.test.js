@@ -11,14 +11,15 @@ const path = require('path');
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const code = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
-/* 模擬 Electron preload 的檔案存檔後端（與 electron/preload.js 同邏輯） */
+/* 模擬 Electron preload 的「帶 key」檔案存檔後端（與 electron/preload.js 同邏輯） */
 function makeFileStore(dir){
-  const FILE = path.join(dir, 'kidquest-save.json');
+  const NAMES = { kidquest_data:'kidquest-save.json', kidquest_accounts:'kidquest-accounts.json' };
+  const fileFor = key => path.join(dir, NAMES[key] || (String(key).replace(/[^a-z0-9_\-]/gi,'_')+'.json'));
   return {
-    read(){ try { return fs.existsSync(FILE) ? fs.readFileSync(FILE,'utf8') : null; } catch(e){ return null; } },
-    write(str){ fs.writeFileSync(FILE, str, 'utf8'); },
-    remove(){ if (fs.existsSync(FILE)) fs.unlinkSync(FILE); },
-    file: FILE,
+    read(key){ const f=fileFor(key); try { return fs.existsSync(f) ? fs.readFileSync(f,'utf8') : null; } catch(e){ return null; } },
+    write(key,str){ fs.writeFileSync(fileFor(key), str, 'utf8'); },
+    remove(key){ const f=fileFor(key); if (fs.existsSync(f)) fs.unlinkSync(f); },
+    file: fileFor('kidquest_data'),
   };
 }
 

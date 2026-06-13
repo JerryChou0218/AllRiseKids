@@ -313,12 +313,17 @@
         <button onclick="tryParent()" class="btn-dark py-3 text-sm">🔒 家長</button>
       </div>
 
-      <div class="sys-win">
+      <div class="sys-win mb-3">
         <div class="sys-head"><span class="sys-i">i</span>每日任務進度</div>
         <div class="p-4">
           <div class="bar-track h-3"><div class="stat-fill text-emerald-400" id="status-dayprog" style="width:0%; background:linear-gradient(90deg,#0d9466,#34d399);"></div></div>
           <p id="status-daytext" class="text-xs mt-2 font-bold" style="color:var(--sys-dim);"></p>
         </div>
+      </div>
+
+      <div class="sys-win">
+        <div class="sys-head"><span class="sys-i">i</span>金幣與獎勵概況</div>
+        <div class="p-4 grid grid-cols-3 gap-2 text-center" id="status-economy"></div>
       </div>
     </div>
 
@@ -423,9 +428,14 @@
         <div class="p-3 grid gap-2" id="pending-list"></div>
       </div>
 
+      <div class="sys-win gold-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">!</span>待處理真實獎勵申請 <span id="rewardreq-count" class="text-xs text-red-300 num"></span></div>
+        <div class="p-3 grid gap-2" id="parent-rewardreqs"></div>
+      </div>
+
       <div class="sys-win mb-3">
-        <div class="sys-head text-sm"><span class="sys-i">i</span>連續紀錄保護</div>
-        <div class="p-3" id="parent-protect"></div>
+        <div class="sys-head text-sm"><span class="sys-i">i</span>經濟摘要</div>
+        <div class="p-3" id="parent-economy"></div>
       </div>
 
       <div class="sys-win mb-3">
@@ -658,7 +668,7 @@
       <div class="lv-arise gold-arise text-sm mb-2">DAILY CLEAR</div>
       <div class="text-4xl font-black text-white mb-2" style="text-shadow:0 0 20px rgba(245,197,66,.9);">今日攻略完成！</div>
       <div class="text-sm font-bold mb-1" style="color:var(--sys-dim);">全部每日任務攻略成功</div>
-      <div class="num text-3xl font-bold my-3" style="color:var(--sys-gold); text-shadow:0 0 20px rgba(245,197,66,.9);">獎勵金幣 +20 🪙</div>
+      <div class="num text-3xl font-bold my-3" style="color:var(--sys-gold); text-shadow:0 0 20px rgba(245,197,66,.9);">獎勵金幣 +25 🪙　EXP +20%</div>
       <div class="text-sm font-bold text-orange-300 mb-5">🔥 連續紀錄 <span class="num" id="dayclear-streak">1</span> 天</div>
       <button onclick="closeModal('dayclear-overlay')" class="btn-gold w-full py-3 text-lg">確 認</button>
     </div>
@@ -677,8 +687,20 @@
 'use strict';
 /* ═══════════════════ 常數 ═══════════════════ */
 const STORAGE_KEY = 'kidquest_data';
-const VERSION = 3;
-const ALL_DONE_BONUS = 20;
+const VERSION = 4;
+
+/* ═══════════════════ 經濟設定（集中管理）═══════════════════ */
+const ECONOMY = {
+  coinsPerTwd: 5,                 // 僅用於「真實獎勵」的家庭預算換算（5 金幣 ≈ NT$1）
+  dailyTargetCoins: 150,
+  weeklyTargetCoins: 1000,
+  monthlyRealRewardBudgetTwd: 900,
+  maxCoinStreakBonusPct: 50,      // 金幣連續加成上限
+  maxXpStreakBonusPct: 100,       // EXP 連續加成上限
+  realRewardPendingApproval: true,
+};
+const ALL_DONE_BONUS = 25;        // 今日全部每日任務完成的額外金幣
+const ALL_DONE_XP_BONUS_PCT = 20; // 今日全部完成的額外 EXP（佔當日任務 EXP 的 %）
 
 const CATS = {
   homework: { name:'作業',     emoji:'📚', stat:'int' },
@@ -698,10 +720,10 @@ const STATS = {
   sen: { name:'感知', desc:'商店折扣 +0.5% / 點（上限25%）', color:'#c98aff' },
 };
 const DIFFS = {
-  easy:   { rank:'E', name:'E級', xp:10,  coins:4,  statGain:1, color:'#7fb4e8', beam:'linear-gradient(to top,#2e7cd6,rgba(120,190,255,0))', base:'radial-gradient(ellipse,#2e7cd6aa,transparent 70%)' },
-  medium: { rank:'C', name:'C級', xp:25,  coins:10, statGain:2, color:'#00d2ff', beam:'linear-gradient(to top,#00b8e0,rgba(0,210,255,0))',  base:'radial-gradient(ellipse,#00b8e0aa,transparent 70%)' },
-  hard:   { rank:'B', name:'B級', xp:50,  coins:18, statGain:3, color:'#b06bff', beam:'linear-gradient(to top,#8b3df0,rgba(176,107,255,0))', base:'radial-gradient(ellipse,#8b3df0aa,transparent 70%)' },
-  epic:   { rank:'S', name:'S級', xp:100, coins:50, statGain:4, color:'#ffd24a', beam:'linear-gradient(to top,#d24aff,rgba(255,120,255,0))', base:'radial-gradient(ellipse,#d24affaa,transparent 70%)' },
+  easy:   { rank:'E', name:'E級', xp:12,  coins:8,   statGain:1, color:'#7fb4e8', beam:'linear-gradient(to top,#2e7cd6,rgba(120,190,255,0))', base:'radial-gradient(ellipse,#2e7cd6aa,transparent 70%)' },
+  medium: { rank:'C', name:'C級', xp:28,  coins:18,  statGain:2, color:'#00d2ff', beam:'linear-gradient(to top,#00b8e0,rgba(0,210,255,0))',  base:'radial-gradient(ellipse,#00b8e0aa,transparent 70%)' },
+  hard:   { rank:'B', name:'B級', xp:60,  coins:35,  statGain:3, color:'#b06bff', beam:'linear-gradient(to top,#8b3df0,rgba(176,107,255,0))', base:'radial-gradient(ellipse,#8b3df0aa,transparent 70%)' },
+  epic:   { rank:'S', name:'S級', xp:140, coins:100, statGain:4, color:'#ffd24a', beam:'linear-gradient(to top,#d24aff,rgba(255,120,255,0))', base:'radial-gradient(ellipse,#d24affaa,transparent 70%)' },
 };
 const CLASSES = {
   mage:     { name:'魔法師',   emoji:'🔮', sprite:'🧙', bonusCat:'homework', desc:'作業任務 經驗值 +50%' },
@@ -779,77 +801,83 @@ const TASK_POOL = [
 ];
 
 /* ═══════════════════ 商店目錄 ═══════════════════ */
+/* RPG 定價（不套用台幣換算）：common 120–250 / rare 350–700 / epic 900–1600 / legendary 2200–4000。
+   以每日 ~150 金幣估：common 約 1–2 天、rare 約 3–5 天、epic 約 1–2 週、legendary 約 3–5 週。 */
 const SHOP_ITEMS = [
   /* 頭部 */
-  { id:'s1',  name:'獵人面罩',     emoji:'🎭', type:'hat',       cost:100, rarity:'common' },
-  { id:'s2',  name:'闇影兜帽',     emoji:'🥷', type:'hat',       cost:200, rarity:'rare' },
-  { id:'s3',  name:'君王之冠',     emoji:'👑', type:'hat',       cost:500, rarity:'legendary' },
-  { id:'n1',  name:'新手獵人耳機', emoji:'🎧', type:'hat',       cost:120, rarity:'common',    set:'訓練' },
-  { id:'n2',  name:'影襲面具',     emoji:'🎭', type:'hat',       cost:240, rarity:'rare',      set:'闇影' },
-  { id:'n3',  name:'星界觀測冠',   emoji:'👑', type:'hat',       cost:420, rarity:'epic',      set:'星界' },
-  { id:'n4',  name:'深淵君主冠',   emoji:'👑', type:'hat',       cost:700, rarity:'legendary', set:'深淵' },
+  { id:'s1',  name:'獵人面罩',     emoji:'🎭', type:'hat',       cost:150,  rarity:'common' },
+  { id:'s2',  name:'闇影兜帽',     emoji:'🥷', type:'hat',       cost:420,  rarity:'rare' },
+  { id:'s3',  name:'君王之冠',     emoji:'👑', type:'hat',       cost:3000, rarity:'legendary' },
+  { id:'n1',  name:'新手獵人耳機', emoji:'🎧', type:'hat',       cost:160,  rarity:'common',    set:'訓練' },
+  { id:'n2',  name:'影襲面具',     emoji:'🎭', type:'hat',       cost:460,  rarity:'rare',      set:'闇影' },
+  { id:'n3',  name:'星界觀測冠',   emoji:'👑', type:'hat',       cost:1100, rarity:'epic',      set:'星界' },
+  { id:'n4',  name:'深淵君主冠',   emoji:'👑', type:'hat',       cost:2600, rarity:'legendary', set:'深淵' },
   /* 服裝 */
-  { id:'s4',  name:'獵人協會制服', emoji:'🦺', type:'outfit',    cost:150, rarity:'common' },
-  { id:'s5',  name:'強化戰鬥服',   emoji:'🥋', type:'outfit',    cost:250, rarity:'rare' },
-  { id:'s6',  name:'星辰披風',     emoji:'🌠', type:'outfit',    cost:400, rarity:'epic' },
-  { id:'n5',  name:'訓練者外套',   emoji:'🧥', type:'outfit',    cost:140, rarity:'common',    set:'訓練' },
-  { id:'n6',  name:'夜行戰鬥服',   emoji:'🥷', type:'outfit',    cost:280, rarity:'rare',      set:'闇影' },
-  { id:'n7',  name:'雷紋披風',     emoji:'🌩️', type:'outfit',    cost:480, rarity:'epic',      set:'雷霆' },
-  { id:'n8',  name:'黑曜戰甲',     emoji:'🛡️', type:'outfit',    cost:760, rarity:'legendary', set:'深淵' },
+  { id:'s4',  name:'獵人協會制服', emoji:'🦺', type:'outfit',    cost:180,  rarity:'common' },
+  { id:'s5',  name:'強化戰鬥服',   emoji:'🥋', type:'outfit',    cost:480,  rarity:'rare' },
+  { id:'s6',  name:'星辰披風',     emoji:'🌠', type:'outfit',    cost:1200, rarity:'epic' },
+  { id:'n5',  name:'訓練者外套',   emoji:'🧥', type:'outfit',    cost:170,  rarity:'common',    set:'訓練' },
+  { id:'n6',  name:'夜行戰鬥服',   emoji:'🥷', type:'outfit',    cost:520,  rarity:'rare',      set:'闇影' },
+  { id:'n7',  name:'雷紋披風',     emoji:'🌩️', type:'outfit',    cost:1300, rarity:'epic',      set:'雷霆' },
+  { id:'n8',  name:'黑曜戰甲',     emoji:'🛡️', type:'outfit',    cost:3200, rarity:'legendary', set:'深淵' },
   /* 武器 */
-  { id:'s7',  name:'鐵製短刀',     emoji:'🗡️', type:'weapon',    cost:150, rarity:'common' },
-  { id:'s8',  name:'魔力法杖',     emoji:'🪄', type:'weapon',    cost:250, rarity:'rare' },
-  { id:'n9',  name:'木製訓練劍',   emoji:'🗡️', type:'weapon',    cost:100, rarity:'common',    set:'訓練' },
-  { id:'n10', name:'破風短刃',     emoji:'⚔️', type:'weapon',    cost:260, rarity:'rare',      set:'闇影' },
-  { id:'n11', name:'雷霆魔劍',     emoji:'⚡', type:'weapon',    cost:520, rarity:'epic',      set:'雷霆' },
-  { id:'n12', name:'星隕大劍',     emoji:'☄️', type:'weapon',    cost:800, rarity:'legendary', set:'星界' },
+  { id:'s7',  name:'鐵製短刀',     emoji:'🗡️', type:'weapon',    cost:200,  rarity:'common' },
+  { id:'s8',  name:'魔力法杖',     emoji:'🪄', type:'weapon',    cost:500,  rarity:'rare' },
+  { id:'n9',  name:'木製訓練劍',   emoji:'🗡️', type:'weapon',    cost:140,  rarity:'common',    set:'訓練' },
+  { id:'n10', name:'破風短刃',     emoji:'⚔️', type:'weapon',    cost:540,  rarity:'rare',      set:'闇影' },
+  { id:'n11', name:'雷霆魔劍',     emoji:'⚡', type:'weapon',    cost:1250, rarity:'epic',      set:'雷霆' },
+  { id:'n12', name:'星隕大劍',     emoji:'☄️', type:'weapon',    cost:3400, rarity:'legendary', set:'星界' },
   /* 飾品 */
-  { id:'s10', name:'解析之鏡',     emoji:'👓', type:'accessory', cost:100, rarity:'common' },
-  { id:'s11', name:'獵人圍巾',     emoji:'🧣', type:'accessory', cost:100, rarity:'common' },
-  { id:'s12', name:'魔力戒指',     emoji:'💍', type:'accessory', cost:350, rarity:'epic' },
-  { id:'n13', name:'專注護符',     emoji:'🔷', type:'accessory', cost:120, rarity:'common',    set:'訓練' },
-  { id:'n14', name:'感知耳環',     emoji:'💠', type:'accessory', cost:260, rarity:'rare',      set:'闇影' },
-  { id:'n15', name:'獵人協會戒指', emoji:'💍', type:'accessory', cost:480, rarity:'epic' },
-  { id:'n16', name:'時空核心',     emoji:'🌀', type:'accessory', cost:780, rarity:'legendary', set:'星界' },
+  { id:'s10', name:'解析之鏡',     emoji:'👓', type:'accessory', cost:150,  rarity:'common' },
+  { id:'s11', name:'獵人圍巾',     emoji:'🧣', type:'accessory', cost:150,  rarity:'common' },
+  { id:'s12', name:'魔力戒指',     emoji:'💍', type:'accessory', cost:1000, rarity:'epic' },
+  { id:'n13', name:'專注護符',     emoji:'🔷', type:'accessory', cost:160,  rarity:'common',    set:'訓練' },
+  { id:'n14', name:'感知耳環',     emoji:'💠', type:'accessory', cost:480,  rarity:'rare',      set:'闇影' },
+  { id:'n15', name:'獵人協會戒指', emoji:'💍', type:'accessory', cost:1150, rarity:'epic' },
+  { id:'n16', name:'時空核心',     emoji:'🌀', type:'accessory', cost:2800, rarity:'legendary', set:'星界' },
   /* 隨從 */
-  { id:'s13', name:'影之獵犬',     emoji:'🐺', type:'pet',       cost:300, rarity:'rare' },
-  { id:'s14', name:'契約黑貓',     emoji:'🐈‍⬛', type:'pet',       cost:300, rarity:'rare' },
-  { id:'s15', name:'幻光麒麟',     emoji:'🦄', type:'pet',       cost:400, rarity:'epic' },
-  { id:'n17', name:'小影犬',       emoji:'🐺', type:'pet',       cost:300, rarity:'rare',      set:'闇影' },
-  { id:'n18', name:'書靈使魔',     emoji:'📘', type:'pet',       cost:320, rarity:'rare' },
-  { id:'n19', name:'雷雲幼龍',     emoji:'🐉', type:'pet',       cost:560, rarity:'epic',      set:'雷霆' },
-  { id:'n20', name:'古龍幼體',     emoji:'🐲', type:'pet',       cost:900, rarity:'legendary', set:'深淵' },
+  { id:'s13', name:'影之獵犬',     emoji:'🐺', type:'pet',       cost:560,  rarity:'rare' },
+  { id:'s14', name:'契約黑貓',     emoji:'🐈‍⬛', type:'pet',       cost:560,  rarity:'rare' },
+  { id:'s15', name:'幻光麒麟',     emoji:'🦄', type:'pet',       cost:1200, rarity:'epic' },
+  { id:'n17', name:'小影犬',       emoji:'🐺', type:'pet',       cost:540,  rarity:'rare',      set:'闇影' },
+  { id:'n18', name:'書靈使魔',     emoji:'📘', type:'pet',       cost:600,  rarity:'rare' },
+  { id:'n19', name:'雷雲幼龍',     emoji:'🐉', type:'pet',       cost:1400, rarity:'epic',      set:'雷霆' },
+  { id:'n20', name:'古龍幼體',     emoji:'🐲', type:'pet',       cost:3600, rarity:'legendary', set:'深淵' },
   /* 稱號 */
-  { id:'s17', name:'稱號：作業獵人',       emoji:'📜', type:'title', cost:150, rarity:'rare' },
-  { id:'s18', name:'稱號：清潔王者',       emoji:'📜', type:'title', cost:150, rarity:'rare' },
-  { id:'s19', name:'稱號：不滅鬥士',       emoji:'📜', type:'title', cost:150, rarity:'rare' },
-  { id:'n21', name:'稱號：黎明覺醒者',     emoji:'🌅', type:'title', cost:180, rarity:'rare' },
-  { id:'n22', name:'稱號：連續紀錄守護者', emoji:'🔥', type:'title', cost:360, rarity:'epic' },
-  { id:'n23', name:'稱號：S級攻略者',      emoji:'🏆', type:'title', cost:420, rarity:'epic' },
-  { id:'n24', name:'稱號：家庭公會王牌',   emoji:'👑', type:'title', cost:700, rarity:'legendary' },
+  { id:'s17', name:'稱號：作業獵人',     emoji:'📜', type:'title', cost:400,  rarity:'rare' },
+  { id:'s18', name:'稱號：清潔王者',     emoji:'📜', type:'title', cost:400,  rarity:'rare' },
+  { id:'s19', name:'稱號：不滅鬥士',     emoji:'📜', type:'title', cost:400,  rarity:'rare' },
+  { id:'n21', name:'稱號：黎明覺醒者',   emoji:'🌅', type:'title', cost:450,  rarity:'rare' },
+  { id:'n22', name:'稱號：連續紀錄霸者', emoji:'🔥', type:'title', cost:1000, rarity:'epic' },
+  { id:'n23', name:'稱號：S級攻略者',    emoji:'🏆', type:'title', cost:1100, rarity:'epic' },
+  { id:'n24', name:'稱號：家庭公會王牌', emoji:'👑', type:'title', cost:2600, rarity:'legendary' },
   /* 徽記 */
-  { id:'s20', name:'勝利徽記',     emoji:'🏵️', type:'emote',     cost:100, rarity:'common' },
-  { id:'s21', name:'王者徽記',     emoji:'♠️', type:'emote',     cost:100, rarity:'common' },
-  /* 特殊 */
-  { id:'sp1', name:'連續紀錄保護券', emoji:'🎟️', type:'consumable', cost:300, rarity:'epic' },
+  { id:'s20', name:'勝利徽記',     emoji:'🏵️', type:'emote',     cost:150,  rarity:'common' },
+  { id:'s21', name:'王者徽記',     emoji:'♠️', type:'emote',     cost:150,  rarity:'common' },
 ];
 
+/* 真實獎勵：以台灣家庭預算定價，cost = estimatedTwd × ECONOMY.coinsPerTwd。
+   孩子畫面只顯示金幣與約需天數；台幣估值主要給家長看。月度核准建議約 NT$700–1000。 */
+const RWD = (id,name,emoji,estimatedTwd,tier)=>({ id, name, emoji, estimatedTwd, cost:estimatedTwd*ECONOMY.coinsPerTwd, tier, status:'available' });
 const DEFAULT_REWARDS = [
-  { id:'r1',  name:'螢幕時間 +15 分鐘',       emoji:'📺', cost:60 },
-  { id:'r2',  name:'螢幕時間 +30 分鐘',       emoji:'📺', cost:100 },
-  { id:'r3',  name:'選今天晚餐',               emoji:'🍕', cost:140 },
-  { id:'r4',  name:'睡前故事加長 10 分鐘',     emoji:'📖', cost:80 },
-  { id:'r5',  name:'週末桌遊時間',             emoji:'🎲', cost:160 },
-  { id:'r6',  name:'和爸媽單獨約會 30 分鐘',   emoji:'☕', cost:180 },
-  { id:'r7',  name:'選一部家庭電影',           emoji:'🎬', cost:200 },
-  { id:'r8',  name:'公園或球場時間',           emoji:'🏀', cost:180 },
-  { id:'r9',  name:'小點心兌換券',             emoji:'🍪', cost:90 },
-  { id:'r10', name:'今天免一項小家事',         emoji:'🎫', cost:160 },
-  { id:'r11', name:'晚睡 15 分鐘',             emoji:'🌙', cost:120 },
-  { id:'r12', name:'買一本書補助',             emoji:'📚', cost:300 },
-  { id:'r13', name:'小文具補給',               emoji:'✏️', cost:220 },
-  { id:'r14', name:'選家庭活動',               emoji:'🚗', cost:350 },
-  { id:'r15', name:'神秘寶箱獎勵',             emoji:'🎁', cost:500 },
+  /* 小型（約 1–2 天）*/
+  RWD('r1',  '螢幕時間 +15 分鐘',     '📺', 30, 'small'),
+  RWD('r2',  '小點心兌換券',           '🍪', 40, 'small'),
+  RWD('r3',  '飲料兌換券',             '🧃', 35, 'small'),
+  RWD('r4',  '睡前故事加長 10 分鐘',   '📖', 30, 'small'),
+  RWD('r5',  '晚睡 10 分鐘',           '🌙', 40, 'small'),
+  /* 中型（約 3–7 天）*/
+  RWD('r6',  '螢幕時間 +30 分鐘',     '🎮', 70,  'mid'),
+  RWD('r7',  '自己選今天晚餐',         '🍕', 120, 'mid'),
+  RWD('r8',  '週末桌遊時間',           '🎲', 100, 'mid'),
+  RWD('r9',  '公園或球場時間',         '🏀', 120, 'mid'),
+  RWD('r10', '小文具補給',             '✏️', 150, 'mid'),
+  /* 大型（約 2–4 週）*/
+  RWD('r11', '家庭電影之夜',           '🎬', 250, 'large'),
+  RWD('r12', '買一本書補助',           '📚', 300, 'large'),
+  RWD('r13', '親子約會 1 小時',         '☕', 300, 'large'),
+  RWD('r14', '選一次週末家庭活動',     '🚗', 500, 'large'),
+  RWD('r15', '神秘寶箱獎勵',           '🎁', 600, 'large'),
 ];
 
 /* ═══════════════════ 技能樹 ═══════════════════ */
@@ -888,9 +916,9 @@ const ACHIEVEMENTS = [
   { id:'a2',  name:'黎明獵人',   emoji:'🌅', desc:'在早上 8 點前完成任務',   coins:30,  target:1,   val:s=>s.counters.earlyBird?1:0 },
   { id:'a3',  name:'淨化者',     emoji:'🫧', desc:'連續 7 天完成衛生任務',   coins:60,  target:7,   val:s=>s.counters.hygieneStreak },
   { id:'a4',  name:'魔導書蟲',   emoji:'📖', desc:'完成閱讀任務 10 次',      coins:50,  target:10,  val:s=>s.counters.readCount },
-  { id:'a5',  name:'鋼鐵意志',   emoji:'🛡️', desc:'保持 14 天連續紀錄（＋保護券×1）', coins:150, target:14, ticket:1, val:s=>s.counters.bestStreak },
+  { id:'a5',  name:'鋼鐵意志',   emoji:'🛡️', desc:'保持 14 天連續紀錄',       coins:200, target:14,  val:s=>s.counters.bestStreak },
   { id:'a6',  name:'三日修煉',   emoji:'🔥', desc:'保持 3 天連續紀錄',       coins:30,  target:3,   val:s=>s.counters.bestStreak },
-  { id:'a7',  name:'七日不滅',   emoji:'💫', desc:'保持 7 天連續紀錄（＋保護券×1）', coins:80, target:7, ticket:1, val:s=>s.counters.bestStreak },
+  { id:'a7',  name:'七日不滅',   emoji:'💫', desc:'保持 7 天連續紀錄',       coins:100, target:7,   val:s=>s.counters.bestStreak },
   { id:'a8',  name:'見習獵人',   emoji:'🌱', desc:'完成 10 個任務',          coins:30,  target:10,  val:s=>s.counters.total },
   { id:'a9',  name:'精英獵人',   emoji:'🗡️', desc:'完成 50 個任務',         coins:80,  target:50,  val:s=>s.counters.total },
   { id:'a10', name:'傳說獵人',   emoji:'🏅', desc:'完成 100 個任務',         coins:200, target:100, val:s=>s.counters.total },
@@ -931,14 +959,17 @@ function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return d.
 function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return d.toLocaleDateString('sv'); }
 function isWeekend(){ const day=new Date().getDay(); return day===0||day===6; }
 function uid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-function xpNeeded(level){ return level*100; }
+function xpNeeded(level){
+  if(level<=5) return 60 + level*25;
+  return Math.floor(80 + level*35 + Math.pow(level,1.7)*8);
+}
 
 function defaultData(){
   return {
     version: VERSION,
     player: { name:'', class:'', level:1, xp:0, coins:0,
       stats:{ str:0, agi:0, int:0, vit:0, sen:0 },
-      statPoints:0, skillPoints:0, skills:[], streakTickets:0,
+      statPoints:0, skillPoints:0, skills:[],
       streak:0, lastActiveDate:'', lastAllDoneDate:'' },
     taskPool: TASK_POOL.map(t=>({ ...t })),
     tasks: [],
@@ -946,10 +977,10 @@ function defaultData(){
     achievements: ACHIEVEMENTS.map(a=>({ id:a.id, unlocked:false })),
     shop: SHOP_ITEMS.map(s=>({ ...s })),
     parentConfig: { pin:'1234', customRewards: DEFAULT_REWARDS.map(r=>({ ...r })), dailyCount:8, ageGroup:'all' },
+    rewardRequests: [],
     history: [],
     counters: { total:0, readCount:0, hygieneStreak:0, hygieneLastDate:'', earlyBird:false,
       purchases:0, coinsEarned:0, epicDone:0, equippedOnce:false, bestStreak:0 },
-    brokenStreak: null,
     meta: { lastDay: todayStr(), lastWeek: weekKey() },
   };
 }
@@ -957,17 +988,20 @@ function defaultData(){
 /* 存檔後端：在 Electron 桌面版寫入 .exe 同層的存檔檔案（window.kqStore，由 preload 提供），
    其餘環境（純瀏覽器 / 測試）退回 localStorage。介面相同，遊戲邏輯無需感知差異。 */
 const kqStorage = {
-  read(){
-    if(typeof window!=='undefined' && window.kqStore) return window.kqStore.read();
-    return localStorage.getItem(STORAGE_KEY);
+  read(key){
+    key = key || STORAGE_KEY;
+    if(typeof window!=='undefined' && window.kqStore) return window.kqStore.read(key);
+    return localStorage.getItem(key);
   },
-  write(str){
-    if(typeof window!=='undefined' && window.kqStore){ window.kqStore.write(str); return; }
-    localStorage.setItem(STORAGE_KEY, str);
+  write(str, key){
+    key = key || STORAGE_KEY;
+    if(typeof window!=='undefined' && window.kqStore){ window.kqStore.write(key, str); return; }
+    localStorage.setItem(key, str);
   },
-  remove(){
-    if(typeof window!=='undefined' && window.kqStore){ window.kqStore.remove(); return; }
-    localStorage.removeItem(STORAGE_KEY);
+  remove(key){
+    key = key || STORAGE_KEY;
+    if(typeof window!=='undefined' && window.kqStore){ window.kqStore.remove(key); return; }
+    localStorage.removeItem(key);
   }
 };
 
@@ -997,7 +1031,20 @@ function load(){
 function migrate(data){
   if(!data.version) data = migrateV1toV2(data);
   if(data.version === 2) data = migrateV2toV3(data);
+  if(data.version === 3) data = migrateV3toV4(data);
   return data;
+}
+const DEFAULT_REWARD_IDS = new Set(DEFAULT_REWARDS.map(r=>r.id));
+function migrateV3toV4(old){
+  old.version = 4;
+  if(old.player) delete old.player.streakTickets;   // 移除連續紀錄保護券
+  delete old.brokenStreak;
+  const opc = old.parentConfig || (old.parentConfig = {});
+  const custom = (opc.customRewards||[]).filter(r=>!DEFAULT_REWARD_IDS.has(r.id))
+    .map(r=>({ ...r, estimatedTwd: r.estimatedTwd || Math.round((r.cost||0)/ECONOMY.coinsPerTwd), tier: r.tier||'custom', status: r.status||'available' }));
+  opc.customRewards = [ ...DEFAULT_REWARDS.map(r=>({ ...r })), ...custom ];
+  old.rewardRequests = old.rewardRequests || [];
+  return old;
 }
 function migrateV1toV2(old){
   const p = old.player||{}; const st = p.stats||{};
@@ -1014,8 +1061,8 @@ function migrateV2toV3(old){
   const d = defaultData();
   const op = old.player||{};
   d.player = { ...d.player, ...op,
-    stats:{ ...d.player.stats, ...(op.stats||{}) },
-    streakTickets: op.streakTickets||0 };
+    stats:{ ...d.player.stats, ...(op.stats||{}) } };
+  delete d.player.streakTickets;
   d.inventory = old.inventory||[];
   d.history = old.history||[];
   d.counters = { ...d.counters, ...(old.counters||{}) };
@@ -1025,7 +1072,8 @@ function migrateV2toV3(old){
   });
   const opc = old.parentConfig||{};
   d.parentConfig.pin = opc.pin||'1234';
-  const customRewards = (opc.customRewards||[]).filter(r=>!['r1','r2','r3'].includes(r.id));
+  const customRewards = (opc.customRewards||[]).filter(r=>!DEFAULT_REWARD_IDS.has(r.id))
+    .map(r=>({ ...r, estimatedTwd: r.estimatedTwd || Math.round((r.cost||0)/ECONOMY.coinsPerTwd), tier: r.tier||'custom', status: r.status||'available' }));
   d.parentConfig.customRewards = [ ...DEFAULT_REWARDS.map(r=>({ ...r })), ...customRewards ];
   (old.tasks||[]).forEach(t=>{
     const category = CATS[t.category] ? t.category : 'other';
@@ -1118,12 +1166,9 @@ function dailyReset(){
     state.meta.lastWeek = wk;
     pickWeeklyTasks();
   }
-  // 連續紀錄中斷（可用保護券由家長恢復）
+  // 連續紀錄中斷：漏掉一天即歸零（無保護券）
   if(state.player.lastAllDoneDate && state.player.lastAllDoneDate < yesterdayStr() && state.player.streak>0){
-    state.brokenStreak = { value: state.player.streak, date: today };
     state.player.streak = 0;
-  }else if(state.brokenStreak && state.brokenStreak.date !== today){
-    state.brokenStreak = null;
   }
   if(state.counters.hygieneLastDate && state.counters.hygieneLastDate < yesterdayStr()) state.counters.hygieneStreak = 0;
   pickDailyTasks();
@@ -1159,14 +1204,15 @@ function combatPower(){
 function shopDiscount(){ return Math.min(25, state.player.stats.sen*0.5 + activeEffects().discount); }
 function discounted(cost){ return Math.max(1, Math.round(cost * (1 - shopDiscount()/100))); }
 function dropChance(){ return Math.min(95, 60 + state.player.stats.agi*0.5 + activeEffects().drop); }
-function streakBonusPct(){ return Math.min(100, state.player.streak*10); }
+/* 連續紀錄加成拆開：EXP 每天 +10%（上限 +100%），金幣每天 +5%（上限 +50%），避免真實獎勵通膨過快 */
+function xpStreakBonusPct(){ return Math.min(ECONOMY.maxXpStreakBonusPct, state.player.streak*10); }
+function coinStreakBonusPct(){ return Math.min(ECONOMY.maxCoinStreakBonusPct, state.player.streak*5); }
 function classBonusApplies(task){ return (CLASSES[state.player.class]||{}).bonusCat === task.category; }
 function calcRewards(task){
   const d = DIFFS[task.difficulty];
   const eff = activeEffects();
-  const streakMult = 1 + streakBonusPct()/100;
-  let xpMult = streakMult * (classBonusApplies(task)?1.5:1) * (1 + (state.player.stats.int*1 + eff.xpAll)/100);
-  let coinMult = streakMult * (1 + (state.player.stats.vit*1 + eff.coinAll + (eff.coinCat[task.category]||0))/100);
+  let xpMult = (1 + xpStreakBonusPct()/100) * (classBonusApplies(task)?1.5:1) * (1 + (state.player.stats.int*1 + eff.xpAll)/100);
+  let coinMult = (1 + coinStreakBonusPct()/100) * (1 + (state.player.stats.vit*1 + eff.coinAll + (eff.coinCat[task.category]||0))/100);
   if(task.difficulty==='epic' && eff.sRankBonus){ xpMult *= 1+eff.sRankBonus/100; coinMult *= 1+eff.sRankBonus/100; }
   return { xp: Math.round(d.xp*xpMult), coins: Math.round(d.coins*coinMult) };
 }
@@ -1276,6 +1322,14 @@ function renderStatus(){
   const done = daily.filter(t=>t.status==='completed').length;
   document.getElementById('status-dayprog').style.width = (daily.length?done/daily.length*100:0)+'%';
   document.getElementById('status-daytext').textContent = `已完成 ${done} / ${daily.length}${done===daily.length&&daily.length?' — 每日任務全數攻略完成。':''}`;
+
+  // 金幣與獎勵概況：今日 / 本週金幣、本月已核准真實獎勵估值
+  const today = todayStr(), wk = weekKey();
+  const todayCoins = state.history.filter(h=>h.date===today).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
+  const weekCoins = state.history.filter(h=>h.date>=wk).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
+  const ecoBox = (v,l,c)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-lg font-bold" style="color:${c};">${v}</div><div class="text-[10px] font-bold" style="color:var(--sys-dim);">${l}</div></div>`;
+  document.getElementById('status-economy').innerHTML =
+    ecoBox('🪙'+todayCoins,'今日金幣','#ffd25c') + ecoBox('🪙'+weekCoins,'本週金幣','#5cb8ff') + ecoBox('NT$'+monthlyApprovedTwd(),'本月已核准獎勵','#5cffb8');
 }
 function renderEquipSummary(){
   const slots = ['hat','outfit','weapon','accessory','pet','title','emote'];
@@ -1297,7 +1351,7 @@ function renderEquipSummary(){
   }).join(' ');
   document.getElementById('status-equip').innerHTML = `
     <div class="grid grid-cols-2 gap-1.5 mb-2">${chips}</div>
-    <div class="text-xs font-bold mb-2">裝備戰鬥力 <span class="num" style="color:var(--sys-gold);">+${equipPower.toLocaleString()}</span>　🎟️ 保護券 <span class="num text-cyan-300">×${state.player.streakTickets||0}</span></div>
+    <div class="text-xs font-bold mb-2">裝備戰鬥力 <span class="num" style="color:var(--sys-gold);">+${equipPower.toLocaleString()}</span></div>
     <div class="flex flex-wrap gap-1.5 mb-1">${setLines}</div>
     <div class="text-[10px] font-bold" style="color:var(--sys-dim);">收集同套裝裝備，未來將開放套裝效果！</div>`;
 }
@@ -1471,7 +1525,7 @@ function openGate(id){
     </div>
     ${t.difficulty==='epic'?`<div class="text-xs font-bold text-fuchsia-300 mb-2">💎 S級任務有 ${Math.round(dropChance())}% 機率掉落裝備寶箱！</div>`:''}
     ${classBonusApplies(t)?`<div class="text-xs font-bold text-purple-300 mb-2">職業加成發動中：${CLASSES[state.player.class].name} EXP ×1.5</div>`:''}
-    ${streakBonusPct()?`<div class="text-xs font-bold text-orange-300 mb-2">🔥 連續加成 +${streakBonusPct()}%</div>`:''}
+    ${state.player.streak>0?`<div class="text-xs font-bold text-orange-300 mb-2">🔥 連續加成 EXP +${xpStreakBonusPct()}%・金幣 +${coinStreakBonusPct()}%</div>`:''}
     ${action}`;
   document.getElementById('gate-modal').classList.add('show');
 }
@@ -1575,7 +1629,11 @@ function approveTask(id){
       state.counters.bestStreak = Math.max(state.counters.bestStreak, state.player.streak);
       state.player.coins += ALL_DONE_BONUS;
       state.counters.coinsEarned += ALL_DONE_BONUS;
-      state.history.unshift({ date:today, kind:'bonus', name:'今日攻略完成獎勵', xpEarned:0, coinsEarned:ALL_DONE_BONUS });
+      // 今日攻略完成：額外 +25 金幣 + 當日任務 EXP 的 +20%
+      const todayTaskXp = state.history.filter(h=>h.kind==='task' && h.date===today).reduce((a,h)=>a+(h.xpEarned||0),0);
+      const bonusXp = Math.round(todayTaskXp * ALL_DONE_XP_BONUS_PCT/100);
+      if(bonusXp>0) awardXP(bonusXp);
+      state.history.unshift({ date:today, kind:'bonus', name:'今日攻略完成獎勵', xpEarned:bonusXp, coinsEarned:ALL_DONE_BONUS });
       showDayClear();
     }
   }
@@ -1628,9 +1686,8 @@ function checkAchievements(){
       rec.unlocked = true;
       state.player.coins += def.coins;
       state.counters.coinsEarned += def.coins;
-      if(def.ticket) state.player.streakTickets = (state.player.streakTickets||0) + def.ticket;
       state.history.unshift({ date:todayStr(), kind:'achievement', name:`解鎖成就：${def.name}`, xpEarned:0, coinsEarned:def.coins });
-      toast(`🏆 成就解鎖「${def.name}」 +${def.coins} 🪙${def.ticket?`、保護券 ×${def.ticket}`:''}`);
+      toast(`🏆 成就解鎖「${def.name}」 +${def.coins} 🪙`);
     }
   });
 }
@@ -1655,7 +1712,7 @@ function renderAchievements(){
 }
 
 /* ═══════════════════ 商店 ═══════════════════ */
-const SHOP_FILTERS = [ ['all','全部'],['hat','頭部'],['outfit','服裝'],['weapon','武器'],['accessory','飾品'],['pet','隨從'],['title','稱號'],['consumable','特殊'] ];
+const SHOP_FILTERS = [ ['all','全部'],['hat','頭部'],['outfit','服裝'],['weapon','武器'],['accessory','飾品'],['pet','隨從'],['title','稱號'],['emote','徽記'] ];
 function setShopTab(tab){
   shopTab = tab;
   document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('active', b.dataset.stab===tab));
@@ -1676,16 +1733,15 @@ function renderShop(){
     let items = state.shop;
     if(shopFilter!=='all') items = items.filter(s=>s.type===shopFilter);
     list.innerHTML = items.map(s=>{
-      const isConsumable = s.type==='consumable';
-      const owned = !isConsumable && state.inventory.some(i=>i.id===s.id);
+      const owned = state.inventory.some(i=>i.id===s.id);
       const price = discounted(s.cost);
+      const hasPower = !['title','emote'].includes(s.type);
       return `<div class="sys-win rar-${s.rarity} p-3 text-center" style="border-width:1px;">
         <span class="rar-tag text-[10px] font-black px-2 py-0.5 rounded">${RARITY[s.rarity]}</span>
         <div class="text-4xl my-2">${s.emoji}</div>
         <div class="font-black text-white text-xs leading-tight">${s.name}</div>
-        <div class="text-[10px] font-bold mb-1" style="color:var(--sys-dim);">${SLOT_NAMES[s.type]}${['title','emote','consumable'].includes(s.type)?'':'・戰鬥力+'+RAR_POWER[s.rarity]}</div>
+        <div class="text-[10px] font-bold mb-1" style="color:var(--sys-dim);">${SLOT_NAMES[s.type]}${hasPower?'・戰鬥力 +'+RAR_POWER[s.rarity]:''}</div>
         ${s.set?`<div class="chip mb-1.5">🧩 ${s.set}套裝</div>`:''}
-        ${isConsumable?`<div class="text-[10px] font-bold text-cyan-300 mb-1.5">持有 ×${state.player.streakTickets||0}・連續中斷時可抵消一次（需家長核可）</div>`:''}
         ${owned
           ? '<div class="py-1.5 rounded text-xs font-black" style="background:rgba(20,35,60,.8); color:var(--sys-dim);">已持有 ✔</div>'
           : `<button onclick="askBuy('${s.id}','virtual')" class="btn-sys w-full py-1.5 text-xs num ${state.player.coins>=price?'':'opacity-40'}">🪙 ${price}${price<s.cost?` <s class="opacity-50">${s.cost}</s>`:''}</button>`}
@@ -1694,13 +1750,16 @@ function renderShop(){
   }else{
     filterRow.innerHTML = '';
     const rewards = state.parentConfig.customRewards;
-    list.innerHTML = rewards.length ? rewards.map(r=>`
-      <div class="sys-win gold-win p-3 text-center">
+    list.innerHTML = rewards.length ? rewards.map(r=>{
+      const days = Math.max(1, Math.ceil(r.cost/ECONOMY.dailyTargetCoins));
+      return `<div class="sys-win gold-win p-3 text-center">
         <span class="text-[10px] font-black px-2 py-0.5 rounded" style="background:#a87b14; color:#fff3cf;">真實獎勵</span>
         <div class="text-4xl my-2">${r.emoji||'🎁'}</div>
-        <div class="font-black text-white text-xs leading-tight mb-2">${r.name}</div>
+        <div class="font-black text-white text-xs leading-tight mb-1">${r.name}</div>
+        <div class="text-[10px] font-bold mb-1.5" style="color:var(--sys-dim);">約需努力 ${days} 天・需家長核准</div>
         <button onclick="askBuy('${r.id}','real')" class="btn-gold w-full py-1.5 text-xs num ${state.player.coins>=r.cost?'':'opacity-40'}">🪙 ${r.cost}</button>
-      </div>`).join('')
+      </div>`;
+    }).join('')
       : `<div class="col-span-2 lg:col-span-4 text-center font-bold py-8" style="color:var(--sys-dim);">管理者尚未設定真實獎勵。</div>`;
   }
 }
@@ -1722,20 +1781,16 @@ document.getElementById('buy-confirm').onclick = function(){
   if(state.player.coins < price){ closeBuy(); return; }
   state.player.coins -= price;
   if(kind==='virtual'){
-    if(item.type==='consumable'){
-      state.player.streakTickets = (state.player.streakTickets||0) + 1;
-      state.counters.purchases++;
-      state.history.unshift({ date:todayStr(), kind:'buy', name:`購買：${item.name}`, xpEarned:0, coinsEarned:-price });
-      toast(`🎟️「${item.name}」入手！目前持有 ×${state.player.streakTickets}。連續中斷時請爸媽到管理者模式核可使用。`);
-    }else{
-      state.inventory.push({ id:item.id, name:item.name, emoji:item.emoji, type:item.type, rarity:item.rarity, equipped:false });
-      state.counters.purchases++;
-      state.history.unshift({ date:todayStr(), kind:'buy', name:`購買：${item.name}`, xpEarned:0, coinsEarned:-price });
-      toast(`「${item.name}」入手！到背包裝備，提升戰鬥力。`);
-    }
+    state.inventory.push({ id:item.id, name:item.name, emoji:item.emoji, type:item.type, rarity:item.rarity, equipped:false });
+    state.counters.purchases++;
+    state.history.unshift({ date:todayStr(), kind:'buy', name:`購買：${item.name}`, xpEarned:0, coinsEarned:-price });
+    toast(`「${item.name}」入手！到背包裝備，提升戰鬥力。`);
   }else{
-    state.history.unshift({ date:todayStr(), kind:'redeem', name:`兌換真實獎勵：${item.name}`, xpEarned:0, coinsEarned:-price });
-    toast(`兌換完成！拿著這則通知去找管理者（爸媽）領取「${item.name}」。`);
+    // 真實獎勵：建立兌換申請（金幣先扣住），等家長核准或退回（退回則退還金幣）
+    state.rewardRequests.unshift({ id:uid(), rewardId:item.id, name:item.name, emoji:item.emoji||'🎁',
+      estimatedTwd: item.estimatedTwd || Math.round(price/ECONOMY.coinsPerTwd), cost:price, status:'requested', date:todayStr() });
+    state.history.unshift({ date:todayStr(), kind:'redeem', name:`申請真實獎勵（待核准）：${item.name}`, xpEarned:0, coinsEarned:-price });
+    toast(`已送出兌換申請「${item.name}」，等爸媽在管理者模式核准後發放。`);
   }
   checkAchievements();
   save();
@@ -1832,19 +1887,31 @@ function renderParent(){
     </div>`;
   }).join('') : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">目前沒有待審核的任務。</div>`;
 
-  // 連續紀錄保護
-  const tickets = state.player.streakTickets||0;
-  let protectHtml = `<div class="text-xs font-bold" style="color:var(--sys-dim);">🎟️ 目前持有保護券：<span class="num text-cyan-300">×${tickets}</span>（商店可購買，部分成就也會贈送）</div>`;
-  if(state.brokenStreak){
-    protectHtml += `<div class="alert-line rounded px-3 py-2.5 text-xs font-bold mt-2">
-      ⚠ 偵測到連續紀錄中斷：原本 🔥${state.brokenStreak.value} 天已歸零。
-      ${tickets>0 ? '可使用 1 張保護券恢復。' : '沒有保護券可用。'}</div>
-      <div class="flex gap-2 mt-2">
-        ${tickets>0?`<button onclick="useProtection()" class="btn-gold flex-1 py-2 text-sm">🎟️ 同意使用保護券恢復</button>`:''}
-        <button onclick="dismissProtection()" class="btn-dark flex-1 py-2 text-sm">不使用，重新開始</button>
-      </div>`;
-  }
-  document.getElementById('parent-protect').innerHTML = protectHtml;
+  // 待處理真實獎勵申請
+  const reqs = (state.rewardRequests||[]).filter(r=>r.status==='requested');
+  document.getElementById('rewardreq-count').textContent = reqs.length ? reqs.length+' 筆' : '';
+  document.getElementById('parent-rewardreqs').innerHTML = reqs.length ? reqs.map(r=>`
+    <div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(120,90,10,.12); border:1px solid rgba(245,197,66,.3);">
+      <span class="text-xl">${r.emoji}</span>
+      <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${r.name}</div>
+      <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">🪙${r.cost}　≈ NT$${r.estimatedTwd}　${r.date}</div></div>
+      <button onclick="approveReward('${r.id}')" class="btn-sys px-3 py-2 text-sm">核准 ✔</button>
+      <button onclick="rejectReward('${r.id}')" class="btn-red px-3 py-2 text-sm">退回 ✖</button>
+    </div>`).join('') : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">目前沒有待處理的真實獎勵申請。</div>`;
+
+  // 經濟摘要
+  const approvedTwd = monthlyApprovedTwd();
+  const budget = ECONOMY.monthlyRealRewardBudgetTwd;
+  const over = approvedTwd > budget;
+  const ecoCell = (label,val,color)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="text-[11px] font-bold" style="color:var(--sys-dim);">${label}</div><div class="num font-bold" style="color:${color||'#fff'};">${val}</div></div>`;
+  document.getElementById('parent-economy').innerHTML = `
+    <div class="grid grid-cols-2 gap-2">
+      ${ecoCell('金幣 ≈ 台幣', ECONOMY.coinsPerTwd+' 金幣 ≈ NT$1')}
+      ${ecoCell('建議月預算', 'NT$'+budget)}
+      ${ecoCell('本月已核准真實獎勵', 'NT$'+approvedTwd, over?'#ff8a8a':'#5cffb8')}
+      ${ecoCell('每日 / 每週目標', '🪙'+ECONOMY.dailyTargetCoins+' / '+ECONOMY.weeklyTargetCoins)}
+    </div>
+    ${over?`<div class="alert-line rounded px-3 py-2 text-xs font-bold mt-2">⚠ 本月真實獎勵已超出建議預算 NT$${budget}（目前 NT$${approvedTwd}）。僅提醒，不限制發放。</div>`:''}`;
 
   const wk = weekKey();
   const weekDone = state.history.filter(h=>h.kind==='task' && h.date>=wk).length;
@@ -1886,8 +1953,8 @@ function renderParent(){
     ? state.parentConfig.customRewards.map(r=>`
       <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
         <span class="text-lg">${r.emoji||'🎁'}</span>
-        <div class="flex-1 font-bold text-white text-xs">${r.name}</div>
-        <span class="num font-bold text-xs" style="color:var(--sys-gold);">🪙${r.cost}</span>
+        <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${r.name}</div>
+        <span class="num font-bold text-xs text-right" style="color:var(--sys-gold);">🪙${r.cost}<br><span class="text-[10px]" style="color:var(--sys-dim);">≈NT$${r.estimatedTwd||Math.round(r.cost/ECONOMY.coinsPerTwd)}</span></span>
         <button onclick="deleteReward('${r.id}')" class="btn-red px-2.5 py-1.5 text-xs">🗑️</button>
       </div>`).join('')
     : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">尚未設定真實獎勵。</div>`;
@@ -1928,21 +1995,31 @@ function poolSet(id, field, value){
   p[field] = value;
   save();
 }
-function useProtection(){
-  if(!state.brokenStreak || (state.player.streakTickets||0)<1) return;
-  state.player.streak = state.brokenStreak.value;
-  state.player.lastAllDoneDate = yesterdayStr();
-  state.player.streakTickets--;
-  state.history.unshift({ date:todayStr(), kind:'bonus', name:`使用保護券恢復連續紀錄 🔥${state.player.streak}`, xpEarned:0, coinsEarned:0 });
-  state.brokenStreak = null;
+/* ── 真實獎勵：家長核准 / 退回 ── */
+function monthKey(){ return todayStr().slice(0,7); }
+function monthlyApprovedTwd(){
+  return (state.rewardRequests||[])
+    .filter(r=>r.status==='approved' && (r.approvedDate||r.date||'').slice(0,7)===monthKey())
+    .reduce((a,r)=>a+(r.estimatedTwd||0),0);
+}
+function approveReward(id){
+  const r = (state.rewardRequests||[]).find(x=>x.id===id);
+  if(!r || r.status!=='requested') return;
+  r.status = 'approved'; r.approvedDate = todayStr();
+  state.history.unshift({ date:todayStr(), kind:'redeem', name:`真實獎勵已發放：${r.name}`, xpEarned:0, coinsEarned:0 });
   save();
-  toast(`🎟️ 已使用保護券，連續紀錄恢復為 🔥${state.player.streak} 天。`);
+  toast(`已核准發放「${r.name}」。`);
   renderParent();
 }
-function dismissProtection(){
-  state.brokenStreak = null;
+function rejectReward(id){
+  const r = (state.rewardRequests||[]).find(x=>x.id===id);
+  if(!r || r.status!=='requested') return;
+  r.status = 'rejected'; r.rejectedDate = todayStr();
+  state.player.coins += r.cost;   // 退還金幣
+  state.history.unshift({ date:todayStr(), kind:'redeem', name:`真實獎勵退回，退還 ${r.cost} 🪙：${r.name}`, xpEarned:0, coinsEarned:r.cost });
   save();
-  renderParent();
+  toast(`已退回「${r.name}」，已退還 ${r.cost} 🪙。`);
+  renderParent(); renderTop();
 }
 
 /* ── 任務池編輯表單 ── */
