@@ -2500,6 +2500,50 @@ function accountsLoad(){
   return { accounts:[], activeId:null };
 }
 function accountsSave(c){ kqStorage.write(JSON.stringify(c), ACCOUNTS_KEY); }
+
+/* ===== M17 雲端就緒抽象層（cloudStore + auth）=====
+ * 介面對齊未來 Supabase（M23 只需替換內部實作）；目前為本機實作（kqStorage）。雲端設定缺失→本機。
+ * 模型：parent { id, email, provider, displayName, createdAt, pin, children[] }
+ *       children[]：{ id, name, avatar, blob(該小孩存檔字串), createdAt }；每位家長最多 4。
+ *       session：{ parentId, activeChildId }
+ */
+const CLOUD_KEY = 'kidquest_cloud';
+const MAX_CHILDREN = 4;
+const cloudStore = (function(){
+  function _read(){
+    try{ const raw = kqStorage.read(CLOUD_KEY); if(raw){ const c = JSON.parse(raw); if(c && Array.isArray(c.parents)) return c; } }catch(e){}
+    return { parents:[], session:{ parentId:null, activeChildId:null } };
+  }
+  function _write(c){ kqStorage.write(JSON.stringify(c), CLOUD_KEY); }
+  return {
+    raw:_read, save:_write,
+    getParentByEmail(email){ return _read().parents.find(p=>p.email===email) || null; },
+    createParent(email, displayName){
+      const c=_read(); let p=c.parents.find(x=>x.email===email); if(p) return p;
+      p={ id:uid(), email, provider:'google', displayName: displayName||(email||'家長').split('@')[0], createdAt: todayStr(), pin:null, children:[] };
+      c.parents.push(p); _write(c); return p;
+    },
+    saveParent(p){ const c=_read(); const i=c.parents.findIndex(x=>x.id===p.id); if(i>=0) c.parents[i]=p; else c.parents.push(p); _write(c); },
+    getParent(parentId){ return _read().parents.find(x=>x.id===parentId) || null; },
+    listChildren(parentId){ const p=_read().parents.find(x=>x.id===parentId); return p? p.children.slice() : []; },
+    addChild(parentId, name){
+      const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return { ok:false, reason:'no-parent' };
+      if(p.children.length>=MAX_CHILDREN) return { ok:false, reason:'max' };
+      const child={ id:uid(), name:(name||'小獵人').trim()||'小獵人', avatar:null, blob:null, createdAt: todayStr() };
+      p.children.push(child); _write(c); return { ok:true, child };
+    },
+    saveChildBlob(parentId, childId, blob){ const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return; const ch=p.children.find(x=>x.id===childId); if(!ch) return; ch.blob=blob; _write(c); },
+    loadChildBlob(parentId, childId){ const p=_read().parents.find(x=>x.id===parentId); if(!p) return null; const ch=p.children.find(x=>x.id===childId); return ch? ch.blob : null; },
+    getSession(){ return _read().session || { parentId:null, activeChildId:null }; },
+    setSession(s){ const c=_read(); c.session=s; _write(c); }
+  };
+})();
+/* 家長登入：M23 會把內部換成 supabase.auth.signInWithOAuth({ provider:'google' }) */
+const auth = {
+  signInWithGoogle(email, displayName){ if(!email) return null; return cloudStore.createParent(email, displayName); },
+  currentParent(){ const s=cloudStore.getSession(); return s.parentId? cloudStore.getParent(s.parentId) : null; },
+  signOutParent(){ cloudStore.setSession({ parentId:null, activeChildId:null }); }
+};
 function avatarFor(a){ let h=0; for(const ch of (a.name||'')) h=(h+ch.charCodeAt(0))%AVATARS.length; return a.avatar || AVATARS[h]; }
 function snapshotActive(c){
   if(c.activeId){ const a = c.accounts.find(x=>x.id===c.activeId); if(a){ const blob = kqStorage.read(); if(blob) a.blob = blob; } }

@@ -360,7 +360,7 @@
       "title": "帳號模型重構：家長為主帳號（Gmail）+ 小孩子帳號（最多 4）+ 雲端就緒抽象層",
       "spec_file": "milestones/m17-parent-child-account-model.md",
       "spec_summary": "安裝後第一畫面只開放家長以 Gmail 註冊/登入；家長為 root，底下建立最多 4 個小孩子帳號。小孩切換需先登出小孩；小孩無法登出家長（家長登出只在家長頁）。導入 cloudStore 抽象層（先本機實作、介面對齊 Supabase），所有小孩資料掛在家長帳號下。整個 init/gate 流程重寫。",
-      "status": "pending",
+      "status": "in_progress",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
