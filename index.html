@@ -2598,13 +2598,19 @@ function renderAccountGate(){
   const p = cloudStore.getParent(cloudStore.getSession().parentId);
   if(!p){ gateMode='parent-login'; return renderAccountGate(); }
   const kids = p.children || [];
-  const cards = kids.map(c=>`
-    <button onclick="enterChild('${c.id}')" class="flex items-center gap-3 p-3 rounded text-left transition-all"
-      style="border:1px solid #1c3a60; background:rgba(12,24,46,.6);">
-      <span class="text-3xl">${avatarFor(c)}</span>
-      <span class="flex-1 font-black text-white">${c.name}</span>
-      <span class="text-cyan-300 font-black">進入 →</span>
-    </button>`).join('') || `<div class="text-xs font-bold" style="color:var(--sys-dim);">還沒有小孩帳號，先建立一個吧！</div>`;
+  const cards = kids.map(c=>{
+    const pend = childPendingTasks(c).length;
+    const badge = pend>0 ? `<span class="ml-1 px-1.5 rounded-full text-xs font-black align-middle" style="background:#dc2626;color:#fff;">🔔${pend}</span>` : '';
+    const reviewBtn = pend>0 ? `<button onclick="reviewChild('${c.id}')" class="btn-gold px-3 py-2 text-xs font-black flex-none">審核 ${pend}</button>` : '';
+    return `<div class="flex items-center gap-2 p-2 rounded" style="border:1px solid #1c3a60; background:rgba(12,24,46,.6);">
+      <span class="text-2xl">${avatarFor(c)}</span>
+      <span class="flex-1 font-black text-white truncate">${c.name}${badge}</span>
+      ${reviewBtn}
+      <button onclick="enterChild('${c.id}')" class="btn-sys px-3 py-2 text-xs font-black flex-none">進入 →</button>
+    </div>`;
+  }).join('') || `<div class="text-xs font-bold" style="color:var(--sys-dim);">還沒有小孩帳號，先建立一個吧！</div>`;
+  const totalPend = parentPendingCount(p.id);
+  const pendLine = totalPend>0 ? `<div class="text-xs font-black mb-1" style="color:#fca5a5;">🔔 待審核任務：${totalPend} 筆 — 點小孩旁「審核」處理</div>` : '';
   const addBtn = kids.length < MAX_CHILDREN
     ? `<button onclick="gateChildCreate()" class="btn-sys w-full py-2.5 text-sm mt-1">➕ 建立小孩帳號（${kids.length}/${MAX_CHILDREN}）</button>`
     : `<div class="text-xs font-bold text-center" style="color:var(--sys-dim);">已達 ${MAX_CHILDREN} 位小孩上限</div>`;
@@ -2614,6 +2620,7 @@ function renderAccountGate(){
     : `<div class="text-xs text-center mt-2" style="color:var(--sys-dim);">登出家長請至遊戲內「家長」頁（需 PIN）</div>`;
   body.innerHTML = `
     <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">家長：<span class="text-white">${p.displayName}</span>（${p.email}）</div>
+    ${pendLine}
     ${cards}
     ${addBtn}
     ${logoutBtn}`;
@@ -2669,6 +2676,28 @@ function parentLogout(){
   auth.signOutParent();
   currentAccountId = null;
   showAccountGate();   // → parent-login
+}
+
+/* ===== M18 家長審核佇列（由 blob/live state 推導，與 save() 即時鏡射搭配恆一致） ===== */
+function childPendingTasks(child){
+  const sess = cloudStore.getSession();
+  let tasks = [];
+  if(sess.activeChildId === child.id){ tasks = state.tasks || []; }
+  else { try{ const d = JSON.parse(child.blob||'{}'); tasks = d.tasks || []; }catch(e){ tasks = []; } }
+  return tasks.filter(t=>t.status==='pending');
+}
+function parentQueue(parentId){
+  const p = cloudStore.getParent(parentId); if(!p) return [];
+  return p.children.map(c=>({ child:c, items:childPendingTasks(c) }));
+}
+function parentPendingCount(parentId){
+  return parentQueue(parentId).reduce((n,g)=>n+g.items.length,0);
+}
+// 家長從首頁點「審核」→ 進入該小孩審核頁（重用既有 approveTask/rejectTask）
+function reviewChild(childId){
+  enterChild(childId);
+  parentUnlocked = true;
+  goScreen('parent');
 }
 // 一次性遷移：舊扁平 kidquest_accounts → 預設本機家長名下的小孩（原資料保留作備援）
 function migrateFlatAccountsToCloud(){

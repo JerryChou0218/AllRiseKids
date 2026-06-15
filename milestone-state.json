@@ -4,15 +4,15 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 18,
+  "current_milestone_id": 19,
   "planning_complete": true,
   "budget": {
-    "used_usd": 5.1,
+    "used_usd": 6.9,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 2,
-    "verification_calls": 2,
+    "execution_calls": 3,
+    "verification_calls": 3,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -383,7 +383,7 @@
       "title": "家長後台：任務審核佇列 + 小孩送出即時通知",
       "spec_file": "milestones/m18-parent-approval-notify.md",
       "spec_summary": "小孩按下『完成家事/任務』→ 進入該家長的待審核佇列並產生通知（紅點/橫幅）；家長頁面集中審核自己名下每個小孩的任務，核准發獎、退回不發。即時通知本機以輪詢/狀態旗標實作，雲端就緒（日後可換 Supabase Realtime / 推播）。",
-      "status": "pending",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
@@ -395,7 +395,9 @@
         "通知與佇列以 cloudStore 抽象層儲存，雲端缺失時走本機輪詢；介面對齊未來 Realtime/推播",
         "新增對應自動化測試（佇列進出、核准發獎、退回不發），全測試綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 家長審核佇列由各小孩 blob/活躍 live state 推導（childPendingTasks/parentQueue/parentPendingCount），與 save() 即時鏡射搭配恆一致、不會 desync。家長首頁每個小孩卡顯示 🔔 待審核紅點數與『審核』鈕＋頂部總數行；reviewChild 進入該小孩審核頁(parentUnlocked=true,goScreen parent)重用既有 approveTask/rejectTask 核准發獎/退回不發。本地『即時』＝進家長首頁即見最新；真正推播留 M23。新增 test/parent-queue.test.js 7/7；smoke 77、cloud-store 9、accounts 8、desktop 4 全綠。" }
+      ]
     },
     {
       "id": 19,
