@@ -4,13 +4,13 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 16,
+  "current_milestone_id": 17,
   "planning_complete": true,
   "budget": {
-    "used_usd": 1.8,
+    "used_usd": 3.3,
     "limit_usd": 30.0,
     "tokens_used": 0,
-    "planning_calls": 1,
+    "planning_calls": 2,
     "execution_calls": 1,
     "verification_calls": 1,
     "cost_estimate_usd": {
@@ -185,12 +185,12 @@
       "title": "帳號制雲端同步（Supabase + Google 登入）",
       "spec_file": "milestones/m9-cloud-sync-supabase.md",
       "spec_summary": "每位小孩用自己的 Google 帳號登入，進度存到 Supabase 並以 Row Level Security 個別隔離；自動跨裝置同步。未登入時維持純本機。先 Mockup + 設定包供審核，核准且使用者開好 Supabase 專案後再整合。",
-      "status": "pending",
+      "status": "blocked",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": true,
       "depends_on": [1],
-      "human_feedback": "暫緩：使用者覺得雲端設定麻煩，改先做單機可攜桌面版（M10）。Mockup 與 Supabase 設定包已備妥，日後要做雲端可直接接續。",
+      "human_feedback": "已被取代（superseded）：2026-06-16 使用者決定改造為小型多人線上遊戲。家長 Gmail 登入 + 小孩子帳號 + 雲端同步的需求改由 M17（家長為主帳號模型重構）與 M23（真正的 Supabase/Google OAuth 接線，human-approval gate）承接。schema.sql 與設定包仍可沿用。此里程碑標 blocked 以排除於自動推進，勿再單獨啟動。",
       "acceptance_criteria": [
         "小孩用自己的 Google 帳號登入後，進度自動同步到雲端並可在另一裝置還原",
         "不同帳號的進度各自獨立儲存且互相看不到（Supabase RLS）",
@@ -354,6 +354,141 @@
       "history": [
         { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: GitHub repo 建立並推送（gh CLI）；Vercel --prod 部署成功並 alias allrisekids.vercel.app；vercel.json builds 由 index.html 改 **/* 修正 install.html/圖示 404；.vercelignore 排除 node_modules(563MB)/dist(268MB) 避開 100MB 上限；sharp 由 icon.svg 產 icon-192/512.png 並寫入 manifest（iOS 相容）；新增 install.html QR code 安裝頁。順帶修兩個 M15 之後引入的既有測試回歸（accounts mock 補 focus()、setAccountPassword 改 modal 流程後測試同步更新）。smoke 77/77、accounts 10/10、desktop-save 4/4 全綠。" }
       ]
+    },
+    {
+      "id": 17,
+      "title": "帳號模型重構：家長為主帳號（Gmail）+ 小孩子帳號（最多 4）+ 雲端就緒抽象層",
+      "spec_file": "milestones/m17-parent-child-account-model.md",
+      "spec_summary": "安裝後第一畫面只開放家長以 Gmail 註冊/登入；家長為 root，底下建立最多 4 個小孩子帳號。小孩切換需先登出小孩；小孩無法登出家長（家長登出只在家長頁）。導入 cloudStore 抽象層（先本機實作、介面對齊 Supabase），所有小孩資料掛在家長帳號下。整個 init/gate 流程重寫。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [11, 15],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "安裝後第一畫面為家長登入/註冊，目前只開放 Gmail（OAuth 先以本機 stub 模擬，介面對齊真實 Google 登入）",
+        "家長可建立最多 4 個小孩子帳號；超過 4 個時阻擋並提示",
+        "小孩之間切換需先登出目前小孩再選另一個；小孩端無任何可登出家長的入口",
+        "家長登出只在家長頁面提供；登出家長後回到家長登入畫面",
+        "所有小孩進度資料掛在家長帳號物件下（parent.children[]），透過 cloudStore 抽象層讀寫；雲端設定缺失時自動走本機",
+        "既有單人/桌面行為相容；smoke、accounts、desktop-save 測試維持綠燈（必要時更新測試以反映新模型）"
+      ],
+      "history": []
+    },
+    {
+      "id": 18,
+      "title": "家長後台：任務審核佇列 + 小孩送出即時通知",
+      "spec_file": "milestones/m18-parent-approval-notify.md",
+      "spec_summary": "小孩按下『完成家事/任務』→ 進入該家長的待審核佇列並產生通知（紅點/橫幅）；家長頁面集中審核自己名下每個小孩的任務，核准發獎、退回不發。即時通知本機以輪詢/狀態旗標實作，雲端就緒（日後可換 Supabase Realtime / 推播）。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [17],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "小孩標記任務完成 → 立即進入家長待審核佇列，家長端出現未讀通知（紅點+數量）",
+        "家長頁面可逐筆核准/退回自己名下任一小孩的任務；核准才發 EXP/金幣",
+        "通知與佇列以 cloudStore 抽象層儲存，雲端缺失時走本機輪詢；介面對齊未來 Realtime/推播",
+        "新增對應自動化測試（佇列進出、核准發獎、退回不發），全測試綠燈"
+      ],
+      "history": []
+    },
+    {
+      "id": 19,
+      "title": "遊戲架構重整：金錢/等級/升級曲線/任務主線+支線（6–15 歲台灣社會觀）",
+      "spec_file": "milestones/m19-game-progression-architecture.md",
+      "spec_summary": "重整經濟與成長：金錢架構、等級架構、Lv0→100 升級曲線、任務主線（成長敘事）+ 支線（日常家事/學習）。內容符合 6–15 歲台灣家庭與校園價值觀，機制鼓勵『今天比昨天更好』（成長對比、連續、每日目標）。沿用並擴充 M12 ECONOMY。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [12, 17],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "明確的金錢架構與來源/去向；等級 1→100 升級曲線經數值定義且可被速通驗證",
+        "任務分主線（章節式成長敘事）與支線（每日家事/學習），各有適齡（6–15）內容與台灣在地情境",
+        "成長機制鼓勵『今天比昨天更好』：每日目標、個人最佳、連續成長獎勵，避免懲罰/羞辱式設計",
+        "經濟/等級平衡通過 M20 速通驗證，無明顯卡關或通膨；全測試綠燈"
+      ],
+      "history": []
+    },
+    {
+      "id": 20,
+      "title": "測試/除錯模式：無限金幣 + 等級 0→100 速通與平衡驗證",
+      "spec_file": "milestones/m20-debug-playtest-mode.md",
+      "spec_summary": "家長隱藏的除錯模式：無限金幣、一鍵跳級、模擬每日完成，自動跑過 Lv0→100 全程，輸出各階段所需任務數/天數/金幣收支報告，找出卡關與通膨點並回饋 M19 調整。除錯入口不可被小孩開啟。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [19],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "除錯模式提供無限金幣與跳級，僅家長可進入（小孩端無入口）",
+        "可自動模擬 Lv0→100 全程並輸出每階段任務數/天數/金幣收支/解鎖節點報告",
+        "依報告找出至少卡關/通膨問題並回饋 M19 調整，再次驗證改善",
+        "除錯資料不污染正式存檔；全測試綠燈"
+      ],
+      "history": []
+    },
+    {
+      "id": 21,
+      "title": "世界戰績排行榜（跨家庭，雲端就緒）",
+      "spec_file": "milestones/m21-world-leaderboard.md",
+      "spec_summary": "不同家長名下的小孩可在世界排行榜互相看到（等級/戰績/成就），含篩選與名次。先以 cloudStore 抽象層 + 本機示範資料實作，介面與資料形態對齊未來 Supabase 公開讀取表。僅公開非敏感資訊（暱稱/等級/戰績），不露個資。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [17, 19],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "排行榜顯示跨家庭小孩的暱稱/等級/戰績/名次，可篩選（總榜/週榜/同齡）",
+        "只公開非敏感資訊；不顯示真實姓名/email/家長資訊",
+        "以 cloudStore 抽象層讀取，本機以示範資料運作，介面對齊未來公開讀取表",
+        "全測試綠燈"
+      ],
+      "history": []
+    },
+    {
+      "id": 22,
+      "title": "跨家庭虛擬物品交換（交易系統，雲端就緒）",
+      "spec_file": "milestones/m22-item-trading.md",
+      "spec_summary": "不同家庭的小孩可交換虛擬物品：提出交易→對方接受→雙方背包更新，含家長可選的核可開關防止不當交易。先本機抽象層 + 示範對手實作，介面對齊未來 Supabase 交易表/交易狀態機。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [21],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "小孩可對另一家庭小孩提出物品交換，對方接受後雙方背包正確更新（交易狀態機：proposed→accepted/declined/cancelled）",
+        "家長可開啟交易核可開關，需家長同意才成交（防詐騙/不當交易）",
+        "以 cloudStore 抽象層實作，本機以示範對手運作，介面對齊未來交易表",
+        "交易不會憑空增減物品（守恆）；全測試綠燈"
+      ],
+      "history": []
+    },
+    {
+      "id": 23,
+      "title": "真正的雲端接線：Supabase + Google OAuth（human-approval gate）",
+      "spec_file": "milestones/m23-supabase-google-wire.md",
+      "spec_summary": "把 cloudStore 抽象層接到真正的 Supabase（家長帳號表/小孩子表/任務佇列/排行榜/交易表 + RLS）與 Google OAuth 家長登入。需使用者建立 Supabase 專案與 Google OAuth 憑證並提供金鑰（環境變數，不進 repo）。在此之前全系統以本機降級運作。",
+      "status": "pending",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": true,
+      "depends_on": [17, 18, 21, 22],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "Supabase 專案建立、schema（家長/小孩/佇列/排行榜/交易 + RLS）部署，金鑰以環境變數注入不進 repo",
+        "家長以真實 Google 帳號登入；不同家長資料以 RLS 隔離",
+        "cloudStore 抽象層切換到 Supabase 後，帳號/任務審核/排行榜/交易跨裝置同步正常",
+        "雲端設定缺失時自動退回本機且全測試維持綠燈"
+      ],
+      "history": []
     }
   ]
 }
