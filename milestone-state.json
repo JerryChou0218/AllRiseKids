@@ -481,7 +481,7 @@
       "max_attempts": 3,
       "require_human_approval": true,
       "depends_on": [17, 18, 21, 22],
-      "human_feedback": null,
+      "human_feedback": "2026-06-16 使用者已先提供部分公開金鑰（存於 gitignore 的 cloud-config.local.json）：siteUrl=https://allrisekids.vercel.app、supabasePublishableKey=sb_publishable_…、googleClientId=541985626153-…。仍缺 Supabase Project URL（https://<ref>.supabase.co）才能接線；並待確認 Supabase Google provider 已 Enable+Client Secret、Google redirect URIs 含 supabase callback。M23 deps（M17/M18/M21/M22）尚未完成，先擱置，到位後再接。",
       "acceptance_criteria": [
         "Supabase 專案建立、schema（家長/小孩/佇列/排行榜/交易 + RLS）部署，金鑰以環境變數注入不進 repo",
         "家長以真實 Google 帳號登入；不同家長資料以 RLS 隔離",

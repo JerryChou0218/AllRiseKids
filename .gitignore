@@ -6,3 +6,5 @@ dist/
 kidquest-save.json
 
 .vercel
+
+cloud-config.local.json
