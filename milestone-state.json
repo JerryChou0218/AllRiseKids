@@ -7,12 +7,12 @@
   "current_milestone_id": 16,
   "planning_complete": true,
   "budget": {
-    "used_usd": 0.0,
+    "used_usd": 1.8,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 1,
-    "execution_calls": 0,
-    "verification_calls": 0,
+    "execution_calls": 1,
+    "verification_calls": 1,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -331,6 +331,28 @@
       "human_feedback": null,
       "history": [
         { "timestamp": "2026-06-13T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: setAccountPassword(id)/deleteAccount(id) 改為可操作任一帳號（刪除登入中帳號後回登入畫面）；新增 setMyPassword 與狀態頁『設定我的密碼』；真實獎勵表單支援編輯名稱/點數（estimatedTwd 連動）；新增 sellItem 返還半價並記錄；移除 resetData 按鈕與函式；主選單加背包/成就、狀態頁移除背包/成就/家長三鈕。smoke 77/77、desktop 4/4、accounts 10/10，exe 啟動成功。" }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "雲端部署上線（GitHub + Vercel）+ PWA 安裝 QR code",
+      "spec_file": "milestones/m16-deploy-github-vercel-pwa.md",
+      "spec_summary": "建立 GitHub public repo（JerryChou0218/AllRiseKids）並推送全部歷史；Vercel 正式部署 allrisekids.vercel.app（連 GitHub 自動部署）；vercel.json builds 改 **/* 修 install/圖示 404；.vercelignore 排除 node_modules/dist 避開 100MB 上限；sharp 由 SVG 產 192/512 PNG 圖示供 iOS；新增 install.html QR code 安裝頁（iOS/Android 加入主畫面步驟）。",
+      "status": "complete",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [7, 15],
+      "human_feedback": null,
+      "acceptance_criteria": [
+        "程式碼推送到 GitHub public repo（JerryChou0218/AllRiseKids），含 M1–M15 完整 commit 歷史",
+        "Vercel 正式環境部署成功，https://allrisekids.vercel.app 可開啟並正常遊玩",
+        "https://allrisekids.vercel.app/install.html 可開啟，含可掃描 QR code 與 iOS/Android 加入主畫面步驟",
+        "manifest.webmanifest 含 192/512 PNG 圖示（iOS Safari 主畫面圖示相容）",
+        "既有行為不受影響：smoke 77/77、accounts 10/10、desktop-save 4/4 全綠"
+      ],
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: GitHub repo 建立並推送（gh CLI）；Vercel --prod 部署成功並 alias allrisekids.vercel.app；vercel.json builds 由 index.html 改 **/* 修正 install.html/圖示 404；.vercelignore 排除 node_modules(563MB)/dist(268MB) 避開 100MB 上限；sharp 由 icon.svg 產 icon-192/512.png 並寫入 manifest（iOS 相容）；新增 install.html QR code 安裝頁。順帶修兩個 M15 之後引入的既有測試回歸（accounts mock 補 focus()、setAccountPassword 改 modal 流程後測試同步更新）。smoke 77/77、accounts 10/10、desktop-save 4/4 全綠。" }
       ]
     }
   ]

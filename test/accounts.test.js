@@ -13,7 +13,7 @@ function el(){
   return new Proxy({ style:{ setProperty(){} },
     classList:{ add(){}, remove(){}, toggle(){}, contains(){ return false; } },
     dataset:{}, value:'', innerHTML:'', textContent:'',
-    insertAdjacentHTML(){}, appendChild(){}, remove(){}, querySelectorAll(){ return []; } },
+    insertAdjacentHTML(){}, appendChild(){}, remove(){}, focus(){}, querySelectorAll(){ return []; } },
     { get(t,k){ return k in t ? t[k] : undefined; }, set(t,k,v){ t[k]=v; return true; } });
 }
 const els = {};
@@ -74,7 +74,9 @@ const bb = JSON.parse(c.accounts.find(a=>a.name==='小美').blob);
 assert(ab.player.coins===111 && bb.player.coins===222, '兩帳號存檔各自獨立（111 / 222）');
 
 /* 6. 家長：變更指定帳號密碼 + 刪除指定帳號 */
-setAccountPassword(A.id);                   // prompt → '7777'
+setAccountPassword(A.id);                   // 開啟設定密碼 modal（_setpassId = A.id；Electron 相容，不用 prompt）
+document.getElementById('setpass-inp').value = '7777';
+submitSetPass();                            // 套用新密碼
 assert(accountsLoad().accounts.find(a=>a.id===A.id).pass===__hash('7777'), '家長可變更指定帳號密碼');
 const cnt0 = accountsLoad().accounts.length;
 deleteAccount(A.id);                        // 刪除指定帳號（A 非登入中）
