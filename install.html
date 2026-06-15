@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>安裝 KidQuest</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #060b18;
+      color: #cfe8ff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #0e1a2e;
+      border: 1px solid #1e3a5f;
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(168,85,247,0.15);
+    }
+    .logo { font-size: 48px; margin-bottom: 8px; }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #a855f7;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+    }
+    .subtitle { font-size: 0.85rem; color: #7ea8cc; margin-bottom: 28px; }
+    #qr {
+      background: #fff;
+      border-radius: 16px;
+      padding: 16px;
+      display: inline-block;
+      margin-bottom: 28px;
+      box-shadow: 0 0 24px rgba(168,85,247,0.3);
+    }
+    .url {
+      font-size: 0.8rem;
+      color: #00d2ff;
+      margin-bottom: 28px;
+      word-break: break-all;
+    }
+    .steps { text-align: left; }
+    .platform {
+      background: #0a1628;
+      border: 1px solid #1e3a5f;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .platform-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #a855f7;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 7px;
+      font-size: 0.82rem;
+      color: #9bbedd;
+      line-height: 1.4;
+    }
+    .step-num {
+      background: #1e3a5f;
+      color: #00d2ff;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .tip {
+      font-size: 0.75rem;
+      color: #4a7a9b;
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #1e3a5f;
+    }
+    @media print {
+      body { background: #fff; }
+      .card { box-shadow: none; border: 2px solid #333; }
+      h1 { color: #333; }
+      .platform { border-color: #999; }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">⚔️</div>
+    <h1>KidQuest</h1>
+    <p class="subtitle">覺醒．升級．成為傳說獵人</p>
+
+    <div id="qr"></div>
+    <div class="url">allrisekids.vercel.app</div>
+
+    <div class="steps">
+      <div class="platform">
+        <div class="platform-title">🤖 Android（Chrome）</div>
+        <div class="step"><span class="step-num">1</span>用相機掃描 QR code，在 Chrome 開啟網頁</div>
+        <div class="step"><span class="step-num">2</span>瀏覽器底部出現「加入主畫面」橫幅，點擊安裝</div>
+        <div class="step"><span class="step-num">3</span>若沒出現，點右上角 ⋮ → 「加入主畫面」</div>
+      </div>
+      <div class="platform">
+        <div class="platform-title">🍎 iPhone / iPad（Safari）</div>
+        <div class="step"><span class="step-num">1</span>用相機掃描 QR code，在 <strong>Safari</strong> 開啟</div>
+        <div class="step"><span class="step-num">2</span>點底部分享按鈕 ⎋</div>
+        <div class="step"><span class="step-num">3</span>選「加入主畫面」→ 點「新增」</div>
+      </div>
+    </div>
+
+    <p class="tip">安裝後從主畫面開啟，沒有網址列，就像真正的 App ✨<br>進度存在裝置本機，可離線遊玩。</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    new QRCode(document.getElementById('qr'), {
+      text: 'https://allrisekids.vercel.app',
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  </script>
+</body>
+</html>
