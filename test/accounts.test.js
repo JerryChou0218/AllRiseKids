@@ -1,5 +1,6 @@
-/* 本機多帳號驗證：建立多帳號、進度各自獨立、登出切換、密碼把關。
- * 不啟動 GUI；用 smoke 同款 DOM stub 跑 index.html，直接呼叫帳號函式並檢查 state。
+/* M17 家長/小孩帳號流程驗證（取代舊扁平模型）：
+ *   家長 Gmail 登入 → 建立小孩（≤4）→ 各自進度隔離 → 登出小孩需回家長 → 家長登出。
+ * 不啟動 GUI；用 smoke 同款 DOM stub 跑 index.html，直接呼叫 gate 流程函式。
  * 執行：node test/accounts.test.js
  */
 'use strict';
@@ -19,89 +20,70 @@ function el(){
 const els = {};
 global.document = { getElementById:id=>{ els[id]=els[id]||el(); return els[id]; },
   querySelectorAll:()=>[], createElement:()=>el(), body:el() };
-global.window = { innerWidth:400, innerHeight:800, scrollTo(){} };  // 無 kqStore → 走 localStorage
+global.window = { innerWidth:400, innerHeight:800, scrollTo(){} };
 global.localStorage = { _d:{}, getItem(k){ return this._d[k]===undefined?null:this._d[k]; }, setItem(k,v){ this._d[k]=v; }, removeItem(k){ delete this._d[k]; } };
-global.confirm = ()=>true; global.prompt = ()=>'7777';
+global.confirm = ()=>true; global.prompt = ()=>'x';
 global.setInterval = ()=>{}; global.setTimeout = f=>{ f(); return 0; }; global.clearTimeout = ()=>{};
 Math.random = (()=>{ let s=42; return ()=>{ s=(s*1103515245+12345)%2147483648; return s/2147483648; }; })();
 
-let pass=0, fail=0;
-const assert=(c,m)=>{ if(c){ console.log('PASS:', m); pass++; } else { console.log('FAIL:', m); fail++; } };
-
-const harness = `
-function makeAccount(name, pw, coins){
-  document.getElementById('acc-new-name').value = name;
-  document.getElementById('acc-new-pass').value = pw;
-  createAccountSubmit();                 // 建立帳號 + 進入覺醒引導（已預填 ob-name）
-  finishOnboarding();                    // 完成角色建立
-  state.player.coins = coins; save();    // 給各帳號不同金幣以驗證隔離
-}
-
-/* 1. 建立兩個帳號（各有密碼、各自進度） */
-makeAccount('小宇', '1111', 111);
-makeAccount('小美', '2222', 222);
-let c = accountsLoad();
-assert(c.accounts.length===2, '建立兩個本機帳號');
-const A = c.accounts.find(a=>a.name==='小宇');
-const B = c.accounts.find(a=>a.name==='小美');
-assert(A && B, '兩帳號名稱正確（小宇 / 小美）');
-assert(A.pass && A.pass===__hash('1111') && A.pass!==A_plain(), '密碼以雜湊儲存（非明文）');
-assert(c.activeId===B.id && state.player.coins===222, '剛建立的帳號（小美）為登入中、金幣 222');
-
-/* 2. 登出 → 切換到小宇（正確密碼） */
-switchAccount();
-gateSel = A.id;
-document.getElementById('acc-pass').value = '1111';
-loginSubmit();
-assert(state.player.name==='小宇' && state.player.coins===111, '切換到小宇：進度獨立（金幣 111）');
-
-/* 3. 密碼錯誤不得登入 */
-switchAccount();
-gateSel = B.id;
-document.getElementById('acc-pass').value = '0000';
-loginSubmit();
-assert(state.player.name==='小宇', '密碼錯誤 → 維持原帳號（小宇），未切換');
-
-/* 4. 正確密碼登入小美 */
-document.getElementById('acc-pass').value = '2222';
-loginSubmit();
-assert(state.player.name==='小美' && state.player.coins===222, '正確密碼 → 登入小美（金幣 222）');
-
-/* 5. 兩帳號存檔互相隔離 */
-c = accountsLoad();
-const ab = JSON.parse(c.accounts.find(a=>a.name==='小宇').blob);
-const bb = JSON.parse(c.accounts.find(a=>a.name==='小美').blob);
-assert(ab.player.coins===111 && bb.player.coins===222, '兩帳號存檔各自獨立（111 / 222）');
-
-/* 6. 家長：變更指定帳號密碼 + 刪除指定帳號 */
-setAccountPassword(A.id);                   // 開啟設定密碼 modal（_setpassId = A.id；Electron 相容，不用 prompt）
-document.getElementById('setpass-inp').value = '7777';
-submitSetPass();                            // 套用新密碼
-assert(accountsLoad().accounts.find(a=>a.id===A.id).pass===__hash('7777'), '家長可變更指定帳號密碼');
-const cnt0 = accountsLoad().accounts.length;
-deleteAccount(A.id);                        // 刪除指定帳號（A 非登入中）
-assert(accountsLoad().accounts.length===cnt0-1 && !accountsLoad().accounts.some(a=>a.id===A.id), '家長可刪除指定帳號');
-
-console.log('');
-console.log(__afail()===0 ? '=== 多帳號驗證通過（'+__apass()+' 項）===' : '=== 失敗 '+__afail()+' 項 ===');
-`;
-
-// 橋接：讓測試字串能取用斷言計數與雜湊
-global.__pass = ()=>{}; // 未用
 let _p=0,_f=0;
-global.__apass = ()=>_p; global.__afail = ()=>_f;
-global.__hash = null; // 由遊戲碼內的 hashPass 提供（同作用域），這裡用包裝
-const bridge = `
-function __hash(s){ return hashPass(s); }
-function A_plain(){ return '1111'; }
-const __assert = (c,m)=>{ if(c){ console.log('PASS:', m); __pp(); } else { console.log('FAIL:', m); __pf(); } };
-`;
 global.__pp = ()=>{ _p++; }; global.__pf = ()=>{ _f++; };
 
+const harness = `
+const __assert = (c,m)=>{ if(c){ console.log('PASS:', m); __pp(); } else { console.log('FAIL:', m); __pf(); } };
+
+/* 1. 家長以 Gmail 登入 */
+document.getElementById('parent-email').value = 'mom@gmail.com';
+parentGoogleLogin();
+const pid = cloudStore.getSession().parentId;
+__assert(pid && auth.currentParent().email==='mom@gmail.com', '家長以 Gmail 登入');
+
+/* 小工具：建立小孩 + 完成覺醒 + 設定金幣 + 登出小孩 */
+function makeChild(name, coins){
+  gateChildCreate();
+  document.getElementById('child-new-name').value = name;
+  createChildSubmit();                 // → enterChild（新小孩進覺醒）
+  document.getElementById('ob-name').value = name;
+  finishOnboarding();                  // 完成角色建立
+  state.player.coins = coins; save();  // 給不同金幣以驗證隔離
+  exitChild();                         // 存回並回家長首頁
+}
+
+/* 2. 建立兩個小孩 */
+makeChild('小宇', 111);
+makeChild('小美', 222);
+__assert(cloudStore.listChildren(pid).length===2, '家長底下建立兩個小孩');
+
+/* 3. 進入各小孩 → 進度互相獨立 */
+const kids = cloudStore.listChildren(pid);
+const A = kids.find(k=>k.name==='小宇'); const B = kids.find(k=>k.name==='小美');
+enterChild(A.id);
+__assert(state.player.name==='小宇' && state.player.coins===111, '進入小宇：進度獨立（111）');
+exitChild();
+enterChild(B.id);
+__assert(state.player.name==='小美' && state.player.coins===222, '進入小美：進度獨立（222）');
+
+/* 4. 小孩切換需先登出小孩：exitChild 後無活躍小孩、家長仍在 */
+exitChild();
+__assert(cloudStore.getSession().parentId===pid && cloudStore.getSession().activeChildId===null, '登出小孩後回家長（家長未登出）');
+
+/* 5. 最多 4 個小孩，第 5 個被阻擋 */
+makeChild('小安', 0); makeChild('小樂', 0);
+__assert(cloudStore.listChildren(pid).length===4, '可建立 4 個小孩');
+gateChildCreate(); document.getElementById('child-new-name').value='第五個'; createChildSubmit();
+__assert(cloudStore.listChildren(pid).length===4, '第 5 個小孩被阻擋（max 4）');
+
+/* 6. 家長登出（只在家長頁）→ session 清空 */
+parentLogout();
+__assert(auth.currentParent()===null && cloudStore.getSession().parentId===null, '家長登出後 session 清空');
+
+console.log('');
+console.log(__af()===0 ? '=== 家長/小孩帳號驗證通過（'+__ap()+' 項）===' : '=== 失敗 '+__af()+' 項 ===');
+`;
+global.__ap = ()=>_p; global.__af = ()=>_f;
+
 try{
-  // 在遊戲碼作用域內，把 assert 換成計數版
-  const wired = harness.replace(/\bassert\(/g, '__assert(');
-  new Function(code + bridge + wired)();
+  new Function(code + harness)();
 }catch(e){
   console.error('RUNTIME ERROR:', e.message);
   process.exit(1);

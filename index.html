@@ -1200,7 +1200,13 @@ const kqStorage = {
   }
 };
 
-function save(){ kqStorage.write(JSON.stringify(state)); }
+function save(){
+  const s = JSON.stringify(state);
+  kqStorage.write(s);
+  // M17：同步鏡射到家長雲端的活躍小孩
+  const sess = cloudStore.getSession();
+  if(sess.parentId && sess.activeChildId){ cloudStore.saveChildBlob(sess.parentId, sess.activeChildId, s); }
+}
 
 function load(){
   try{
@@ -2560,43 +2566,121 @@ function enterGame(){
   document.getElementById('game').classList.remove('hidden');
   goScreen('status');
 }
+/* ===== M17 家長/小孩登入閘門（parent-login → parent-home → child） ===== */
 function showAccountGate(){
   parentUnlocked = false;
   document.getElementById('game').classList.add('hidden');
   const ob = document.getElementById('onboarding'); ob.classList.remove('active'); ob.style.display='none';
   const g = document.getElementById('account-gate'); g.style.display='block'; g.classList.add('active');
-  gateMode = 'list'; renderAccountGate();
+  const sess = cloudStore.getSession();
+  gateMode = (sess.parentId && cloudStore.getParent(sess.parentId)) ? 'parent-home' : 'parent-login';
+  renderAccountGate();
 }
 function renderAccountGate(){
-  const c = accountsLoad();
   const body = document.getElementById('account-gate-body');
-  if(gateMode === 'create'){
+  if(gateMode === 'parent-login'){
     body.innerHTML = `
-      <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">建立新帳號（密碼可留空）</div>
-      <input id="acc-new-name" maxlength="12" placeholder="帳號名稱（孩子的名字）" class="inp">
-      <input id="acc-new-pass" type="password" maxlength="20" placeholder="密碼（可留空）" class="inp">
-      <button onclick="createAccountSubmit()" class="btn-gold w-full py-3 text-base">建立並開始</button>
-      <button onclick="gateBack()" class="btn-dark w-full py-2 text-sm">返回</button>`;
+      <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前僅開放家長以 Google 帳號註冊／登入。登入後即可建立並管理小孩帳號（最多 ${MAX_CHILDREN} 位）。</div>
+      <input id="parent-email" type="email" maxlength="60" placeholder="你的 Gmail" class="inp" autocomplete="email">
+      <button onclick="parentGoogleLogin()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`;
     return;
   }
-  const cards = c.accounts.map(a=>{
-    const sel = a.id===gateSel;
-    return `<button onclick="gatePick('${a.id}')" class="flex items-center gap-3 p-3 rounded text-left transition-all"
-      style="border:1px solid ${sel?'var(--sys-cyan)':'#1c3a60'}; background:${sel?'rgba(0,210,255,.12)':'rgba(12,24,46,.6)'}; ${sel?'box-shadow:0 0 12px rgba(0,210,255,.3);':''}">
-      <span class="text-3xl">${avatarFor(a)}</span>
-      <span class="flex-1 font-black text-white">${a.name} ${a.pass?'🔒':''}</span>
-      ${sel?'<span class="text-cyan-300 font-black">✓</span>':''}
-    </button>`;
-  }).join('');
-  let action = '';
-  if(gateSel){
-    const a = c.accounts.find(x=>x.id===gateSel);
-    if(a){
-      action = `${a.pass?`<input id="acc-pass" type="password" maxlength="20" placeholder="輸入密碼" class="inp">`:''}
-        <button onclick="loginSubmit()" class="btn-gold w-full py-3 text-base">登入「${a.name}」</button>`;
-    }
+  if(gateMode === 'child-create'){
+    const pc = cloudStore.getParent(cloudStore.getSession().parentId);
+    body.innerHTML = `
+      <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">建立小孩帳號（${(pc?pc.children.length:0)}/${MAX_CHILDREN}）</div>
+      <input id="child-new-name" maxlength="12" placeholder="孩子的名字" class="inp">
+      <button onclick="createChildSubmit()" class="btn-gold w-full py-3 text-base">建立並開始覺醒</button>
+      <button onclick="gateParentHome()" class="btn-dark w-full py-2 text-sm">返回</button>`;
+    return;
   }
-  body.innerHTML = cards + action + `<button onclick="gateCreate()" class="btn-sys w-full py-2.5 text-sm mt-1">➕ 建立新帳號</button>`;
+  // parent-home：家長首頁（列出小孩、建立、登出家長）
+  const p = cloudStore.getParent(cloudStore.getSession().parentId);
+  if(!p){ gateMode='parent-login'; return renderAccountGate(); }
+  const kids = p.children || [];
+  const cards = kids.map(c=>`
+    <button onclick="enterChild('${c.id}')" class="flex items-center gap-3 p-3 rounded text-left transition-all"
+      style="border:1px solid #1c3a60; background:rgba(12,24,46,.6);">
+      <span class="text-3xl">${avatarFor(c)}</span>
+      <span class="flex-1 font-black text-white">${c.name}</span>
+      <span class="text-cyan-300 font-black">進入 →</span>
+    </button>`).join('') || `<div class="text-xs font-bold" style="color:var(--sys-dim);">還沒有小孩帳號，先建立一個吧！</div>`;
+  const addBtn = kids.length < MAX_CHILDREN
+    ? `<button onclick="gateChildCreate()" class="btn-sys w-full py-2.5 text-sm mt-1">➕ 建立小孩帳號（${kids.length}/${MAX_CHILDREN}）</button>`
+    : `<div class="text-xs font-bold text-center" style="color:var(--sys-dim);">已達 ${MAX_CHILDREN} 位小孩上限</div>`;
+  // 登出家長：只在「尚無小孩」時於此提供（讓剛登入的家長可退出）；有小孩後，登出家長只在 PIN 保護的遊戲內家長頁，避免小孩在此登出家長。
+  const logoutBtn = kids.length===0
+    ? `<button onclick="parentLogout()" class="btn-dark w-full py-2 text-sm mt-2">🚪 登出家長</button>`
+    : `<div class="text-xs text-center mt-2" style="color:var(--sys-dim);">登出家長請至遊戲內「家長」頁（需 PIN）</div>`;
+  body.innerHTML = `
+    <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">家長：<span class="text-white">${p.displayName}</span>（${p.email}）</div>
+    ${cards}
+    ${addBtn}
+    ${logoutBtn}`;
+}
+function gateParentHome(){ gateMode='parent-home'; renderAccountGate(); }
+function gateChildCreate(){ gateMode='child-create'; renderAccountGate(); }
+function parentGoogleLogin(){
+  const email = ((document.getElementById('parent-email')||{}).value||'').trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('請輸入有效的 Gmail。'); return; }
+  const p = auth.signInWithGoogle(email);
+  cloudStore.setSession({ parentId:p.id, activeChildId:null });
+  toast(`家長已登入：${p.displayName}`);
+  gateMode='parent-home'; renderAccountGate();
+}
+function createChildSubmit(){
+  const sess = cloudStore.getSession();
+  const name = ((document.getElementById('child-new-name')||{}).value||'').trim();
+  if(!name){ toast('請輸入孩子的名字。'); return; }
+  const r = cloudStore.addChild(sess.parentId, name);
+  if(!r.ok){ toast(r.reason==='max' ? `最多只能建立 ${MAX_CHILDREN} 位小孩帳號。` : '建立失敗。'); return; }
+  enterChild(r.child.id);   // 新小孩 → 覺醒引導
+}
+function enterChild(childId){
+  const sess = cloudStore.getSession();
+  const p = cloudStore.getParent(sess.parentId); if(!p) return;
+  const ch = p.children.find(x=>x.id===childId); if(!ch) return;
+  cloudStore.setSession({ parentId:p.id, activeChildId:childId });
+  currentAccountId = childId;
+  if(ch.blob){
+    kqStorage.write(ch.blob); load(); dailyReset(); ensureToday();
+    enterGame(); renderCurrent(); toast(`歡迎回來，${ch.name}！`);
+  }else{
+    const fresh = JSON.stringify(defaultData());
+    kqStorage.write(fresh); load(); dailyReset(); ensureToday();
+    document.getElementById('account-gate').style.display='none';
+    document.getElementById('game').classList.add('hidden');
+    const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
+    document.getElementById('ob-name').value = ch.name; obClass='warrior'; renderOnboarding();
+  }
+}
+// 小孩登出（回家長首頁）— 小孩端唯一的離開出口，無法登出家長
+function exitChild(){
+  const sess = cloudStore.getSession();
+  if(sess.parentId && sess.activeChildId){ cloudStore.saveChildBlob(sess.parentId, sess.activeChildId, JSON.stringify(state)); }
+  cloudStore.setSession({ parentId:sess.parentId, activeChildId:null });
+  currentAccountId = null;
+  showAccountGate();   // → parent-home
+}
+// 家長登出（只在家長首頁/家長頁提供）
+function parentLogout(){
+  const sess = cloudStore.getSession();
+  if(sess.parentId && sess.activeChildId){ cloudStore.saveChildBlob(sess.parentId, sess.activeChildId, JSON.stringify(state)); }
+  auth.signOutParent();
+  currentAccountId = null;
+  showAccountGate();   // → parent-login
+}
+// 一次性遷移：舊扁平 kidquest_accounts → 預設本機家長名下的小孩（原資料保留作備援）
+function migrateFlatAccountsToCloud(){
+  if(cloudStore.raw().parents.length > 0) return;
+  const flat = accountsLoad();
+  if(!flat.accounts || !flat.accounts.length) return;
+  const p = cloudStore.createParent('local@device', '本機家長');
+  flat.accounts.slice(0, MAX_CHILDREN).forEach(a=>{
+    const r = cloudStore.addChild(p.id, a.name||'小獵人');
+    if(r.ok) cloudStore.saveChildBlob(p.id, r.child.id, a.blob || JSON.stringify(defaultData()));
+  });
+  cloudStore.setSession({ parentId:p.id, activeChildId:null });
 }
 function gatePick(id){ gateSel = id; renderAccountGate(); }
 function gateCreate(){ gateMode = 'create'; renderAccountGate(); }
@@ -2641,12 +2725,8 @@ function createAccountSubmit(){
   const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
   document.getElementById('ob-name').value = nm; obClass = 'warrior'; renderOnboarding();
 }
-function switchAccount(){
-  const c = accountsLoad();
-  snapshotActive(c); accountsSave(c);
-  gateSel = c.activeId;
-  showAccountGate();
-}
+// M17：頂部「切換」＝登出小孩回家長首頁（小孩無法登出家長）
+function switchAccount(){ exitChild(); }
 // 變更「指定帳號」的密碼（家長 / 使用者皆可呼叫）
 let _setpassId = null;
 function setAccountPassword(id){
@@ -2670,12 +2750,8 @@ function submitSetPass(){
   renderAccounts();
   _setpassId = null;
 }
-// 使用者：設定自己（登入中帳號）的密碼
-function setMyPassword(){
-  const c = accountsLoad();
-  if(!c.activeId){ toast('目前為單人模式，尚未建立帳號。'); return; }
-  setAccountPassword(c.activeId);
-}
+// M17：新版改為家長帳號制，小孩免密碼（由家長在家長頁管理）
+function setMyPassword(){ toast('新版由家長帳號管理，孩子免設密碼。'); }
 // 家長：刪除「指定帳號」（含登入中；刪除登入中帳號後回登入畫面）
 function deleteAccount(id){
   const c = accountsLoad();
@@ -2697,23 +2773,35 @@ function deleteAccount(id){
 function renderAccounts(){
   const box = document.getElementById('parent-accounts');
   if(!box) return;
-  const c = accountsLoad();
-  const active = c.accounts.find(x=>x.id===c.activeId);
-  if(!c.accounts.length){
-    box.innerHTML = `<p class="text-xs font-bold" style="color:var(--sys-dim);">目前為單人模式（尚未建立帳號）。在登入畫面建立帳號後，即可多人各自存進度、登入登出與切換。</p>`;
+  const sess = cloudStore.getSession();
+  const p = sess.parentId ? cloudStore.getParent(sess.parentId) : null;
+  if(!p){
+    box.innerHTML = `<p class="text-xs font-bold" style="color:var(--sys-dim);">尚未以家長身分登入。</p>`;
     return;
   }
-  const list = c.accounts.map(a=>`
+  const kids = p.children || [];
+  const list = kids.map(c=>`
     <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
-      <span class="text-lg">${avatarFor(a)}</span>
-      <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${a.name} ${a.pass?'🔒':''}${a.id===c.activeId?'　<span class="text-cyan-300">（登入中）</span>':''}</div>
-      <button onclick="setAccountPassword('${a.id}')" class="btn-sys px-2.5 py-1.5 text-xs" title="變更此帳號密碼">🔑</button>
-      <button onclick="deleteAccount('${a.id}')" class="btn-red px-2.5 py-1.5 text-xs" title="刪除此帳號">🗑️</button>
-    </div>`).join('');
+      <span class="text-lg">${avatarFor(c)}</span>
+      <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${c.name}${c.id===sess.activeChildId?'　<span class="text-cyan-300">（遊玩中）</span>':''}</div>
+      <button onclick="deleteChild('${c.id}')" class="btn-red px-2.5 py-1.5 text-xs" title="刪除此小孩">🗑️</button>
+    </div>`).join('') || `<div class="text-xs font-bold" style="color:var(--sys-dim);">還沒有小孩帳號。</div>`;
   box.innerHTML = `
-    <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前登入：<span class="text-white">${active?active.name:'—'}</span>　🔑＝變更密碼、🗑️＝刪除帳號</div>
+    <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">家長：<span class="text-white">${p.displayName}</span>（${p.email}）　共 ${kids.length}/${MAX_CHILDREN} 位小孩</div>
     ${list}
-    <button onclick="switchAccount()" class="btn-gold py-2.5 text-sm mt-1">🚪 登出 / 切換帳號</button>`;
+    <button onclick="exitChild()" class="btn-gold py-2.5 text-sm mt-1">🚪 登出小孩 / 切換</button>
+    <button onclick="parentLogout()" class="btn-dark py-2 text-sm mt-1">登出家長帳號</button>`;
+}
+function deleteChild(id){
+  const sess = cloudStore.getSession();
+  const p = cloudStore.getParent(sess.parentId); if(!p) return;
+  const ch = p.children.find(x=>x.id===id); if(!ch) return;
+  if(!confirm(`確定刪除小孩「${ch.name}」？該帳號進度將永久消失！`)) return;
+  p.children = p.children.filter(x=>x.id!==id);
+  cloudStore.saveParent(p);
+  toast(`已刪除「${ch.name}」。`);
+  if(sess.activeChildId===id){ cloudStore.setSession({ parentId:p.id, activeChildId:null }); currentAccountId=null; showAccountGate(); }
+  else renderAccounts();
 }
 
 /* ═══════════════════ 啟動 ═══════════════════ */
@@ -2721,17 +2809,16 @@ load();
 dailyReset();
 ensureToday();
 (function boot(){
-  const acc = accountsLoad();
-  if(acc.accounts.length > 0){
-    currentAccountId = acc.activeId;
-    gateSel = acc.activeId;
-    showAccountGate();                         // 有帳號 → 需登入
-  }else if(state.player.name){
-    seedAccountFromCurrent(state.player.name); // 既有單人存檔 → 自動建立第一個帳號，直接進遊戲
-    enterGame();
+  migrateFlatAccountsToCloud();                // 一次性：舊扁平帳號 → 預設本機家長名下小孩
+  const sess = cloudStore.getSession();
+  const p = sess.parentId ? cloudStore.getParent(sess.parentId) : null;
+  const ch = (p && sess.activeChildId) ? p.children.find(c=>c.id===sess.activeChildId) : null;
+  if(ch && ch.blob){
+    currentAccountId = ch.id;
+    kqStorage.write(ch.blob); load(); dailyReset(); ensureToday();
+    enterGame(); renderCurrent();              // 上次正在玩的小孩 → 直接進遊戲
   }else{
-    document.getElementById('onboarding').classList.add('active');  // 全新、無帳號 → 原本覺醒引導
-    renderOnboarding();
+    showAccountGate();                         // 否則 → 家長登入 / 家長首頁
   }
 })();
 setInterval(()=>{ if(state.meta.lastDay !== todayStr()){ dailyReset(); ensureToday(); renderCurrent(); } }, 60000);

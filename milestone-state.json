@@ -4,15 +4,15 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 17,
+  "current_milestone_id": 18,
   "planning_complete": true,
   "budget": {
-    "used_usd": 3.3,
+    "used_usd": 5.1,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 1,
-    "verification_calls": 1,
+    "execution_calls": 2,
+    "verification_calls": 2,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -360,7 +360,7 @@
       "title": "帳號模型重構：家長為主帳號（Gmail）+ 小孩子帳號（最多 4）+ 雲端就緒抽象層",
       "spec_file": "milestones/m17-parent-child-account-model.md",
       "spec_summary": "安裝後第一畫面只開放家長以 Gmail 註冊/登入；家長為 root，底下建立最多 4 個小孩子帳號。小孩切換需先登出小孩；小孩無法登出家長（家長登出只在家長頁）。導入 cloudStore 抽象層（先本機實作、介面對齊 Supabase），所有小孩資料掛在家長帳號下。整個 init/gate 流程重寫。",
-      "status": "in_progress",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
@@ -374,7 +374,9 @@
         "所有小孩進度資料掛在家長帳號物件下（parent.children[]），透過 cloudStore 抽象層讀寫；雲端設定缺失時自動走本機",
         "既有單人/桌面行為相容；smoke、accounts、desktop-save 測試維持綠燈（必要時更新測試以反映新模型）"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 重寫 init/gate 為家長(Gmail stub)→家長首頁→小孩 三段流程。新增 cloudStore(本機，介面對齊 Supabase)+auth.signInWithGoogle；parentGoogleLogin/createChildSubmit/enterChild/exitChild/parentLogout/migrateFlatAccountsToCloud；save() 鏡射活躍小孩 blob 到 parent.children[]；boot() 依 session 路由；topbar switchAccount→exitChild；家長頁 renderAccounts 改管理小孩(刪除/切換/登出家長)；setMyPassword 改提示(小孩免密碼)。小孩端唯一出口 exitChild(無法登出家長)；parent-home 有小孩時隱藏登出家長(只在 PIN 保護的家長頁)。舊扁平帳號一次性遷移為本機家長名下小孩。測試：smoke 77/77、cloud-store 9/9、accounts(新模型) 8/8、desktop-save 4/4 全綠。" }
+      ]
     },
     {
       "id": 18,
