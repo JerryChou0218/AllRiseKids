@@ -4,15 +4,15 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 19,
+  "current_milestone_id": 20,
   "planning_complete": true,
   "budget": {
-    "used_usd": 6.9,
+    "used_usd": 8.7,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 3,
-    "verification_calls": 3,
+    "execution_calls": 4,
+    "verification_calls": 4,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -404,7 +404,7 @@
       "title": "遊戲架構重整：金錢/等級/升級曲線/任務主線+支線（6–15 歲台灣社會觀）",
       "spec_file": "milestones/m19-game-progression-architecture.md",
       "spec_summary": "重整經濟與成長：金錢架構、等級架構、Lv0→100 升級曲線、任務主線（成長敘事）+ 支線（日常家事/學習）。內容符合 6–15 歲台灣家庭與校園價值觀，機制鼓勵『今天比昨天更好』（成長對比、連續、每日目標）。沿用並擴充 M12 ECONOMY。",
-      "status": "pending",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
@@ -416,7 +416,9 @@
         "成長機制鼓勵『今天比昨天更好』：每日目標、個人最佳、連續成長獎勵，避免懲罰/羞辱式設計",
         "經濟/等級平衡通過 M20 速通驗證，無明顯卡關或通膨；全測試綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 等級上限 50→100，新升級曲線 xpNeeded=round(20+7L+1.2·L^1.5)（前期快後期穩，滿等約 84,028 XP、每日 235XP≈358 天）；HUNTER_RANKS 擴為 E/D/C/B/A/S/國家(91+)。新增 MAIN_QUEST 10 章成長敘事(台灣情境,依等級解鎖前向發金幣,累計 8400🪙)+checkMainQuest/backfillMainQuest(不回溯補發)/mainQuestStatus；支線＝既有每日任務。growthSnapshot 今日vs昨日/個人最佳/達標,狀態頁顯示主線當前章節＋『🔥今天比昨天更好』。成就 a18 文案修正。新增 test/progression.test.js 速通驗證 10/10(曲線單調/可達100/滿等不溢出/主線全解鎖/階級對應/成長對比)；smoke 77、cloud-store 9、accounts 8、parent-queue 7、desktop-save 4 全綠。" }
+      ]
     },
     {
       "id": 20,

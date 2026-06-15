@@ -793,6 +793,21 @@ const ECONOMY = {
 const ALL_DONE_BONUS = 25;        // 今日全部每日任務完成的額外金幣
 const ALL_DONE_XP_BONUS_PCT = 20; // 今日全部完成的額外 EXP（佔當日任務 EXP 的 %）
 
+/* M19 主線任務：章節式成長敘事，依等級解鎖並發金幣（支線＝每日家事/學習任務）。
+   敘事貼合 6–15 歲台灣家庭/校園，強調「每天比昨天進步一點」、不羞辱不懲罰。 */
+const MAIN_QUEST = [
+  { id:'mq1',  atLevel:1,   title:'第一章 · 覺醒',       coins:0,    story:'系統選中了你。從今天起，把每天該做的事做好，就是變強的開始。' },
+  { id:'mq2',  atLevel:5,   title:'第二章 · 養成習慣',   coins:50,   story:'連續完成任務，你開始明白：強者不是天生，而是每天比昨天進步一點。' },
+  { id:'mq3',  atLevel:10,  title:'第三章 · D級獵人',    coins:100,  story:'你升上 D 級。學校的功課、家裡的家事，你都扛得起來了。' },
+  { id:'mq4',  atLevel:20,  title:'第四章 · 自律之力',   coins:200,  story:'你學會管理自己的時間與情緒，連大人都對你刮目相看。' },
+  { id:'mq5',  atLevel:31,  title:'第五章 · C級突破',    coins:350,  story:'升上 C 級！你開始主動幫忙、照顧家人，成為值得依靠的人。' },
+  { id:'mq6',  atLevel:46,  title:'第六章 · B級試煉',    coins:550,  story:'B 級獵人。困難的挑戰你也不退縮，失敗了就再試一次。' },
+  { id:'mq7',  atLevel:61,  title:'第七章 · A級榮耀',    coins:850,  story:'A 級！你的努力成為弟妹與同學的榜樣。' },
+  { id:'mq8',  atLevel:76,  title:'第八章 · S級君主',    coins:1300, story:'升上 S 級。你已能獨當一面，把每一天都過得比昨天更好。' },
+  { id:'mq9',  atLevel:91,  title:'第九章 · 國家級獵人', coins:2000, story:'國家級！極少數人能走到這裡。你證明了持之以恆的力量。' },
+  { id:'mq10', atLevel:100, title:'終章 · 自己的傳說',   coins:3000, story:'滿等！但真正的傳說不是等級，而是你成為了更好的自己。' },
+];
+
 const CATS = {
   /* ── 主要分類（5–15 歲全面成長）── */
   school:    { name:'學校教育', emoji:'📒', stat:'int' },
@@ -835,7 +850,7 @@ const CLASSES = {
   warrior:  { name:'戰士',     emoji:'⚔️', sprite:'🥷', bonusCat:'health', desc:'健康習慣任務 經驗值 +50%' },
   guardian: { name:'守護騎士', emoji:'🛡️', sprite:'🦸', bonusCat:'family', desc:'家庭教育任務 經驗值 +50%' },
 };
-const HUNTER_RANKS = [ [50,'S'],[40,'A'],[30,'B'],[20,'C'],[10,'D'],[1,'E'] ];
+const HUNTER_RANKS = [ [91,'國家'],[76,'S'],[61,'A'],[46,'B'],[31,'C'],[16,'D'],[1,'E'] ];
 function hunterRank(lv){ for(const [min,r] of HUNTER_RANKS){ if(lv>=min) return r; } return 'E'; }
 
 const RARITY = { common:'普通', rare:'稀有', epic:'史詩', legendary:'傳說' };
@@ -1124,7 +1139,7 @@ const ACHIEVEMENTS = [
   { id:'a15', name:'嶄露頭角',   emoji:'⭐', desc:'達到等級 5',              coins:30,  target:5,   val:s=>s.player.level },
   { id:'a16', name:'D級升格',    emoji:'🎖️', desc:'達到等級 10',            coins:60,  target:10,  val:s=>s.player.level },
   { id:'a17', name:'A級之路',    emoji:'🦸', desc:'達到等級 25',             coins:150, target:25,  val:s=>s.player.level },
-  { id:'a18', name:'S級君主',    emoji:'👑', desc:'達到最高等級 50',         coins:500, target:50,  val:s=>s.player.level },
+  { id:'a18', name:'S級君主',    emoji:'👑', desc:'達到等級 50',             coins:500, target:50,  val:s=>s.player.level },
   { id:'a19', name:'DUNGEON BREAK', emoji:'🌀', desc:'完成第一個 A/S 級挑戰', coins:60,  target:1,   val:s=>s.counters.epicDone },
   { id:'a20', name:'全能玩家',   emoji:'💎', desc:'五項能力值全部達到 10',   coins:100, target:1,   val:s=>(Object.values(s.player.stats).every(v=>v>=10))?1:0 },
 ];
@@ -1154,9 +1169,11 @@ function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return d.
 function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return d.toLocaleDateString('sv'); }
 function isWeekend(){ const day=new Date().getDay(); return day===0||day===6; }
 function uid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+// M19：1→100 平滑升級曲線。前期快（首幾級 1–2 天可達，給孩子即時成就感），
+// 後期穩定爬升，全程到滿等約 8.3 萬 XP（每日全完成 ~220 XP ≈ 一年抵達 Lv100）。
+const MAX_LEVEL = 100;
 function xpNeeded(level){
-  if(level<=5) return 60 + level*25;
-  return Math.floor(80 + level*35 + Math.pow(level,1.7)*8);
+  return Math.round(20 + level*7 + Math.pow(level,1.5)*1.2);
 }
 
 function defaultData(){
@@ -1165,7 +1182,7 @@ function defaultData(){
     player: { name:'', class:'', age:10, gender:'all', level:1, xp:0, coins:0,
       stats:{ str:0, agi:0, int:0, vit:0, sen:0 },
       statPoints:0, skillPoints:0, skills:[],
-      streak:0, lastActiveDate:'', lastAllDoneDate:'' },
+      streak:0, lastActiveDate:'', lastAllDoneDate:'', mainQuestClaimed:[] },
     taskPool: TASK_POOL.map(t=>({ ...t })),
     tasks: [],
     inventory: [],
@@ -1175,7 +1192,7 @@ function defaultData(){
     rewardRequests: [],
     history: [],
     counters: { total:0, readCount:0, hygieneStreak:0, hygieneLastDate:'', earlyBird:false,
-      purchases:0, coinsEarned:0, epicDone:0, equippedOnce:false, bestStreak:0 },
+      purchases:0, coinsEarned:0, epicDone:0, equippedOnce:false, bestStreak:0, bestDayDone:0 },
     meta: { lastDay: todayStr(), lastWeek: weekKey() },
   };
 }
@@ -1221,6 +1238,7 @@ function load(){
         parentConfig:{ ...d.parentConfig, ...data.parentConfig },
         meta:{ ...d.meta, ...data.meta } };
       state.shop = SHOP_ITEMS.map(s=>({ ...s })); // 商店目錄永遠使用最新版
+      backfillMainQuest();                        // M19：標記已達等級的主線章節為已領（不回溯補發金幣）
       return;
     }
   }catch(e){ console.warn('讀取存檔失敗，重新初始化', e); }
@@ -1530,9 +1548,9 @@ function renderStatus(){
   document.getElementById('status-power').textContent = combatPower().toLocaleString();
   document.getElementById('status-level').textContent = p.level;
   const need = xpNeeded(p.level);
-  document.getElementById('status-xp').textContent = p.level>=50 ? 'MAX' : p.xp;
+  document.getElementById('status-xp').textContent = p.level>=MAX_LEVEL ? 'MAX' : p.xp;
   document.getElementById('status-xpneed').textContent = need;
-  document.getElementById('status-xpbar').style.width = (p.level>=50?100:Math.min(100,p.xp/need*100))+'%';
+  document.getElementById('status-xpbar').style.width = (p.level>=MAX_LEVEL?100:Math.min(100,p.xp/need*100))+'%';
 
   const badge = document.getElementById('alloc-badge');
   if(p.statPoints>0){ badge.textContent = p.statPoints; badge.classList.remove('hidden'); }
@@ -1564,11 +1582,26 @@ function renderStatus(){
   document.getElementById('status-economy').innerHTML =
     ecoBox('🪙'+todayCoins,'今日金幣','#ffd25c') + ecoBox('🪙'+weekCoins,'本週金幣','#5cb8ff') + ecoBox('🎁'+monthRewards,'本月已兌換獎勵','#5cffb8');
 
-  // 使用者自設密碼（同一台裝置可能有別的使用者）：有登入帳號才顯示
+  // M19：主線進度 + 成長對比「今天比昨天更好」
   const mp = document.getElementById('status-mypass');
-  if(mp) mp.innerHTML = currentAccountId
-    ? `<button onclick="setMyPassword()" class="btn-dark w-full py-3 text-sm">🔑 設定我的密碼（保護我的帳號）</button>`
-    : '';
+  if(mp){
+    const mq = mainQuestStatus();
+    const g = growthSnapshot();
+    const cur = mq.current ? `<div class="text-sm font-black text-amber-300">${mq.current.title}</div><div class="text-xs mt-0.5" style="color:#cfe8ff;">${mq.current.story}</div>` : '';
+    const nxt = mq.next ? `<div class="text-[11px] mt-1.5" style="color:var(--sys-dim);">下一章：${mq.next.title}（Lv.${mq.next.atLevel}）</div>` : `<div class="text-[11px] mt-1.5 text-emerald-300">主線全數完成 — 你成為了自己的傳說。</div>`;
+    const cmp = g.beatYesterday
+      ? `<span class="text-emerald-300">🔥 今天 ${g.todayDone} 件，比昨天(${g.yesterdayDone})更好！</span>`
+      : (g.todayDone>0 ? `<span style="color:var(--sys-dim);">今天 ${g.todayDone} 件，昨天 ${g.yesterdayDone} 件 — 再加一件就超越昨天！</span>`
+                       : `<span style="color:var(--sys-dim);">今天還沒開始，做一件就贏過昨天！</span>`);
+    mp.innerHTML = `
+      <div class="sys-win">
+        <div class="sys-head text-sm"><span class="sys-i">⚔</span>主線任務 <span class="ml-auto text-xs num">${mq.unlocked.length}/${mq.total}</span></div>
+        <div class="p-3">
+          ${cur}${nxt}
+          <div class="text-xs font-bold mt-2 pt-2" style="border-top:1px solid #1c3a60;">${cmp}　<span class="text-[11px]" style="color:var(--sys-dim);">個人最佳：${g.bestDayDone} 件/日</span></div>
+        </div>
+      </div>`;
+  }
 }
 function renderEquipSummary(){
   const slots = ['hat','outfit','weapon','accessory','pet','title','emote'];
@@ -1892,18 +1925,60 @@ function rejectTask(id){
 
 function awardXP(amount){
   const p = state.player;
-  if(p.level>=50) return;
+  if(p.level>=MAX_LEVEL) return;
   p.xp += amount;
   let leveled = false, fromRank = hunterRank(p.level);
-  while(p.level<50 && p.xp >= xpNeeded(p.level)){
+  while(p.level<MAX_LEVEL && p.xp >= xpNeeded(p.level)){
     p.xp -= xpNeeded(p.level);
     p.level++;
     p.statPoints += 3;
     p.skillPoints += 1;
     leveled = true;
   }
-  if(p.level>=50) p.xp = 0;
-  if(leveled) showLevelUp(p.level, fromRank);
+  if(p.level>=MAX_LEVEL) p.xp = 0;
+  if(leveled){ showLevelUp(p.level, fromRank); checkMainQuest(); }
+}
+
+/* M19 主線推進：等級到達門檻時解鎖該章節並發金幣（只發一次）。回傳本次新解鎖章節。 */
+function checkMainQuest(){
+  const p = state.player;
+  if(!Array.isArray(p.mainQuestClaimed)) p.mainQuestClaimed = [];
+  const newly = [];
+  for(const ch of MAIN_QUEST){
+    if(p.level >= ch.atLevel && !p.mainQuestClaimed.includes(ch.id)){
+      p.mainQuestClaimed.push(ch.id);
+      if(ch.coins>0){ p.coins += ch.coins; state.counters.coinsEarned += ch.coins; }
+      state.history.unshift({ date:todayStr(), kind:'mainquest', name:`主線解鎖：${ch.title}`, xpEarned:0, coinsEarned:ch.coins });
+      newly.push(ch);
+    }
+  }
+  return newly;
+}
+/* M19 既有/遷移存檔：把已達等級的章節標記已領（不回溯補發金幣，避免通膨）。 */
+function backfillMainQuest(){
+  const p = state.player;
+  if(!Array.isArray(p.mainQuestClaimed)) p.mainQuestClaimed = [];
+  for(const ch of MAIN_QUEST){ if(p.level>=ch.atLevel && !p.mainQuestClaimed.includes(ch.id)) p.mainQuestClaimed.push(ch.id); }
+}
+/* M19 主線狀態：已解鎖 / 目前章節 / 下一章節（供主線畫面與測試使用）。 */
+function mainQuestStatus(){
+  const p = state.player;
+  const claimed = Array.isArray(p.mainQuestClaimed) ? p.mainQuestClaimed : [];
+  const unlocked = MAIN_QUEST.filter(c=>claimed.includes(c.id));
+  const next = MAIN_QUEST.find(c=>!claimed.includes(c.id)) || null;
+  const current = unlocked.length ? unlocked[unlocked.length-1] : null;
+  return { unlocked, current, next, total: MAIN_QUEST.length };
+}
+/* M19 成長對比「今天比昨天更好」：今日/昨日完成數、個人最佳日、是否達標、是否超越昨天。 */
+function growthSnapshot(){
+  const today = todayStr(), yest = yesterdayStr();
+  const doneOn = d => state.history.filter(h=>h.kind==='task' && h.date===d).length;
+  const todayDone = doneOn(today), yesterdayDone = doneOn(yest);
+  const dailyGoal = (state.parentConfig && state.parentConfig.dailyCount) || 8;
+  const bestDayDone = Math.max((state.counters.bestDayDone||0), todayDone);
+  state.counters.bestDayDone = bestDayDone;
+  return { todayDone, yesterdayDone, bestDayDone, dailyGoal,
+    metGoal: todayDone>=dailyGoal, beatYesterday: todayDone>yesterdayDone };
 }
 
 function epicDrop(){
