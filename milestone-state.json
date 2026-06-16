@@ -7,12 +7,12 @@
   "current_milestone_id": 23,
   "planning_complete": true,
   "budget": {
-    "used_usd": 16.1,
+    "used_usd": 17.6,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 9,
-    "verification_calls": 9,
+    "execution_calls": 10,
+    "verification_calls": 10,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -502,7 +502,8 @@
         "雲端設定缺失時自動退回本機且全測試維持綠燈"
       ],
       "history": [
-        { "timestamp": "2026-06-16T02:00:00Z", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS（使用者核可開始 M23）：已完成不需活連線的雲端前置——(1) 新增 cloud-config.js（committed，公開安全值：publishableKey+googleClientId，supabaseUrl 留空待填）；(2) index.html 載入 cloud-config 並建 CLOUD_READY 旗標（有 supabaseUrl 才 true，否則純本機，與現狀相同）；(3) 家長登入畫面顯示雲端/本機狀態徽記；(4) 改寫 supabase/schema.sql 為家長為主模型（saves 家長整包 jsonb + RLS、leaderboard 公開讀寫自有、trades 雙方讀寫，皆 RLS）。CLOUD_READY=false 下 9 套件全綠。BLOCKED：仍缺使用者 Supabase Project URL（https://<ref>.supabase.co）才能寫 supabase-js 客戶端(Google 登入/blob 推拉同步)並對真專案驗證 RLS 隔離。" }
+        { "timestamp": "2026-06-16T02:00:00Z", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS（使用者核可開始 M23）：已完成不需活連線的雲端前置——(1) 新增 cloud-config.js（committed，公開安全值：publishableKey+googleClientId，supabaseUrl 留空待填）；(2) index.html 載入 cloud-config 並建 CLOUD_READY 旗標（有 supabaseUrl 才 true，否則純本機，與現狀相同）；(3) 家長登入畫面顯示雲端/本機狀態徽記；(4) 改寫 supabase/schema.sql 為家長為主模型（saves 家長整包 jsonb + RLS、leaderboard 公開讀寫自有、trades 雙方讀寫，皆 RLS）。CLOUD_READY=false 下 9 套件全綠。BLOCKED：仍缺使用者 Supabase Project URL（https://<ref>.supabase.co）才能寫 supabase-js 客戶端(Google 登入/blob 推拉同步)並對真專案驗證 RLS 隔離。" },
+        { "timestamp": "2026-06-16T03:00:00Z", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS（已接線，待使用者瀏覽器實測）：使用者提供 Project URL=https://pfswpfdtclnoawmcodht.supabase.co，已填入 cloud-config.js。載入 supabase-js@2 CDN。新增 cloud 模組：cloudClient/cloudSignInGoogle(signInWithOAuth google,redirectTo 部署網址)/cloudSignOut/cloudCurrentUser/cloudPull(saves)/cloudPush(upsert saves)/cloudSchedulePush(去抖 1.5s)/cloudBoot(啟動拉雲端→灌本機家長→家長首頁)。save() 末呼叫 cloudSchedulePush；parent-login 在 CLOUD_READY 時顯示真 Google 鈕；parentLogout 一併 cloudSignOut；boot 後 if(CLOUD_READY) cloudBoot()。全部以 CLOUD_READY 為閘，false 時完全不影響本機。驗證：CLOUD_READY=false 下 9 套件全綠；CLOUD_READY=true 模擬(無 supabase global)載入不崩潰、cloudClient 安全回 null。待辦(需使用者於瀏覽器)：真 Google 登入往返、跨裝置同步、兩帳號 RLS 隔離；確認 Supabase Google provider 已 Enable+Client Secret、redirect URIs 含 callback。通過後 M23→complete。" }
       ]
     }
   ]

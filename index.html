@@ -804,6 +804,7 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="cloud-config.js"></script>
 <script>
 'use strict';
@@ -1258,6 +1259,7 @@ function save(){
   // M17：同步鏡射到家長雲端的活躍小孩
   const sess = cloudStore.getSession();
   if(sess.parentId && sess.activeChildId){ cloudStore.saveChildBlob(sess.parentId, sess.activeChildId, s); }
+  cloudSchedulePush();   // M23：去抖動推送整包家長資料到 Supabase（CLOUD_READY 且已登入才動作）
 }
 
 function load(){
@@ -2960,12 +2962,67 @@ const cloudStore = (function(){
     }
   };
 })();
-/* 家長登入：M23 會把內部換成 supabase.auth.signInWithOAuth({ provider:'google' }) */
+/* 家長登入：本機 stub（無雲端時用 email 模擬）；CLOUD_READY 時改走真正的 Google OAuth（見 cloud 模組）。 */
 const auth = {
   signInWithGoogle(email, displayName){ if(!email) return null; return cloudStore.createParent(email, displayName); },
   currentParent(){ const s=cloudStore.getSession(); return s.parentId? cloudStore.getParent(s.parentId) : null; },
   signOutParent(){ cloudStore.setSession({ parentId:null, activeChildId:null }); }
 };
+
+/* ===== M23 真正的 Supabase 雲端（只在 CLOUD_READY 時啟用；否則完全不影響本機流程） ===== */
+let _supa=null, _cloudUser=null, _pushTimer=null;
+function cloudClient(){
+  if(!CLOUD_READY) return null;
+  if(_supa) return _supa;
+  if(typeof supabase==='undefined' || !supabase.createClient) return null;
+  try{ _supa = supabase.createClient(CLOUD.supabaseUrl, CLOUD.supabasePublishableKey); }catch(e){ _supa=null; }
+  return _supa;
+}
+async function cloudSignInGoogle(){
+  const c=cloudClient(); if(!c){ toast('雲端尚未就緒，改用本機模式。'); return; }
+  try{ await c.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin + location.pathname } }); }
+  catch(e){ toast('Google 登入啟動失敗：'+(e&&e.message||e)); }
+}
+async function cloudSignOut(){ const c=cloudClient(); if(c){ try{ await c.auth.signOut(); }catch(e){} } _cloudUser=null; }
+async function cloudCurrentUser(){
+  const c=cloudClient(); if(!c) return null;
+  try{ const { data } = await c.auth.getSession(); return (data&&data.session)? data.session.user : null; }catch(e){ return null; }
+}
+async function cloudPull(userId){
+  const c=cloudClient(); if(!c) return null;
+  try{ const { data, error } = await c.from('saves').select('data').eq('user_id', userId).maybeSingle();
+    if(error) return null; return data? data.data : null; }catch(e){ return null; }
+}
+async function cloudPush(userId, payload){
+  const c=cloudClient(); if(!c) return;
+  try{ await c.from('saves').upsert({ user_id:userId, data:payload, updated_at:new Date().toISOString() }); }catch(e){}
+}
+// 進度有變更時，去抖動地把目前家長整包資料推上雲端
+function cloudSchedulePush(){
+  if(!CLOUD_READY || !_cloudUser) return;
+  clearTimeout(_pushTimer);
+  _pushTimer = setTimeout(()=>{
+    const sess=cloudStore.getSession();
+    const p = sess.parentId ? cloudStore.getParent(sess.parentId) : null;
+    if(p) cloudPush(_cloudUser.id, p);
+  }, 1500);
+}
+// 啟動時若已有 Google 登入工作階段：拉雲端資料 → 灌入本機家長 → 進家長首頁
+async function cloudBoot(){
+  if(!CLOUD_READY) return;
+  const user = await cloudCurrentUser();
+  if(!user) return;                          // 未登入 → 維持本機登入畫面
+  _cloudUser = user;
+  const dn = (user.user_metadata && (user.user_metadata.full_name||user.user_metadata.name)) || (user.email||'家長');
+  const p = cloudStore.createParent(user.email, dn);
+  const pulled = await cloudPull(user.id);
+  if(pulled && Array.isArray(pulled.children)){
+    pulled.id = p.id; pulled.email = user.email;   // 維持本機 id/email 一致
+    cloudStore.saveParent(pulled);
+  }
+  cloudStore.setSession({ parentId:p.id, activeChildId:null });
+  showAccountGate();                          // → 家長首頁（已含雲端小孩）
+}
 function avatarFor(a){ let h=0; for(const ch of (a.name||'')) h=(h+ch.charCodeAt(0))%AVATARS.length; return a.avatar || AVATARS[h]; }
 function snapshotActive(c){
   if(c.activeId){ const a = c.accounts.find(x=>x.id===c.activeId); if(a){ const blob = kqStorage.read(); if(blob) a.blob = blob; } }
@@ -2998,11 +3055,14 @@ function renderAccountGate(){
     const cloudBadge = CLOUD_READY
       ? `<div class="text-[11px] font-bold mb-1" style="color:#5cffb8;">☁️ 雲端同步已啟用 — 進度將跨裝置同步</div>`
       : `<div class="text-[11px] font-bold mb-1" style="color:#7ea8cc;">📱 本機模式（雲端待設定）— 進度存在這台裝置</div>`;
+    const loginCtrl = CLOUD_READY
+      ? `<button onclick="cloudSignInGoogle()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`
+      : `<input id="parent-email" type="email" maxlength="60" placeholder="你的 Gmail" class="inp" autocomplete="email">
+         <button onclick="parentGoogleLogin()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`;
     body.innerHTML = `
       ${cloudBadge}
       <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前僅開放家長以 Google 帳號註冊／登入。登入後即可建立並管理小孩帳號（最多 ${MAX_CHILDREN} 位）。</div>
-      <input id="parent-email" type="email" maxlength="60" placeholder="你的 Gmail" class="inp" autocomplete="email">
-      <button onclick="parentGoogleLogin()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`;
+      ${loginCtrl}`;
     return;
   }
   if(gateMode === 'child-create'){
@@ -3094,6 +3154,7 @@ function parentLogout(){
   const sess = cloudStore.getSession();
   if(sess.parentId && sess.activeChildId){ cloudStore.saveChildBlob(sess.parentId, sess.activeChildId, JSON.stringify(state)); }
   auth.signOutParent();
+  if(CLOUD_READY) cloudSignOut();   // M23：一併登出 Google 工作階段
   currentAccountId = null;
   showAccountGate();   // → parent-login
 }
@@ -3270,6 +3331,7 @@ ensureToday();
     showAccountGate();                         // 否則 → 家長登入 / 家長首頁
   }
 })();
+if(CLOUD_READY){ cloudBoot().catch(function(){}); }   // M23：若已有 Google 工作階段，拉雲端資料並進家長首頁
 setInterval(()=>{ if(state.meta.lastDay !== todayStr()){ dailyReset(); ensureToday(); renderCurrent(); } }, 60000);
 </script>
 <!-- PWA：service worker 註冊（獨立區塊，不影響 smoke 測試擷取的主腳本） -->
