@@ -473,6 +473,21 @@
       <div id="ach-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
     </div>
 
+    <div id="screen-leaderboard" class="screen">
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>世界戰績排行榜</div>
+        <div class="p-3">
+          <p class="text-[11px] mb-2" style="color:var(--sys-dim);">和全世界的小獵人比拚成長。只顯示遊戲暱稱與戰績，不顯示真實姓名或家長資訊。</p>
+          <div class="flex gap-2" id="lb-filters">
+            <button onclick="setLbFilter('all')"  class="btn-sys flex-1 py-2 text-xs" data-lb="all">總榜</button>
+            <button onclick="setLbFilter('week')" class="btn-dark flex-1 py-2 text-xs" data-lb="week">週榜</button>
+            <button onclick="setLbFilter('age')"  class="btn-dark flex-1 py-2 text-xs" data-lb="age">同齡</button>
+          </div>
+        </div>
+      </div>
+      <div id="lb-list" class="grid gap-2 mb-4"></div>
+    </div>
+
     <!-- 8. 家長後台 -->
     <div id="screen-parent" class="screen">
       <div class="sys-win mb-3">
@@ -576,6 +591,7 @@
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="skills" onclick="goScreen('skills')"><div class="text-xl">✨</div><div class="text-[11px] font-bold">技能</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="inventory" onclick="goScreen('inventory')"><div class="text-xl">🎒</div><div class="text-[11px] font-bold">背包</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="achievements" onclick="goScreen('achievements')"><div class="text-xl">🏆</div><div class="text-[11px] font-bold">成就</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="leaderboard" onclick="goScreen('leaderboard')"><div class="text-xl">🏅</div><div class="text-[11px] font-bold">排行</div></button>
       <button class="nav-btn flex-1 py-2.5 text-center" data-nav="shop" onclick="goScreen('shop')"><div class="text-xl">🛒</div><div class="text-[11px] font-bold">商店</div></button>
     </div>
   </nav>
@@ -1472,6 +1488,7 @@ function renderScreen(name){
   else if(name==='shop') renderShop();
   else if(name==='inventory') renderInventory();
   else if(name==='achievements') renderAchievements();
+  else if(name==='leaderboard') renderLeaderboard();
   else if(name==='parent') renderParent();
 }
 function renderCurrent(){ renderTop(); renderScreen(currentScreen); }
@@ -1479,15 +1496,16 @@ function renderTop(){
   document.getElementById('top-coins').textContent = state.player.coins;
   document.getElementById('top-streak').textContent = state.player.streak;
   document.getElementById('top-level').textContent = state.player.level;
-  // 頂部列：帳號（有帳號才顯示）＋ 家長
-  const c = accountsLoad();
+  // 頂部列：目前遊玩中的小孩（點擊＝登出小孩回家長首頁）＋ 家長
   const accBtn = document.getElementById('tb-account');
   if(accBtn){
-    if(c.accounts.length>0){
-      const a = c.accounts.find(x=>x.id===c.activeId);
+    const sess = cloudStore.getSession();
+    const par = sess.parentId ? cloudStore.getParent(sess.parentId) : null;
+    const ch = (par && sess.activeChildId) ? par.children.find(x=>x.id===sess.activeChildId) : null;
+    if(ch){
       accBtn.style.display = '';
-      document.getElementById('tb-account-ava').textContent = a ? avatarFor(a) : '👤';
-      document.getElementById('tb-account-name').textContent = a ? a.name : '';
+      document.getElementById('tb-account-ava').textContent = avatarFor(ch);
+      document.getElementById('tb-account-name').textContent = ch.name;
     }else accBtn.style.display = 'none';
   }
   const pBtn = document.getElementById('tb-parent');
@@ -2055,6 +2073,56 @@ function runDebugSimulation(){
     <span style="color:var(--sys-dim);">${x.tasks}任務</span><span style="color:#ffd25c;">${x.totalCoins}🪙</span><span style="color:#5cffb8;">主線${x.mainq}/10</span>
   </div>`).join('');
   const out = document.getElementById('dbg-sim-out'); if(out) out.innerHTML = head + rows;
+}
+
+/* ===== M21 世界戰績排行榜（跨家庭；只公開非敏感欄位；本機示範資料，介面對齊未來雲端公開讀取表） ===== */
+const DEMO_RIVALS = [
+  { id:'r1',  name:'闇影獵人',   level:96, tasks:1680, weekTasks:41, age:14, self:false },
+  { id:'r2',  name:'星辰法師',   level:88, tasks:1402, weekTasks:33, age:13, self:false },
+  { id:'r3',  name:'白銀騎士',   level:74, tasks:1115, weekTasks:38, age:12, self:false },
+  { id:'r4',  name:'烈焰小將',   level:61, tasks:902,  weekTasks:29, age:11, self:false },
+  { id:'r5',  name:'青空旅人',   level:52, tasks:760,  weekTasks:35, age:10, self:false },
+  { id:'r6',  name:'微光學徒',   level:43, tasks:611,  weekTasks:27, age:9,  self:false },
+  { id:'r7',  name:'勇敢小熊',   level:34, tasks:455,  weekTasks:31, age:8,  self:false },
+  { id:'r8',  name:'彩虹精靈',   level:25, tasks:320,  weekTasks:22, age:7,  self:false },
+  { id:'r9',  name:'初心冒險者', level:16, tasks:188,  weekTasks:24, age:6,  self:false },
+  { id:'r10', name:'晨曦新星',   level:9,  tasks:92,   weekTasks:18, age:7,  self:false },
+];
+function rankBadge(level){ return ({E:'🔰',D:'🗡️',C:'⚔️',B:'🛡️',A:'🔥',S:'👑','國家':'🏆'})[hunterRank(level)] || '🗡️'; }
+let lbFilter = 'all';
+function setLbFilter(f){
+  lbFilter = f;
+  document.querySelectorAll('#lb-filters [data-lb]').forEach(b=>{
+    b.classList.remove('btn-sys','btn-dark');
+    b.classList.add(b.dataset.lb===f ? 'btn-sys' : 'btn-dark');
+  });
+  renderLeaderboard();
+}
+function worldLeaderboard(filter){
+  filter = filter || lbFilter || 'all';
+  const wk = (typeof weekKey==='function') ? weekKey() : '';
+  let entries = cloudStore.publicChildren(wk).concat(DEMO_RIVALS.map(d=>({ ...d })));
+  if(filter==='age'){ const selfAge = (state.player.age)||10; entries = entries.filter(e=>Math.abs((e.age||10)-selfAge)<=1); }
+  const score = filter==='week' ? (e=>e.weekTasks||0) : (e=>(e.level||1)*100000 + (e.tasks||0));
+  entries.sort((a,b)=> score(b)-score(a) || ((b.level||1)-(a.level||1)));
+  entries.forEach((e,i)=> e.place = i+1);
+  return entries;
+}
+function renderLeaderboard(){
+  const box = document.getElementById('lb-list'); if(!box) return;
+  const entries = worldLeaderboard(lbFilter);
+  box.innerHTML = entries.map(e=>{
+    const medal = e.place===1?'🥇':e.place===2?'🥈':e.place===3?'🥉':('#'+e.place);
+    const metric = lbFilter==='week' ? `本週 ${e.weekTasks} 任務` : `Lv.${e.level}・${e.tasks} 任務`;
+    const hl = e.self ? 'border:1px solid var(--sys-cyan); background:rgba(0,210,255,.10);' : 'border:1px solid #1c3a60; background:rgba(12,24,46,.6);';
+    return `<div class="flex items-center gap-3 p-2.5 rounded" style="${hl}">
+      <span class="num font-black text-lg w-9 text-center flex-none" style="color:#ffd25c;">${medal}</span>
+      <span class="text-2xl flex-none">${rankBadge(e.level)}</span>
+      <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${e.name}${e.self?' <span class="text-cyan-300 text-[10px]">（我）</span>':''}</div>
+      <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${hunterRank(e.level)} 級・${e.age} 歲</div></div>
+      <div class="num font-bold text-xs flex-none" style="color:#5cb8ff;">${metric}</div>
+    </div>`;
+  }).join('') || `<div class="text-sm text-center py-4" style="color:var(--sys-dim);">目前還沒有排行資料。</div>`;
 }
 
 function epicDrop(){
@@ -2693,7 +2761,18 @@ const cloudStore = (function(){
     saveChildBlob(parentId, childId, blob){ const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return; const ch=p.children.find(x=>x.id===childId); if(!ch) return; ch.blob=blob; _write(c); },
     loadChildBlob(parentId, childId){ const p=_read().parents.find(x=>x.id===parentId); if(!p) return null; const ch=p.children.find(x=>x.id===childId); return ch? ch.blob : null; },
     getSession(){ return _read().session || { parentId:null, activeChildId:null }; },
-    setSession(s){ const c=_read(); c.session=s; _write(c); }
+    setSession(s){ const c=_read(); c.session=s; _write(c); },
+    // M21：所有本機家長名下小孩的「公開」排行資料（只含非敏感欄位）。M23 改讀 Supabase 公開排行表。
+    publicChildren(wk){
+      const c=_read(); const out=[];
+      c.parents.forEach(p=>(p.children||[]).forEach(ch=>{
+        let b={}; try{ b=JSON.parse(ch.blob||'{}'); }catch(e){}
+        const pl=b.player||{}, co=b.counters||{};
+        const weekTasks = wk ? (b.history||[]).filter(h=>h.kind==='task' && h.date>=wk).length : 0;
+        out.push({ id:ch.id, name:(pl.name||ch.name||'小獵人'), level:(pl.level||1), tasks:(co.total||0), weekTasks, age:(pl.age||10), self:true });
+      }));
+      return out;
+    }
   };
 })();
 /* 家長登入：M23 會把內部換成 supabase.auth.signInWithOAuth({ provider:'google' }) */

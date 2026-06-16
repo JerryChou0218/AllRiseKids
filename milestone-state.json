@@ -4,15 +4,15 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 21,
+  "current_milestone_id": 22,
   "planning_complete": true,
   "budget": {
-    "used_usd": 10.5,
+    "used_usd": 12.3,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 5,
-    "verification_calls": 5,
+    "execution_calls": 6,
+    "verification_calls": 6,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -446,7 +446,7 @@
       "title": "世界戰績排行榜（跨家庭，雲端就緒）",
       "spec_file": "milestones/m21-world-leaderboard.md",
       "spec_summary": "不同家長名下的小孩可在世界排行榜互相看到（等級/戰績/成就），含篩選與名次。先以 cloudStore 抽象層 + 本機示範資料實作，介面與資料形態對齊未來 Supabase 公開讀取表。僅公開非敏感資訊（暱稱/等級/戰績），不露個資。",
-      "status": "pending",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
@@ -458,7 +458,9 @@
         "以 cloudStore 抽象層讀取，本機以示範資料運作，介面對齊未來公開讀取表",
         "全測試綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 新增 cloudStore.publicChildren(wk) 公開排行資料(只 id/暱稱/等級/總任務/週任務/年齡,不含 email/家長/存檔)；DEMO_RIVALS 10 虛構對手；worldLeaderboard 合併真實+示範→篩選(總榜=等級×100000+任務/週榜=週任務/同齡=±1歲)→指派名次。新增 screen-leaderboard 分頁+底部導覽『🏅排行』+篩選鈕+renderLeaderboard(獎牌/階級徽記/暱稱/年齡/戰績,self 高亮)。順手修 M17 回歸：renderTop 頂部帳號改讀 cloudStore session 顯示遊玩中小孩(切換鈕復原)。新增 test/leaderboard.test.js 7/7(跨家庭彙整/排序名次/隱私無 email-家長/同齡/週榜)；8 套件全綠。" }
+      ]
     },
     {
       "id": 22,
