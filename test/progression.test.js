@@ -36,7 +36,7 @@ const __assert = (c,m)=>{ if(c){ console.log('PASS:', m); __pp(); } else { conso
 let mono=true, prev=0, totalXp=0;
 for(let L=1; L<MAX_LEVEL; L++){ const n=xpNeeded(L); if(n<=0 || n<prev) mono=false; prev=n; totalXp+=n; }
 __assert(mono, 'xpNeeded(1..99) 為正且單調遞增');
-__assert(xpNeeded(1) <= 80, '前期親民：Lv1→2 所需 '+xpNeeded(1)+' XP ≤ 80');
+__assert(xpNeeded(1) <= 110, '前期親民：Lv1→2 所需 '+xpNeeded(1)+' XP ≤ 110');
 
 /* 2. 速通：每日全完成(約 235 XP) → 模擬到 Lv100 */
 state = defaultData(); state.player.name='速通'; state.player.level=1; state.player.xp=0;

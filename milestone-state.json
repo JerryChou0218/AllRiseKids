@@ -4,15 +4,15 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 20,
+  "current_milestone_id": 21,
   "planning_complete": true,
   "budget": {
-    "used_usd": 8.7,
+    "used_usd": 10.5,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 4,
-    "verification_calls": 4,
+    "execution_calls": 5,
+    "verification_calls": 5,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -425,7 +425,7 @@
       "title": "測試/除錯模式：無限金幣 + 等級 0→100 速通與平衡驗證",
       "spec_file": "milestones/m20-debug-playtest-mode.md",
       "spec_summary": "家長隱藏的除錯模式：無限金幣、一鍵跳級、模擬每日完成，自動跑過 Lv0→100 全程，輸出各階段所需任務數/天數/金幣收支報告，找出卡關與通膨點並回饋 M19 調整。除錯入口不可被小孩開啟。",
-      "status": "pending",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
@@ -437,7 +437,9 @@
         "依報告找出至少卡關/通膨問題並回饋 M19 調整，再次驗證改善",
         "除錯資料不污染正式存檔；全測試綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 家長頁(PIN保護)新增除錯區塊 #parent-debug：無限金幣(999999)/+1000/等級+10/直接滿等/設定等級，小孩端無入口。simulateProgression 在暫存 state 跑 Lv1→100、9 檢查點輸出天數/任務/任務金幣/主線金幣/總金幣/主線章數，finally 還原正式存檔；runDebugSimulation 顯示報告。平衡回饋(criterion3)：報告發現原曲線早期過快(Lv5第1天/Lv10第3天,一天衝4級)→回饋 M19 把 xpNeeded 樓地板調高為 round(80+8L+1.15·L^1.5)→再驗證 Lv5≈2天/Lv10≈6天(約一天一級),滿等~396天/~66k金幣仍健康。新增 test/debug-sim.test.js 9/9(含『模擬前後 state 相同』不污染斷言)；progression 10/10、smoke 77、cloud-store 9、accounts 8、parent-queue 7、desktop-save 4 全綠。" }
+      ]
     },
     {
       "id": 21,

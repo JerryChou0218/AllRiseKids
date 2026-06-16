@@ -549,6 +549,11 @@
         <div class="p-3 grid gap-2" id="parent-accounts"></div>
       </div>
 
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">⚙</span>除錯 / 平衡測試（僅家長）</div>
+        <div class="p-3 grid gap-2" id="parent-debug"></div>
+      </div>
+
       <div class="sys-win mb-4">
         <div class="sys-head text-sm"><span class="sys-i">i</span>設定</div>
         <div class="p-3 grid gap-2">
@@ -1169,11 +1174,12 @@ function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return d.
 function weekKey(){ const d=new Date(); const day=(d.getDay()+6)%7; d.setDate(d.getDate()-day); return d.toLocaleDateString('sv'); }
 function isWeekend(){ const day=new Date().getDay(); return day===0||day===6; }
 function uid(){ return 'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
-// M19：1→100 平滑升級曲線。前期快（首幾級 1–2 天可達，給孩子即時成就感），
-// 後期穩定爬升，全程到滿等約 8.3 萬 XP（每日全完成 ~220 XP ≈ 一年抵達 Lv100）。
+// M19/M20：1→100 平滑升級曲線。前期約「一天一級」（首級半天內可達，給即時成就感又不會一天衝 4 級），
+// 後期穩定爬升。全程到滿等約 9.2 萬 XP（每日全完成 ~235 XP ≈ 一年多抵達 Lv100）。
+// 早期樓地板由 M20 速通報告回饋調高（原曲線 Lv10 僅 3 天、過快）。
 const MAX_LEVEL = 100;
 function xpNeeded(level){
-  return Math.round(20 + level*7 + Math.pow(level,1.5)*1.2);
+  return Math.round(80 + level*8 + Math.pow(level,1.5)*1.15);
 }
 
 function defaultData(){
@@ -1981,6 +1987,76 @@ function growthSnapshot(){
     metGoal: todayDone>=dailyGoal, beatYesterday: todayDone>yesterdayDone };
 }
 
+/* ===== M20 家長除錯 / 平衡測試工具（僅 PIN 保護的家長頁可進入；小孩端無入口） ===== */
+let debugInfiniteCoins = false;
+function debugToggleInfiniteCoins(){
+  debugInfiniteCoins = !debugInfiniteCoins;
+  if(debugInfiniteCoins){ state.player.coins = 999999; save(); }
+  toast(debugInfiniteCoins ? '🪙 無限金幣：開（已設 999999）' : '🪙 無限金幣：關');
+  renderCurrent(); renderParent();
+}
+function debugAddCoins(n){ state.player.coins += n; if(n>0) state.counters.coinsEarned += n; save(); toast('🪙 +'+n); renderCurrent(); renderParent(); }
+function debugSetLevel(lv){
+  const p = state.player; const before = p.level;
+  lv = Math.max(1, Math.min(MAX_LEVEL, lv|0));
+  p.level = lv; p.xp = 0;
+  if(lv>before){ p.statPoints += (lv-before)*3; p.skillPoints += (lv-before)*1; }
+  checkMainQuest(); checkAchievements(); save();
+  toast('⏫ 等級設為 Lv.'+lv);
+  renderCurrent(); renderParent();
+}
+function debugJumpLevel(n){ debugSetLevel(state.player.level + n); }
+function debugSetLevelFromInput(){ const v = parseInt((document.getElementById('dbg-level')||{}).value,10); if(!isNaN(v)) debugSetLevel(v); }
+
+/* 速通模擬：在「暫存 state」上跑 Lv1→100，輸出每階段報告；finally 還原正式存檔（不污染）。 */
+function simulateProgression(dailyXp, dailyCoins){
+  dailyXp = dailyXp||235; dailyCoins = dailyCoins||146;
+  const backup = JSON.stringify(state);
+  try{
+    state = defaultData(); state.player.name='SIM'; state.player.level=1; state.player.xp=0;
+    backfillMainQuest();
+    const checkpoints = [5,10,20,31,46,61,76,91,100];
+    const rows = []; let day=0, tasks=0, taskCoins=0, ci=0;
+    while(state.player.level < MAX_LEVEL && day < 6000){
+      awardXP(dailyXp); day++; tasks += 8; taskCoins += dailyCoins;
+      while(ci<checkpoints.length && state.player.level>=checkpoints[ci]){
+        const mqCoins = state.history.filter(h=>h.kind==='mainquest').reduce((a,h)=>a+(h.coinsEarned||0),0);
+        rows.push({ level:checkpoints[ci], rank:hunterRank(checkpoints[ci]), day, tasks, taskCoins, mqCoins,
+          totalCoins: taskCoins+mqCoins, mainq: state.player.mainQuestClaimed.length });
+        ci++;
+      }
+    }
+    return { dailyXp, dailyCoins, days:day, totalTasks:tasks, reachedMax: state.player.level>=MAX_LEVEL, rows };
+  } finally { state = JSON.parse(backup); }
+}
+function renderDebugPanel(){
+  const box = document.getElementById('parent-debug'); if(!box) return;
+  const p = state.player;
+  box.innerHTML = `
+    <p class="text-[11px]" style="color:var(--sys-dim);">家長測試工具：作用於「目前這個小孩」的存檔，請僅測試用。速通報告為模擬，不會改到存檔。</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button onclick="debugToggleInfiniteCoins()" class="btn-${debugInfiniteCoins?'sys':'dark'} py-2 text-xs">🪙 無限金幣：${debugInfiniteCoins?'開':'關'}</button>
+      <button onclick="debugAddCoins(1000)" class="btn-dark py-2 text-xs">🪙 +1000</button>
+      <button onclick="debugJumpLevel(10)" class="btn-dark py-2 text-xs">⏫ 等級 +10（目前 Lv.${p.level}）</button>
+      <button onclick="debugSetLevel(MAX_LEVEL)" class="btn-dark py-2 text-xs">⏫ 直接滿等 Lv.${MAX_LEVEL}</button>
+    </div>
+    <div class="flex items-center gap-2">
+      <input id="dbg-level" type="number" min="1" max="${MAX_LEVEL}" placeholder="設等級 1-${MAX_LEVEL}" class="inp flex-1" style="margin:0;">
+      <button onclick="debugSetLevelFromInput()" class="btn-sys px-3 py-2 text-xs flex-none">設定</button>
+    </div>
+    <button onclick="runDebugSimulation()" class="btn-gold py-2.5 text-sm mt-1">🏃 跑 0→100 速通報告</button>
+    <div id="dbg-sim-out" class="text-[11px]"></div>`;
+}
+function runDebugSimulation(){
+  const r = simulateProgression();
+  const head = `<div class="font-bold mt-2 mb-1" style="color:#ffd25c;">速通模擬：每日 ${r.dailyXp} XP / ${r.dailyCoins} 🪙 → ${r.reachedMax?'抵達 Lv.'+MAX_LEVEL:'未達滿等'}，約 ${r.days} 天、累計 ${r.totalTasks} 任務、~${r.rows.length?r.rows[r.rows.length-1].totalCoins:0} 🪙</div>`;
+  const rows = r.rows.map(x=>`<div class="flex justify-between gap-2 num" style="border-bottom:1px solid #14283f; padding:2px 0;">
+    <span style="color:#c98aff;">Lv.${x.level}(${x.rank})</span><span style="color:var(--sys-dim);">${x.day}天</span>
+    <span style="color:var(--sys-dim);">${x.tasks}任務</span><span style="color:#ffd25c;">${x.totalCoins}🪙</span><span style="color:#5cffb8;">主線${x.mainq}/10</span>
+  </div>`).join('');
+  const out = document.getElementById('dbg-sim-out'); if(out) out.innerHTML = head + rows;
+}
+
 function epicDrop(){
   if(Math.random()*100 > dropChance()) return;
   const pool = state.shop.filter(s=>!['title','emote','consumable'].includes(s.type) && !state.inventory.some(i=>i.id===s.id));
@@ -2303,6 +2379,7 @@ function renderParent(){
     : `<div class="font-bold text-center py-2" style="color:var(--sys-dim);">還沒有任何紀錄。</div>`;
 
   renderAccounts();
+  renderDebugPanel();
 }
 
 /* ── 家長：設定與任務池操作 ── */
