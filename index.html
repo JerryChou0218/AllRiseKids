@@ -1125,34 +1125,44 @@ const DEFAULT_REWARDS = [
 ];
 
 /* ═══════════════════ 技能樹 ═══════════════════ */
+/* 技能樹：每個職業 25 個技能，依等級難度提升（Lv2→95）；總 SP 約 70（Lv100 可學滿並有餘裕）。 */
+const _SKILL_TIERS = ['覺醒','鍛鍊','精通','洗練','領悟','突破','昇華','奧義','真傳','極意','超克','無雙','絕技','秘奧','聖域','天賦','霸氣','鬥魂','究極','終焉','創世','君臨','不朽','傳說','神話'];
+const _SKILL_LVS   = [2,3,5,7,9,12,15,18,22,26,30,35,40,45,50,56,62,68,74,80,84,88,91,93,95];
+const _SKILL_SP    = [1,1,1,1,2,2,2,2,2,2,3,3,3,3,3,3,3,3,4,4,4,4,4,5,5];
+function _skillEffect(i, cat){
+  switch(i%6){
+    case 0: return { power: 200 + i*60 };
+    case 1: return { xpAll: 4 };
+    case 2: return { coinAll: 4 };
+    case 3: return (i<12) ? { discount: 4 } : { drop: 6 };
+    case 4: return { coinCat:[cat, 12] };
+    default: return { sRankBonus: 8, power: 150 };
+  }
+}
+function _skillDesc(e){
+  const p=[];
+  if(e.power) p.push('戰鬥力 +'+e.power);
+  if(e.xpAll) p.push('所有任務經驗值 +'+e.xpAll+'%');
+  if(e.coinAll) p.push('所有任務金幣 +'+e.coinAll+'%');
+  if(e.discount) p.push('商店折扣 +'+e.discount+'%');
+  if(e.drop) p.push('S級寶箱掉落率 +'+e.drop+'%');
+  if(e.sRankBonus) p.push('S級任務經驗與金幣 +'+e.sRankBonus+'%');
+  if(e.coinCat) p.push(((CATS[e.coinCat[0]]||{name:e.coinCat[0]}).name)+'任務金幣 +'+e.coinCat[1]+'%');
+  return p.join('、')+'。';
+}
+function _mkTree(prefix, word, cat, emojis){
+  const out=[];
+  for(let i=0;i<25;i++){
+    const eff=_skillEffect(i,cat);
+    out.push({ id:prefix+(i+1), name:word+_SKILL_TIERS[i], emoji:emojis[i%emojis.length],
+      sp:_SKILL_SP[i], lv:_SKILL_LVS[i], req: i===0?null:prefix+i, effects:eff, desc:_skillDesc(eff) });
+  }
+  return out;
+}
 const SKILLS = {
-  mage: [
-    { id:'m1', name:'魔力覺醒',   emoji:'🔮', sp:1, lv:2,  req:null,  effects:{power:200},        desc:'喚醒體內沉睡的魔力。戰鬥力 +200。' },
-    { id:'m2', name:'智慧光環',   emoji:'📘', sp:1, lv:3,  req:'m1',  effects:{coinCat:['homework',10]}, desc:'作業任務的金幣獎勵 +10%。' },
-    { id:'m3', name:'奧術強化',   emoji:'💠', sp:2, lv:5,  req:'m2',  effects:{xpAll:5},          desc:'所有任務經驗值 +5%。' },
-    { id:'m4', name:'時空交涉術', emoji:'⏳', sp:2, lv:8,  req:'m3',  effects:{discount:5},       desc:'與系統商店交涉。商店折扣 +5%。' },
-    { id:'m5', name:'元素掌控',   emoji:'🌪️', sp:2, lv:12, req:'m4',  effects:{power:500},        desc:'掌控四大元素之力。戰鬥力 +500。' },
-    { id:'m6', name:'賢者之眼',   emoji:'👁️', sp:2, lv:15, req:'m5',  effects:{drop:10},          desc:'看穿寶箱所在。S級掉落率 +10%。' },
-    { id:'m7', name:'終極魔法・流星雨', emoji:'☄️', sp:3, lv:20, req:'m6', effects:{sRankBonus:20, power:300}, desc:'究極奧義。S級任務的經驗值與金幣 +20%，戰鬥力 +300。' },
-  ],
-  warrior: [
-    { id:'w1', name:'鬥氣覺醒',   emoji:'🔥', sp:1, lv:2,  req:null,  effects:{power:200},        desc:'喚醒戰士的鬥氣。戰鬥力 +200。' },
-    { id:'w2', name:'戰士之心',   emoji:'❤️‍🔥', sp:1, lv:3,  req:'w1',  effects:{coinCat:['exercise',10]}, desc:'運動任務的金幣獎勵 +10%。' },
-    { id:'w3', name:'剛毅不屈',   emoji:'🛡️', sp:2, lv:5,  req:'w2',  effects:{coinAll:5},        desc:'所有任務金幣 +5%。' },
-    { id:'w4', name:'疾風步',     emoji:'💨', sp:2, lv:8,  req:'w3',  effects:{drop:5},           desc:'行動如風。S級掉落率 +5%。' },
-    { id:'w5', name:'不屈意志',   emoji:'⚔️', sp:2, lv:12, req:'w4',  effects:{power:500},        desc:'永不放棄的意志。戰鬥力 +500。' },
-    { id:'w6', name:'戰場直覺',   emoji:'🎯', sp:2, lv:15, req:'w5',  effects:{xpAll:5},          desc:'累積的戰鬥經驗。所有任務經驗值 +5%。' },
-    { id:'w7', name:'究極奧義・烈焰連斬', emoji:'🌋', sp:3, lv:20, req:'w6', effects:{sRankBonus:20, power:300}, desc:'究極奧義。S級任務的經驗值與金幣 +20%，戰鬥力 +300。' },
-  ],
-  guardian: [
-    { id:'g1', name:'守護覺醒',   emoji:'✨', sp:1, lv:2,  req:null,  effects:{power:200},        desc:'喚醒守護之力。戰鬥力 +200。' },
-    { id:'g2', name:'家園之盾',   emoji:'🏠', sp:1, lv:3,  req:'g1',  effects:{coinCat:['chore',10]}, desc:'家事任務的金幣獎勵 +10%。' },
-    { id:'g3', name:'秩序之力',   emoji:'⚖️', sp:2, lv:5,  req:'g2',  effects:{xpAll:5},          desc:'維持秩序的力量。所有任務經驗值 +5%。' },
-    { id:'g4', name:'慈愛光環',   emoji:'💖', sp:2, lv:8,  req:'g3',  effects:{discount:5},       desc:'商店店長被你感動了。商店折扣 +5%。' },
-    { id:'g5', name:'絕對聖域',   emoji:'🌐', sp:2, lv:12, req:'g4',  effects:{power:500},        desc:'展開守護結界。戰鬥力 +500。' },
-    { id:'g6', name:'守護者之眼', emoji:'🔍', sp:2, lv:15, req:'g5',  effects:{drop:10},          desc:'明察秋毫。S級掉落率 +10%。' },
-    { id:'g7', name:'終極守護・聖光審判', emoji:'🌟', sp:3, lv:20, req:'g6', effects:{sRankBonus:20, power:300}, desc:'究極奧義。S級任務的經驗值與金幣 +20%，戰鬥力 +300。' },
-  ],
+  mage:     _mkTree('m','術', 'school', ['🔮','📘','💠','⏳','🌪️','👁️','☄️','✨','🌌','🪄']),
+  warrior:  _mkTree('w','戰', 'health', ['🔥','❤️‍🔥','🛡️','💨','⚔️','🎯','🌋','🥋','⚡','🐉']),
+  guardian: _mkTree('g','守', 'family', ['✨','🏠','⚖️','💖','🌐','🔍','🌟','🕊️','🛡️','👑']),
 };
 
 const ACHIEVEMENTS = [
@@ -1176,6 +1186,42 @@ const ACHIEVEMENTS = [
   { id:'a18', name:'S級君主',    emoji:'👑', desc:'達到等級 50',             coins:500, target:50,  val:s=>s.player.level },
   { id:'a19', name:'DUNGEON BREAK', emoji:'🌀', desc:'完成第一個 A/S 級挑戰', coins:60,  target:1,   val:s=>s.counters.epicDone },
   { id:'a20', name:'全能玩家',   emoji:'💎', desc:'五項能力值全部達到 10',   coins:100, target:1,   val:s=>(Object.values(s.player.stats).every(v=>v>=10))?1:0 },
+  /* ── 等級里程碑（Lv0→100）── */
+  { id:'a21', name:'嶄露鋒芒',   emoji:'🌠', desc:'達到等級 15',             coins:80,   target:15,   val:s=>s.player.level },
+  { id:'a22', name:'C級獵人',    emoji:'🥉', desc:'達到等級 20',             coins:120,  target:20,   val:s=>s.player.level },
+  { id:'a23', name:'勇者之證',   emoji:'🗿', desc:'達到等級 30',             coins:200,  target:30,   val:s=>s.player.level },
+  { id:'a24', name:'B級強者',    emoji:'🥈', desc:'達到等級 40',             coins:300,  target:40,   val:s=>s.player.level },
+  { id:'a25', name:'A級英雄',    emoji:'🥇', desc:'達到等級 60',             coins:500,  target:60,   val:s=>s.player.level },
+  { id:'a26', name:'S級霸主',    emoji:'👑', desc:'達到等級 75',             coins:800,  target:75,   val:s=>s.player.level },
+  { id:'a27', name:'國家級獵人', emoji:'🏰', desc:'達到等級 90',             coins:1200, target:90,   val:s=>s.player.level },
+  { id:'a28', name:'登峰造極',   emoji:'🌈', desc:'達到最高等級 100',        coins:3000, target:100,  val:s=>s.player.level },
+  /* ── 任務累積 ── */
+  { id:'a29', name:'勤奮之星',   emoji:'⭐', desc:'完成 200 個任務',         coins:150,  target:200,  val:s=>s.counters.total },
+  { id:'a30', name:'任務狂人',   emoji:'🌟', desc:'完成 300 個任務',         coins:220,  target:300,  val:s=>s.counters.total },
+  { id:'a31', name:'攻略大師',   emoji:'📜', desc:'完成 500 個任務',         coins:400,  target:500,  val:s=>s.counters.total },
+  { id:'a32', name:'不眠獵人',   emoji:'🌙', desc:'完成 750 個任務',         coins:600,  target:750,  val:s=>s.counters.total },
+  { id:'a33', name:'千任務傳說', emoji:'💫', desc:'完成 1000 個任務',        coins:1000, target:1000, val:s=>s.counters.total },
+  /* ── 金幣累積 ── */
+  { id:'a34', name:'小富翁',     emoji:'💵', desc:'累積賺取 5000 金幣',      coins:200,  target:5000,  val:s=>s.counters.coinsEarned },
+  { id:'a35', name:'大富翁',     emoji:'💴', desc:'累積賺取 10000 金幣',     coins:400,  target:10000, val:s=>s.counters.coinsEarned },
+  { id:'a36', name:'金庫滿溢',   emoji:'💰', desc:'累積賺取 20000 金幣',     coins:700,  target:20000, val:s=>s.counters.coinsEarned },
+  { id:'a37', name:'黃金帝國',   emoji:'🏆', desc:'累積賺取 50000 金幣',     coins:1500, target:50000, val:s=>s.counters.coinsEarned },
+  /* ── 連續紀錄 ── */
+  { id:'a38', name:'堅持三週',   emoji:'🔥', desc:'保持 21 天連續紀錄',      coins:300,  target:21,   val:s=>s.counters.bestStreak },
+  { id:'a39', name:'月之守護',   emoji:'🌕', desc:'保持 30 天連續紀錄',      coins:500,  target:30,   val:s=>s.counters.bestStreak },
+  { id:'a40', name:'恆心之鑽',   emoji:'💠', desc:'保持 60 天連續紀錄',      coins:900,  target:60,   val:s=>s.counters.bestStreak },
+  { id:'a41', name:'百日修行',   emoji:'🎇', desc:'保持 100 天連續紀錄',     coins:2000, target:100,  val:s=>s.counters.bestStreak },
+  /* ── 技能 ── */
+  { id:'a42', name:'初窺門徑',   emoji:'📗', desc:'學會 5 個技能',           coins:80,   target:5,    val:s=>(s.player.skills||[]).length },
+  { id:'a43', name:'技藝精進',   emoji:'📕', desc:'學會 10 個技能',          coins:160,  target:10,   val:s=>(s.player.skills||[]).length },
+  { id:'a44', name:'融會貫通',   emoji:'📚', desc:'學會 15 個技能',          coins:300,  target:15,   val:s=>(s.player.skills||[]).length },
+  { id:'a45', name:'技能宗師',   emoji:'🧠', desc:'學會 25 個技能（全精通）', coins:800,  target:25,   val:s=>(s.player.skills||[]).length },
+  /* ── 商店 / 挑戰 / 主線 ── */
+  { id:'a46', name:'時尚獵人',   emoji:'🛍️', desc:'在商店購買 10 件道具',    coins:100,  target:10,   val:s=>s.counters.purchases },
+  { id:'a47', name:'蒐藏狂熱',   emoji:'🎁', desc:'在商店購買 25 件道具',    coins:300,  target:25,   val:s=>s.counters.purchases },
+  { id:'a48', name:'破門者',     emoji:'🌀', desc:'完成 10 個 A/S 級挑戰',   coins:250,  target:10,   val:s=>s.counters.epicDone },
+  { id:'a49', name:'深淵征服者', emoji:'🐲', desc:'完成 50 個 A/S 級挑戰',   coins:1000, target:50,   val:s=>s.counters.epicDone },
+  { id:'a50', name:'自己的傳說', emoji:'🎴', desc:'完成全部 10 章主線任務',  coins:2000, target:10,   val:s=>(s.player.mainQuestClaimed||[]).length },
 ];
 
 const GATE_SLOTS = [
