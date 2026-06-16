@@ -465,6 +465,10 @@
       <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>背包 — 點擊道具裝備 / 卸下</div></div>
       <div id="inv-list" class="grid grid-cols-3 gap-2.5 mb-4 lg:grid-cols-6"></div>
       <div id="inv-empty" class="hidden text-center font-bold py-10" style="color:var(--sys-dim);">背包是空的。完成任務賺金幣，去商店補給吧。</div>
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">📨</span>交換邀請<span class="ml-auto text-xs num" id="trade-count"></span></div>
+        <div class="p-3 grid gap-2" id="inv-trades"></div>
+      </div>
     </div>
 
     <!-- 7. 成就 -->
@@ -567,6 +571,11 @@
       <div class="sys-win mb-3">
         <div class="sys-head text-sm"><span class="sys-i">⚙</span>除錯 / 平衡測試（僅家長）</div>
         <div class="p-3 grid gap-2" id="parent-debug"></div>
+      </div>
+
+      <div class="sys-win mb-3">
+        <div class="sys-head text-sm"><span class="sys-i">🔁</span>物品交換管理</div>
+        <div class="p-3 grid gap-2" id="parent-trade"></div>
       </div>
 
       <div class="sys-win mb-4">
@@ -2125,6 +2134,107 @@ function renderLeaderboard(){
   }).join('') || `<div class="text-sm text-center py-4" style="color:var(--sys-dim);">目前還沒有排行資料。</div>`;
 }
 
+/* ===== M22 跨家庭虛擬物品交換（交易狀態機 + 家長核可 + 守恆） =====
+   狀態：proposed → accepted / declined / cancelled；家長核可開時 accept → pending_parent → 家長核准 → accepted。
+   本機以「不同家長名下小孩」即跨家庭；M23 接 Supabase 交易表後可跨裝置。 */
+function tradeItemSnap(it){ return it ? { id:it.id, name:it.name, emoji:it.emoji, type:it.type, rarity:it.rarity } : null; }
+function tradeApprovalOn(parentId){ const p=cloudStore.getParent(parentId); return !!(p && p.tradeApproval); }
+function setTradeApproval(on){
+  const sess=cloudStore.getSession(); const p=cloudStore.getParent(sess.parentId); if(!p) return;
+  p.tradeApproval=!!on; cloudStore.saveParent(p);
+  toast(on?'交易需家長核可：開':'交易需家長核可：關'); renderParent();
+}
+function proposeTrade(toParentId, toChildId, offerItemId, requestItemId){
+  const sess=cloudStore.getSession();
+  if(!sess.activeChildId) return { ok:false, reason:'no-active-child' };
+  const offer=(state.inventory||[]).find(i=>i.id===offerItemId);
+  if(!offer) return { ok:false, reason:'no-offer' };
+  let request=null;
+  if(requestItemId){ request=cloudStore.childInventory(toParentId,toChildId).find(i=>i.id===requestItemId); if(!request) return { ok:false, reason:'no-request' }; }
+  const toCh=(cloudStore.getParent(toParentId)||{children:[]}).children.find(c=>c.id===toChildId);
+  const tr={ id:uid(),
+    from:{ parentId:sess.parentId, childId:sess.activeChildId, name:(state.player.name||'小獵人') },
+    to:{ parentId:toParentId, childId:toChildId, name:(toCh?toCh.name:'對方') },
+    offer:tradeItemSnap(offer), request:tradeItemSnap(request),
+    status:'proposed', createdAt:todayStr() };
+  cloudStore.saveTrade(tr); return { ok:true, trade:tr };
+}
+function executeTrade(tr){
+  // 守恆：offer 由 from→to；request（若有）由 to→from。任一步失敗即中止不發。
+  if(!cloudStore.moveItem(tr.from.parentId, tr.from.childId, tr.offer.id, 'remove')) return false;
+  cloudStore.moveItem(tr.to.parentId, tr.to.childId, tr.offer.id, 'add', { ...tr.offer, equipped:false });
+  if(tr.request){
+    cloudStore.moveItem(tr.to.parentId, tr.to.childId, tr.request.id, 'remove');
+    cloudStore.moveItem(tr.from.parentId, tr.from.childId, tr.request.id, 'add', { ...tr.request, equipped:false });
+  }
+  tr.status='accepted'; cloudStore.saveTrade(tr);
+  reconcileActiveInventory();
+  return true;
+}
+function reconcileActiveInventory(){
+  const sess=cloudStore.getSession();
+  if(sess.parentId && sess.activeChildId){
+    state.inventory = cloudStore.childInventory(sess.parentId, sess.activeChildId);
+    save();
+  }
+}
+function respondTrade(tradeId, accept){
+  const tr=cloudStore.tradesAll().find(t=>t.id===tradeId);
+  if(!tr || tr.status!=='proposed') return { ok:false };
+  const sess=cloudStore.getSession();
+  if(sess.activeChildId!==tr.to.childId) return { ok:false, reason:'not-recipient' };
+  if(!accept){ tr.status='declined'; cloudStore.saveTrade(tr); renderInventory&&renderInventory(); return { ok:true, status:'declined' }; }
+  if(tradeApprovalOn(tr.to.parentId) || tradeApprovalOn(tr.from.parentId)){
+    tr.status='pending_parent'; cloudStore.saveTrade(tr); renderInventory&&renderInventory(); return { ok:true, status:'pending_parent' };
+  }
+  executeTrade(tr); renderInventory&&renderInventory(); renderCurrent&&renderCurrent();
+  return { ok:true, status:'accepted' };
+}
+function cancelTrade(tradeId){
+  const tr=cloudStore.tradesAll().find(t=>t.id===tradeId);
+  if(!tr || (tr.status!=='proposed' && tr.status!=='pending_parent')) return { ok:false };
+  tr.status='cancelled'; cloudStore.saveTrade(tr); renderInventory&&renderInventory(); return { ok:true };
+}
+function parentApproveTrade(tradeId, ok){
+  const tr=cloudStore.tradesAll().find(t=>t.id===tradeId);
+  if(!tr || tr.status!=='pending_parent') return { ok:false };
+  if(!ok){ tr.status='declined'; cloudStore.saveTrade(tr); renderParent(); return { ok:true, status:'declined' }; }
+  executeTrade(tr); renderParent(); renderCurrent&&renderCurrent();
+  return { ok:true, status:'accepted' };
+}
+// 我（活躍小孩）相關的交易：收到的提案、送出的、待家長核可
+function myTrades(){
+  const sess=cloudStore.getSession(); const cid=sess.activeChildId;
+  const all=cloudStore.tradesAll();
+  return {
+    incoming: all.filter(t=>t.to.childId===cid && t.status==='proposed'),
+    outgoing: all.filter(t=>t.from.childId===cid && (t.status==='proposed'||t.status==='pending_parent')),
+  };
+}
+function parentPendingTrades(){
+  const sess=cloudStore.getSession();
+  return cloudStore.tradesAll().filter(t=>t.status==='pending_parent' && (t.to.parentId===sess.parentId || t.from.parentId===sess.parentId));
+}
+function renderTradeBox(){
+  const box=document.getElementById('inv-trades'); if(!box) return;
+  const t=myTrades();
+  const cnt=document.getElementById('trade-count'); if(cnt) cnt.textContent = t.incoming.length ? t.incoming.length+' 筆' : '';
+  const inc=t.incoming.map(tr=>`
+    <div class="p-2.5 rounded" style="border:1px solid rgba(0,210,255,.3); background:rgba(0,210,255,.08);">
+      <div class="text-xs font-bold text-white">${tr.from.name} 想用 ${tr.offer.emoji}${tr.offer.name} 換你的 ${tr.request?tr.request.emoji+tr.request.name:'（贈送，不用給東西）'}</div>
+      <div class="flex gap-2 mt-2">
+        <button onclick="respondTrade('${tr.id}',true)" class="btn-sys flex-1 py-1.5 text-xs">接受 ✔</button>
+        <button onclick="respondTrade('${tr.id}',false)" class="btn-red flex-1 py-1.5 text-xs">拒絕 ✖</button>
+      </div>
+    </div>`).join('');
+  const out=t.outgoing.map(tr=>`
+    <div class="p-2 rounded text-[11px] flex items-center gap-2" style="border:1px solid #1c3a60; background:rgba(12,24,46,.6); color:var(--sys-dim);">
+      <span class="flex-1">送出給 ${tr.to.name}：${tr.offer.emoji}${tr.offer.name}　${tr.status==='pending_parent'?'（等家長核可）':'（等對方回覆）'}</span>
+      <button onclick="cancelTrade('${tr.id}')" class="btn-dark px-2 py-1 text-[10px] flex-none">取消</button>
+    </div>`).join('');
+  box.innerHTML = (inc+out) || `<div class="text-xs font-bold text-center" style="color:var(--sys-dim);">目前沒有交換邀請。跨家庭交換將在雲端連線後開放向全世界的小獵人提出。</div>`;
+}
+
 function epicDrop(){
   if(Math.random()*100 > dropChance()) return;
   const pool = state.shop.filter(s=>!['title','emote','consumable'].includes(s.type) && !state.inventory.some(i=>i.id===s.id));
@@ -2259,6 +2369,7 @@ document.getElementById('buy-confirm').onclick = function(){
 
 /* ═══════════════════ 背包 ═══════════════════ */
 function renderInventory(){
+  renderTradeBox();
   const list = document.getElementById('inv-list');
   const empty = document.getElementById('inv-empty');
   if(!state.inventory.length){ list.innerHTML=''; empty.classList.remove('hidden'); return; }
@@ -2448,6 +2559,25 @@ function renderParent(){
 
   renderAccounts();
   renderDebugPanel();
+  renderParentTrades();
+}
+function renderParentTrades(){
+  const box=document.getElementById('parent-trade'); if(!box) return;
+  const on=tradeApprovalOn(cloudStore.getSession().parentId);
+  const pend=parentPendingTrades();
+  const pendHtml = pend.length ? pend.map(tr=>`
+    <div class="p-2.5 rounded" style="border:1px solid rgba(245,197,66,.4); background:rgba(120,90,10,.12);">
+      <div class="text-xs font-bold text-white">${tr.from.name} ⇄ ${tr.to.name}：${tr.offer.emoji}${tr.offer.name} 換 ${tr.request?tr.request.emoji+tr.request.name:'（贈送）'}</div>
+      <div class="flex gap-2 mt-2">
+        <button onclick="parentApproveTrade('${tr.id}',true)" class="btn-sys flex-1 py-1.5 text-xs">核准 ✔</button>
+        <button onclick="parentApproveTrade('${tr.id}',false)" class="btn-red flex-1 py-1.5 text-xs">擋下 ✖</button>
+      </div>
+    </div>`).join('') : `<div class="text-xs font-bold text-center" style="color:var(--sys-dim);">沒有待核可的交換。</div>`;
+  box.innerHTML = `
+    <p class="text-[11px]" style="color:var(--sys-dim);">開啟後，小孩的每筆物品交換都需家長核可才成交（防詐騙 / 不當交換）。</p>
+    <button onclick="setTradeApproval(${on?'false':'true'})" class="btn-${on?'sys':'dark'} py-2 text-xs">交易需家長核可：${on?'開':'關'}</button>
+    <div class="text-[11px] font-bold mt-1" style="color:var(--sys-dim);">待核可交換</div>
+    ${pendHtml}`;
 }
 
 /* ── 家長：設定與任務池操作 ── */
@@ -2772,6 +2902,24 @@ const cloudStore = (function(){
         out.push({ id:ch.id, name:(pl.name||ch.name||'小獵人'), level:(pl.level||1), tasks:(co.total||0), weekTasks, age:(pl.age||10), self:true });
       }));
       return out;
+    },
+    // M22：交易（跨家庭物品交換）。本機儲存於 cloud root.trades；M23 改用 Supabase 交易表。
+    tradesAll(){ return _read().trades || []; },
+    saveTrade(tr){ const c=_read(); c.trades=c.trades||[]; const i=c.trades.findIndex(t=>t.id===tr.id); if(i>=0) c.trades[i]=tr; else c.trades.push(tr); _write(c); },
+    childInventory(parentId, childId){
+      const p=_read().parents.find(x=>x.id===parentId); if(!p) return [];
+      const ch=p.children.find(x=>x.id===childId); if(!ch) return [];
+      try{ return (JSON.parse(ch.blob||'{}').inventory)||[]; }catch(e){ return []; }
+    },
+    // 對某小孩 blob 的背包增/刪一件物品（守恆交換的原子操作）。回傳是否成功。
+    moveItem(parentId, childId, itemId, dir, item){
+      const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return false;
+      const ch=p.children.find(x=>x.id===childId); if(!ch) return false;
+      let b; try{ b=JSON.parse(ch.blob||'{}'); }catch(e){ return false; }
+      b.inventory = b.inventory||[];
+      if(dir==='remove'){ const idx=b.inventory.findIndex(i=>i.id===itemId); if(idx<0) return false; b.inventory.splice(idx,1); }
+      else { if(b.inventory.some(i=>i.id===itemId)) return false; b.inventory.push(item); }
+      ch.blob = JSON.stringify(b); _write(c); return true;
     }
   };
 })();

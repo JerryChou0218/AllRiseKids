@@ -4,15 +4,15 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": 22,
+  "current_milestone_id": 23,
   "planning_complete": true,
   "budget": {
-    "used_usd": 12.3,
+    "used_usd": 14.1,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 6,
-    "verification_calls": 6,
+    "execution_calls": 7,
+    "verification_calls": 7,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -467,7 +467,7 @@
       "title": "跨家庭虛擬物品交換（交易系統，雲端就緒）",
       "spec_file": "milestones/m22-item-trading.md",
       "spec_summary": "不同家庭的小孩可交換虛擬物品：提出交易→對方接受→雙方背包更新，含家長可選的核可開關防止不當交易。先本機抽象層 + 示範對手實作，介面對齊未來 Supabase 交易表/交易狀態機。",
-      "status": "pending",
+      "status": "complete",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": false,
@@ -479,14 +479,16 @@
         "以 cloudStore 抽象層實作，本機以示範對手運作，介面對齊未來交易表",
         "交易不會憑空增減物品（守恆）；全測試綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 交易狀態機 proposed→accepted/declined/cancelled，家長核可開時 accept→pending_parent→parentApproveTrade→accepted。cloudStore 加 tradesAll/saveTrade/childInventory/moveItem(原子增刪,add 擋重複)；產品 proposeTrade/respondTrade/cancelTrade/parentApproveTrade/executeTrade(守恆:offer from→to、request to→from,任一步失敗中止)/reconcileActiveInventory。家長核可旗標 tradeApproval。UI：背包頁『📨交換邀請』(接受/拒絕/取消)、家長頁『🔁物品交換管理』(核可開關+待核可核准/擋下)。本機以兩家庭(媽媽/小宇、爸爸/小美)示範。新增 test/trade.test.js 10/10(提案/接受守恆/拒絕/取消/家長核可 pending_parent→核准成交)；9 套件全綠。" }
+      ]
     },
     {
       "id": 23,
       "title": "真正的雲端接線：Supabase + Google OAuth（human-approval gate）",
       "spec_file": "milestones/m23-supabase-google-wire.md",
       "spec_summary": "把 cloudStore 抽象層接到真正的 Supabase（家長帳號表/小孩子表/任務佇列/排行榜/交易表 + RLS）與 Google OAuth 家長登入。需使用者建立 Supabase 專案與 Google OAuth 憑證並提供金鑰（環境變數，不進 repo）。在此之前全系統以本機降級運作。",
-      "status": "pending",
+      "status": "pending_approval",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": true,
