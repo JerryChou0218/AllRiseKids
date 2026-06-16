@@ -7,12 +7,12 @@
   "current_milestone_id": 23,
   "planning_complete": true,
   "budget": {
-    "used_usd": 15.1,
+    "used_usd": 16.1,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 8,
-    "verification_calls": 8,
+    "execution_calls": 9,
+    "verification_calls": 9,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -489,7 +489,7 @@
       "title": "真正的雲端接線：Supabase + Google OAuth（human-approval gate）",
       "spec_file": "milestones/m23-supabase-google-wire.md",
       "spec_summary": "把 cloudStore 抽象層接到真正的 Supabase（家長帳號表/小孩子表/任務佇列/排行榜/交易表 + RLS）與 Google OAuth 家長登入。需使用者建立 Supabase 專案與 Google OAuth 憑證並提供金鑰（環境變數，不進 repo）。在此之前全系統以本機降級運作。",
-      "status": "pending_approval",
+      "status": "in_progress",
       "attempts": 1,
       "max_attempts": 3,
       "require_human_approval": true,
@@ -501,7 +501,9 @@
         "cloudStore 抽象層切換到 Supabase 後，帳號/任務審核/排行榜/交易跨裝置同步正常",
         "雲端設定缺失時自動退回本機且全測試維持綠燈"
       ],
-      "history": []
+      "history": [
+        { "timestamp": "2026-06-16T02:00:00Z", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS（使用者核可開始 M23）：已完成不需活連線的雲端前置——(1) 新增 cloud-config.js（committed，公開安全值：publishableKey+googleClientId，supabaseUrl 留空待填）；(2) index.html 載入 cloud-config 並建 CLOUD_READY 旗標（有 supabaseUrl 才 true，否則純本機，與現狀相同）；(3) 家長登入畫面顯示雲端/本機狀態徽記；(4) 改寫 supabase/schema.sql 為家長為主模型（saves 家長整包 jsonb + RLS、leaderboard 公開讀寫自有、trades 雙方讀寫，皆 RLS）。CLOUD_READY=false 下 9 套件全綠。BLOCKED：仍缺使用者 Supabase Project URL（https://<ref>.supabase.co）才能寫 supabase-js 客戶端(Google 登入/blob 推拉同步)並對真專案驗證 RLS 隔離。" }
+      ]
     }
   ]
 }

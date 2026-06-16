@@ -804,9 +804,13 @@
   </div>
 </div>
 
+<script src="cloud-config.js"></script>
 <script>
 'use strict';
 /* ═══════════════════ 常數 ═══════════════════ */
+/* M23 雲端啟用旗標：cloud-config.js 補上 supabaseUrl 後為 true，否則純本機（與現狀相同）。 */
+const CLOUD = (typeof window!=='undefined' && window.KQ_CLOUD) || {};
+const CLOUD_READY = !!(CLOUD.supabaseUrl && CLOUD.supabasePublishableKey);
 const STORAGE_KEY = 'kidquest_data';
 const VERSION = 4;
 
@@ -2991,7 +2995,11 @@ function showAccountGate(){
 function renderAccountGate(){
   const body = document.getElementById('account-gate-body');
   if(gateMode === 'parent-login'){
+    const cloudBadge = CLOUD_READY
+      ? `<div class="text-[11px] font-bold mb-1" style="color:#5cffb8;">☁️ 雲端同步已啟用 — 進度將跨裝置同步</div>`
+      : `<div class="text-[11px] font-bold mb-1" style="color:#7ea8cc;">📱 本機模式（雲端待設定）— 進度存在這台裝置</div>`;
     body.innerHTML = `
+      ${cloudBadge}
       <div class="text-xs font-bold mb-1" style="color:var(--sys-dim);">目前僅開放家長以 Google 帳號註冊／登入。登入後即可建立並管理小孩帳號（最多 ${MAX_CHILDREN} 位）。</div>
       <input id="parent-email" type="email" maxlength="60" placeholder="你的 Gmail" class="inp" autocomplete="email">
       <button onclick="parentGoogleLogin()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`;
