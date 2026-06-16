@@ -66,14 +66,25 @@ __assert(state.tasks.find(x=>x.id===pt.id).status==='completed' && state.player.
 exitChild();
 __assert(parentPendingCount(pid)===1, '核准後家長待審核總數降為 1');
 
-/* 退回小美那筆 */
+/* 退回小美那筆（M18+：退回應記入審核紀錄 kind:'reject'） */
 const B = cloudStore.listChildren(pid).find(c=>c.name==='小美');
 reviewChild(B.id);
 const pt2 = state.tasks.find(x=>x.status==='pending');
 rejectTask(pt2.id);
 __assert(state.tasks.find(x=>x.id===pt2.id).status==='available', '退回後任務回 available');
+__assert(state.history.some(h=>h.kind==='reject'), 'M18+：退回記入審核紀錄（kind:reject）');
 exitChild();
 __assert(parentPendingCount(pid)===0, '退回後家長待審核總數 0');
+
+/* M18+：一鍵全部核准 + 送出時間 */
+reviewChild(B.id);
+const avail = state.tasks.filter(t=>t.status==='available' && !['epic','super'].includes(t.difficulty)).slice(0,3);
+avail.forEach(t=>markDone(t.id));
+__assert(state.tasks.filter(t=>t.status==='pending').length===3, '小美送出 3 筆待審核');
+__assert(state.tasks.find(t=>t.status==='pending').submittedAt>0, 'M18+：送出時間 submittedAt 已記錄');
+approveAllPending();
+__assert(state.tasks.filter(t=>t.status==='pending').length===0, 'M18+：一鍵全部核准 → 待審核清空');
+exitChild();
 
 console.log('');
 console.log(__af()===0 ? '=== 家長審核佇列驗證通過（'+__ap()+' 項）===' : '=== 失敗 '+__af()+' 項 ===');

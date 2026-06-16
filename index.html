@@ -1773,6 +1773,7 @@ function markDone(id, ev){
   t.status = 'pending';
   t.completedDate = todayStr();
   t.doneHour = new Date().getHours();
+  t.submittedAt = Date.now();          // M18+：記錄送出時間，家長端顯示已等待多久
   save();
   if(ev) spawnShards(ev.clientX||window.innerWidth/2, ev.clientY||window.innerHeight/2);
   toast('攻略回報已送出。等待管理者（爸媽）確認後發放報酬。');
@@ -1950,10 +1951,37 @@ function approveTask(id){
 function rejectTask(id){
   const t = state.tasks.find(t=>t.id===id);
   if(!t || t.status!=='pending') return;
-  t.status='available'; t.completedDate=null; t.doneHour=null;
+  t.status='available'; t.completedDate=null; t.doneHour=null; t.submittedAt=null;
+  state.history.unshift({ date:todayStr(), kind:'reject', name:`退回：${t.name}`, xpEarned:0, coinsEarned:0 });  // M18+：退回也記入審核紀錄
+  if(state.history.length>200) state.history.length = 200;
   save();
   toast(`已退回「${t.name}」`);
   renderParent();
+}
+// M18+：一鍵批次審核（作用於目前審核中的小孩）
+function approveAllPending(){
+  const ids = state.tasks.filter(t=>t.status==='pending').map(t=>t.id);
+  if(!ids.length){ toast('沒有待審核的任務。'); return; }
+  if(!confirm(`一鍵核准全部 ${ids.length} 筆任務並發放報酬？`)) return;
+  ids.forEach(id=>approveTask(id));
+  toast(`已核准全部 ${ids.length} 筆。`);
+}
+function rejectAllPending(){
+  const ids = state.tasks.filter(t=>t.status==='pending').map(t=>t.id);
+  if(!ids.length){ toast('沒有待審核的任務。'); return; }
+  if(!confirm(`一鍵退回全部 ${ids.length} 筆任務（不發放報酬）？`)) return;
+  ids.forEach(id=>rejectTask(id));
+  toast(`已退回全部 ${ids.length} 筆。`);
+}
+// M18+：等待時間標籤
+function waitLabel(ts){
+  if(!ts) return '';
+  const mins = Math.floor((Date.now()-ts)/60000);
+  if(mins<1) return '剛剛送出';
+  if(mins<60) return `已等待 ${mins} 分鐘`;
+  const hrs = Math.floor(mins/60);
+  if(hrs<24) return `已等待 ${hrs} 小時`;
+  return `已等待 ${Math.floor(hrs/24)} 天`;
 }
 
 function awardXP(amount){
@@ -2462,13 +2490,18 @@ function renderParent(){
   if(!parentUnlocked){ goScreen('status'); return; }
   const pending = state.tasks.filter(t=>t.status==='pending');
   document.getElementById('pending-count').textContent = pending.length ? pending.length+' 筆' : '';
-  document.getElementById('pending-list').innerHTML = pending.length ? pending.map(t=>{
+  const batchBar = pending.length>1 ? `<div class="flex gap-2 mb-1">
+      <button onclick="approveAllPending()" class="btn-sys flex-1 py-2 text-xs">✔ 全部核准（${pending.length}）</button>
+      <button onclick="rejectAllPending()" class="btn-red flex-1 py-2 text-xs">✖ 全部退回</button>
+    </div>` : '';
+  document.getElementById('pending-list').innerHTML = pending.length ? batchBar + pending.map(t=>{
     const d = DIFFS[t.difficulty];
     const r = calcRewards(t);
+    const wait = waitLabel(t.submittedAt);
     return `<div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(120,90,10,.12); border:1px solid rgba(245,197,66,.3);">
       <span class="text-xl">${t.emoji}</span>
       <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${t.name}</div>
-      <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${d.name}　+${r.xp} EXP / +${r.coins} 🪙　${t.completedDate||''}</div></div>
+      <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${d.name}　+${r.xp} EXP / +${r.coins} 🪙${wait?'　⏱'+wait:''}</div></div>
       <button onclick="approveTask('${t.id}')" class="btn-sys px-3 py-2 text-sm">核准 ✔</button>
       <button onclick="rejectTask('${t.id}')" class="btn-red px-3 py-2 text-sm">退回 ✖</button>
     </div>`;
@@ -2548,7 +2581,7 @@ function renderParent(){
       </div>`).join('')
     : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">尚未設定真實獎勵。</div>`;
 
-  const kindEmoji = { task:'✔', buy:'🛒', sell:'💰', redeem:'🎁', achievement:'🏆', drop:'💎', bonus:'🎉' };
+  const kindEmoji = { task:'✔', reject:'↩️', buy:'🛒', sell:'💰', redeem:'🎁', achievement:'🏆', drop:'💎', bonus:'🎉', mainquest:'⚔️' };
   document.getElementById('parent-history').innerHTML = state.history.length
     ? state.history.slice(0,50).map(h=>`
       <div class="flex justify-between gap-2 px-2.5 py-1.5 rounded" style="background:rgba(12,26,50,.7);">

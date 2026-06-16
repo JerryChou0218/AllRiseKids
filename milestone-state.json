@@ -7,12 +7,12 @@
   "current_milestone_id": 23,
   "planning_complete": true,
   "budget": {
-    "used_usd": 14.1,
+    "used_usd": 15.1,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 7,
-    "verification_calls": 7,
+    "execution_calls": 8,
+    "verification_calls": 8,
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
@@ -396,7 +396,8 @@
         "新增對應自動化測試（佇列進出、核准發獎、退回不發），全測試綠燈"
       ],
       "history": [
-        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 家長審核佇列由各小孩 blob/活躍 live state 推導（childPendingTasks/parentQueue/parentPendingCount），與 save() 即時鏡射搭配恆一致、不會 desync。家長首頁每個小孩卡顯示 🔔 待審核紅點數與『審核』鈕＋頂部總數行；reviewChild 進入該小孩審核頁(parentUnlocked=true,goScreen parent)重用既有 approveTask/rejectTask 核准發獎/退回不發。本地『即時』＝進家長首頁即見最新；真正推播留 M23。新增 test/parent-queue.test.js 7/7；smoke 77、cloud-store 9、accounts 8、desktop 4 全綠。" }
+        { "timestamp": "2026-06-16T00:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS: 家長審核佇列由各小孩 blob/活躍 live state 推導（childPendingTasks/parentQueue/parentPendingCount），與 save() 即時鏡射搭配恆一致、不會 desync。家長首頁每個小孩卡顯示 🔔 待審核紅點數與『審核』鈕＋頂部總數行；reviewChild 進入該小孩審核頁(parentUnlocked=true,goScreen parent)重用既有 approveTask/rejectTask 核准發獎/退回不發。本地『即時』＝進家長首頁即見最新；真正推播留 M23。新增 test/parent-queue.test.js 7/7；smoke 77、cloud-store 9、accounts 8、desktop 4 全綠。" },
+        { "timestamp": "2026-06-16T01:00:00Z", "automated_tests": "PASS", "ai_verification": "ENHANCE(使用者要求強化 M18)：markDone 記 submittedAt 送出時間，審核頁顯示『⏱已等待 X 分/時/天』；新增 approveAllPending/rejectAllPending 一鍵批次審核(>1 筆時顯示批次列)；rejectTask 退回也記入審核紀錄(history kind:'reject')，歷史圖示補 reject/mainquest。parent-queue.test.js 擴充為 11/11；9 套件全綠。" }
       ]
     },
     {
