@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>KidQuest：覺醒 ⚔️ 獵人任務系統</title>
+<title>AllRiseKids 孩子們覺醒吧!</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="KidQuest">
+<meta name="apple-mobile-web-app-title" content="AllRiseKids">
 <style>
   :root{
     --sys-cyan:#00d2ff; --sys-blue:#1e4976; --sys-purple:#a855f7; --sys-gold:#f5c542;
@@ -314,12 +314,11 @@
 <div id="game" class="hidden">
 
   <header class="topbar">
-    <button id="tb-account" class="tb-btn" onclick="switchAccount()" style="display:none;">
+    <div id="tb-account" class="tb-btn" style="display:none; cursor:default;">
       <span id="tb-account-ava">👤</span>
       <span id="tb-account-name" class="tb-name"></span>
-      <span class="tb-sub">⇄ 切換</span>
-    </button>
-    <div class="tb-title">⚔️ KidQuest</div>
+    </div>
+    <div class="tb-title">⚔️ AllRiseKids</div>
     <button id="tb-parent" class="tb-btn" onclick="tryParent()">🔒 家長</button>
   </header>
 
@@ -2819,7 +2818,7 @@ function importSave(input){
     try{
       const data = JSON.parse(reader.result);
       if(!data || typeof data !== 'object' || !data.player){
-        toast('這不是有效的 KidQuest 存檔檔案。'); input.value=''; return;
+        toast('這不是有效的 AllRiseKids 存檔檔案。'); input.value=''; return;
       }
       if(!confirm('⚠️ 匯入會覆蓋這台裝置目前的進度，確定嗎？')){ input.value=''; return; }
       kqStorage.write(JSON.stringify(data));

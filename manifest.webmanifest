@@ -1,7 +1,7 @@
 {
-  "name": "KidQuest：覺醒 獵人任務系統",
-  "short_name": "KidQuest",
-  "description": "給 8–12 歲孩子的每日任務 RPG：完成現實任務換 EXP/金幣，升級配點、解鎖技能、攻略傳送門。",
+  "name": "AllRiseKids 孩子們覺醒吧!",
+  "short_name": "AllRiseKids",
+  "description": "給 6–15 歲孩子的每日任務 RPG：完成現實任務換 EXP/金幣，升級配點、解鎖技能、攻略傳送門、跨家庭排行與交換。",
   "lang": "zh-Hant",
   "start_url": "./index.html",
   "scope": "./",
