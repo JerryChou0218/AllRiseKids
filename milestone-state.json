@@ -7,12 +7,13 @@
   "current_milestone_id": null,
   "planning_complete": true,
   "budget": {
-    "used_usd": 18.4,
+    "used_usd": 20.6,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 10,
-    "verification_calls": 11,
+    "execution_calls": 12,
+    "verification_calls": 12,
+    "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
       "execution": 1.0,
