@@ -20,8 +20,13 @@
     --sys-cyan:#00d2ff; --sys-blue:#1e4976; --sys-purple:#a855f7; --sys-gold:#f5c542;
     --sys-bg:#060b18; --sys-panel:rgba(8,18,38,.92); --sys-text:#cfe8ff; --sys-dim:#6b8cae;
   }
+  /* #8 整體放大字級，讓 6–15 歲孩子在 4.7–6 吋手機上好讀（rem 類別會一併放大） */
+  html{ font-size:17px; }
   *{ font-family:'Noto Sans TC',sans-serif; -webkit-tap-highlight-color:transparent; }
   .num{ font-family:'Rajdhani','Noto Sans TC',sans-serif; }
+  /* #8 最小字級下限：把寫死的極小字撐大，避免吃力 */
+  .text-\[10px\]{ font-size:12.5px !important; }
+  .text-\[11px\]{ font-size:13.5px !important; }
   body{
     background:#060b18 radial-gradient(ellipse at 50% -10%, #0e2a52 0%, #060b18 55%);
     color:var(--sys-text); min-height:100vh;
@@ -239,8 +244,13 @@
   /* ═══ 主導覽：行動=底部列；桌面(≥1024)=左側欄 ═══ */
   .app-nav{ position:fixed; bottom:0; left:0; right:0; z-index:40;
     background:rgba(4,9,20,.96); border-top:1px solid rgba(0,210,255,.35); box-shadow:0 -4px 20px rgba(0,210,255,.12); }
-  .app-nav .nav-inner{ display:flex; justify-content:space-around; max-width:28rem; margin:0 auto; }
-  .app-content{ padding-top:60px; padding-bottom:86px; }
+  .app-nav .nav-inner{ display:flex; flex-wrap:wrap; justify-content:center; max-width:30rem; margin:0 auto; }
+  .app-content{ padding-top:60px; padding-bottom:124px; }
+  /* #7 行動裝置：8 顆導覽改每列 4 顆、共 2 列，按鈕更大不擠 */
+  @media (max-width:1023px){
+    .app-nav .nav-btn{ flex:1 0 24%; max-width:25%; padding-top:9px; padding-bottom:9px; }
+    .app-nav .nav-btn > div:first-child{ font-size:22px; }
+  }
   @media (min-width:1024px){
     .app-nav{ top:52px; right:auto; bottom:0; width:208px; border-top:none;
       border-right:1px solid rgba(0,210,255,.35); box-shadow:4px 0 22px rgba(0,210,255,.10); }
@@ -299,13 +309,21 @@
 <div id="account-gate" class="screen fixed inset-0 z-50 overflow-y-auto" style="display:none;">
   <div class="max-w-md mx-auto px-5 py-8">
     <div class="text-center mb-5">
-      <div class="lv-arise text-xl font-bold mb-1">SYSTEM</div>
-      <div class="text-3xl font-black text-white" style="text-shadow:0 0 18px rgba(0,210,255,.8);">👤 選擇獵人帳號</div>
-      <div class="text-xs font-bold mt-1" style="color:var(--sys-dim);">每個帳號進度各自獨立，全部存在這台裝置</div>
+      <div class="lv-arise text-xl font-bold mb-1">ALLRISEKIDS</div>
+      <div class="text-3xl font-black text-white" style="text-shadow:0 0 18px rgba(0,210,255,.8);">⚔️ 孩子們覺醒吧!</div>
+      <div class="text-xs font-bold mt-1" style="color:var(--sys-dim);">完成現實任務，成為更好的自己</div>
     </div>
     <div class="sys-win scanline mb-4">
-      <div class="sys-head"><span class="sys-i">i</span>本機帳號</div>
+      <div class="sys-head"><span class="sys-i">i</span>家長 / 帳號</div>
       <div class="p-4 grid gap-3" id="account-gate-body"></div>
+    </div>
+    <div class="sys-win mb-4">
+      <div class="sys-head"><span class="sys-i">i</span>分享這個 App</div>
+      <div class="p-4 flex flex-col items-center gap-2">
+        <div id="gate-qr" style="background:#fff; padding:10px; border-radius:10px; line-height:0;"></div>
+        <div class="text-xs font-bold text-center" style="color:var(--sys-dim);">用手機相機掃描 → 加入主畫面即可遊玩</div>
+        <div class="text-[11px] num" style="color:#00d2ff;">allrisekids.vercel.app</div>
+      </div>
     </div>
   </div>
 </div>
@@ -804,6 +822,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="cloud-config.js"></script>
 <script>
 'use strict';
@@ -1838,24 +1857,38 @@ function setMapFilter(f){
   document.querySelectorAll('[data-mfilter]').forEach(b=>b.classList.toggle('active', b.dataset.mfilter===f));
   renderMap();
 }
+// #2 傳送門座標：由下往上、左右交錯；y 介於 32%~93% 避免上緣裁掉光柱特效。
+function gateSlots(n){
+  const cols=[22,50,78], slots=[];
+  for(let i=0;i<n;i++){
+    const row=Math.floor(i/3), col=i%3;
+    const y=93 - row*10;                          // index 0 在最下面，往上每列 -10%
+    const x=cols[col] + (row%2 ? 7 : -7);          // 交錯
+    slots.push({ x:Math.max(13,Math.min(87,x)), y:Math.max(32,y) });
+  }
+  return slots;
+}
 function renderMap(){
   const map = document.getElementById('gate-map');
   let tasks = state.tasks;
   if(mapFilter!=='all') tasks = tasks.filter(t=>t.difficulty===mapFilter);
-  tasks = tasks.slice(0, GATE_SLOTS.length);
+  tasks = tasks.slice(0, 21);
+  const slots = gateSlots(tasks.length);
   const open = tasks.filter(t=>t.status!=='completed').length;
   document.getElementById('map-count').textContent = `開啟中的門：${open}`;
   map.innerHTML = tasks.map((t,i)=>{
     const d = DIFFS[t.difficulty];
-    const slot = GATE_SLOTS[i];
+    const slot = slots[i];
     const isEpic = CHALLENGE.has(t.difficulty);
     const doneCls = t.status==='completed' ? 'gate-done' : '';
+    const nm = t.name.length>10 ? t.name.slice(0,10)+'…' : t.name;
     return `<div class="gate ${doneCls}" style="left:${slot.x}%; top:${slot.y}%;" onclick="openGate('${t.id}')">
       <div class="gate-beam" style="background:${d.beam}; animation-delay:${(i%5)*0.4}s;"></div>
       <div class="gate-base" style="background:${d.base};"></div>
       <div class="gate-tag">
         <span class="num" style="color:${d.color}; text-shadow:0 0 6px ${d.color};">${d.rank}-Rank</span><br>
-        <span class="text-white">${t.emoji} ${t.name.length>6 ? t.name.slice(0,6)+'…' : t.name}</span>
+        <span class="text-white">${t.emoji} ${nm}</span>
+        ${t.status==='completed'?'<br><span class="text-emerald-300">✔ 完成</span>':''}
         ${t.status==='pending'?'<br><span class="text-amber-300">⏳確認中</span>':''}
         ${isEpic && t.status==='available' ? '<br><span class="gate-break">DUNGEON BREAK</span>':''}
       </div>
@@ -3093,6 +3126,13 @@ function showAccountGate(){
   const sess = cloudStore.getSession();
   gateMode = (sess.parentId && cloudStore.getParent(sess.parentId)) ? 'parent-home' : 'parent-login';
   renderAccountGate();
+  renderGateQR();
+}
+// #6 在帳號閘門顯示本 App 的 QR Code（方便分享給別人掃）
+function renderGateQR(){
+  const box = document.getElementById('gate-qr');
+  if(!box || typeof QRCode==='undefined' || box.dataset.done) return;
+  try{ new QRCode(box, { text:'https://allrisekids.vercel.app', width:160, height:160, colorDark:'#000000', colorLight:'#ffffff', correctLevel:QRCode.CorrectLevel.H }); box.dataset.done='1'; }catch(e){}
 }
 function renderAccountGate(){
   const body = document.getElementById('account-gate-body');
