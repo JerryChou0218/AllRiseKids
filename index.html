@@ -90,6 +90,9 @@
   .parent-shell .sys-head{ background:rgba(132,178,220,.08); letter-spacing:.02em; color:#dbeafe; }
   .parent-panel{ display:none; }
   .parent-panel.active{ display:block; }
+  .advanced-box summary{ cursor:pointer; list-style:none; }
+  .advanced-box summary::-webkit-details-marker{ display:none; }
+  .advanced-box[open] summary{ border-bottom:1px solid var(--border-subtle); margin-bottom:10px; padding-bottom:10px; }
   @media (prefers-reduced-motion: reduce){
     *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
   }
@@ -785,13 +788,13 @@
           <button onclick="lockParent()" class="btn-dark ml-auto text-xs px-3 py-1">🔒 鎖定離開</button>
         </div>
         <div class="p-3">
-          <div class="shell-tabs" id="parent-nav">
-            <button class="shell-tab active" data-ptab="overview" onclick="setParentTab('overview')">總覽</button>
-            <button class="shell-tab" data-ptab="review" onclick="setParentTab('review')">審核</button>
-            <button class="shell-tab" data-ptab="tasks" onclick="setParentTab('tasks')">任務管理</button>
-            <button class="shell-tab" data-ptab="rewards" onclick="setParentTab('rewards')">獎勵管理</button>
-            <button class="shell-tab" data-ptab="records" onclick="setParentTab('records')">成長紀錄</button>
-            <button class="shell-tab" data-ptab="settings" onclick="setParentTab('settings')">設定</button>
+          <div class="shell-tabs" id="parent-nav" role="tablist" aria-label="家長模式分頁">
+            <button class="shell-tab active" data-ptab="overview" onclick="setParentTab('overview')" aria-label="家長總覽">總覽</button>
+            <button class="shell-tab" data-ptab="review" onclick="setParentTab('review')" aria-label="審核中心">審核</button>
+            <button class="shell-tab" data-ptab="tasks" onclick="setParentTab('tasks')" aria-label="任務管理">任務管理</button>
+            <button class="shell-tab" data-ptab="rewards" onclick="setParentTab('rewards')" aria-label="獎勵管理">獎勵管理</button>
+            <button class="shell-tab" data-ptab="records" onclick="setParentTab('records')" aria-label="成長紀錄">成長紀錄</button>
+            <button class="shell-tab" data-ptab="settings" onclick="setParentTab('settings')" aria-label="設定">設定</button>
           </div>
         </div>
       </div>
@@ -869,37 +872,45 @@
         <div class="p-3 grid gap-2" id="parent-accounts"></div>
       </div>
 
-      <div class="sys-win mb-3 parent-panel" data-parent-panel="settings">
-        <div class="sys-head text-sm"><span class="sys-i">⚙</span>除錯 / 平衡測試（僅家長）</div>
-        <div class="p-3 grid gap-2" id="parent-debug"></div>
-      </div>
-
-      <div class="sys-win mb-3 parent-panel" data-parent-panel="settings">
-        <div class="sys-head text-sm"><span class="sys-i">🔁</span>物品交換管理</div>
-        <div class="p-3 grid gap-2" id="parent-trade"></div>
-      </div>
-
       <div class="sys-win mb-4 parent-panel" data-parent-panel="settings">
         <div class="sys-head text-sm"><span class="sys-i">i</span>設定</div>
         <div class="p-3 grid gap-2">
           <p class="text-xs" style="color:var(--sys-dim)">換裝置 / 換瀏覽器？用「匯出存檔」存成檔案，到新裝置「匯入存檔」即可延續進度。純本機檔案，不上傳、不需帳號。</p>
-          <button onclick="exportSave()" class="btn-sys py-2.5 text-sm">📤 匯出存檔（跨裝置轉移）</button>
-          <button onclick="triggerImport()" class="btn-sys py-2.5 text-sm">📥 匯入存檔</button>
+          <button onclick="exportSave()" class="btn-sys py-2.5 text-sm" aria-label="匯出存檔">📤 匯出存檔（跨裝置轉移）</button>
+          <button onclick="triggerImport()" class="btn-sys py-2.5 text-sm" aria-label="匯入存檔">📥 匯入存檔</button>
           <input id="import-file" type="file" accept="application/json,.json" onchange="importSave(this)" style="display:none">
           <button onclick="resetPin()" class="btn-sys py-2.5 text-sm">🔑 變更家長 PIN 碼</button>
+          <details class="advanced-box sys-win mt-2">
+            <summary class="p-3 font-black text-sm text-white">⚙ 進階設定 / 除錯</summary>
+            <div class="px-3 pb-3 grid gap-3">
+              <div>
+                <div class="section-title mb-2">資料安全</div>
+                <button onclick="resetCurrentChildData()" class="btn-red w-full py-2.5 text-sm" aria-label="重置目前孩子進度">重置目前孩子進度</button>
+                <p class="caption mt-2">會保留家長帳號、PIN、任務池與真實獎勵設定；重置前需要二次確認。</p>
+              </div>
+              <div>
+                <div class="section-title mb-2">物品交換管理</div>
+                <div class="grid gap-2" id="parent-trade"></div>
+              </div>
+              <div>
+                <div class="section-title mb-2">除錯 / 平衡測試</div>
+                <div class="grid gap-2" id="parent-debug"></div>
+              </div>
+            </div>
+          </details>
         </div>
       </div>
     </div>
   </div>
 
   <!-- 底部導覽 -->
-  <nav class="app-nav">
+  <nav class="app-nav" aria-label="孩子模式主要導覽">
     <div class="nav-inner">
-      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="home" onclick="goScreen('home')"><div class="text-xl">🏠</div><div class="text-[11px] font-bold">首頁</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="adventure" onclick="openAdventure()"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">冒險</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="rewards" onclick="openRewards()"><div class="text-xl">🎁</div><div class="text-[11px] font-bold">獎勵</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="profile" onclick="openProfile()"><div class="text-xl">⭐</div><div class="text-[11px] font-bold">我的角色</div></button>
+      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="home" onclick="goScreen('home')" aria-label="首頁"><div class="text-xl">🏠</div><div class="text-[11px] font-bold">首頁</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')" aria-label="任務"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="adventure" onclick="openAdventure()" aria-label="冒險"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">冒險</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="rewards" onclick="openRewards()" aria-label="獎勵"><div class="text-xl">🎁</div><div class="text-[11px] font-bold">獎勵</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="profile" onclick="openProfile()" aria-label="我的角色"><div class="text-xl">⭐</div><div class="text-[11px] font-bold">我的角色</div></button>
     </div>
   </nav>
 </div>
@@ -3379,6 +3390,38 @@ function resetPin(){
   save();
   toast('PIN 碼已更新。');
 }
+function validateImportedSave(data){
+  if(!data || typeof data !== 'object') return false;
+  if(!data.player || typeof data.player !== 'object') return false;
+  if(typeof data.player.name !== 'string') return false;
+  if(!data.player.stats || typeof data.player.stats !== 'object') return false;
+  if(!Array.isArray(data.tasks) || !Array.isArray(data.taskPool)) return false;
+  if(!Array.isArray(data.inventory) || !Array.isArray(data.achievements)) return false;
+  if(!data.parentConfig || typeof data.parentConfig !== 'object') return false;
+  return true;
+}
+function resetCurrentChildData(){
+  if(!confirm('確定要重置目前孩子的進度嗎？這會清除等級、金幣、任務紀錄、背包與成就，但保留家長設定。')) return;
+  const code = prompt('這是高風險操作。請輸入 RESET 確認重置：');
+  if(code !== 'RESET'){ toast('未輸入 RESET，已取消重置。'); return; }
+  const keepPlayer = { ...state.player };
+  const keepParentConfig = JSON.parse(JSON.stringify(state.parentConfig || {}));
+  const keepTaskPool = (state.taskPool||[]).map(t=>({ ...t }));
+  state = defaultData();
+  state.player.name = keepPlayer.name || state.player.name;
+  state.player.class = keepPlayer.class || state.player.class;
+  state.player.age = keepPlayer.age || state.player.age;
+  state.player.gender = keepPlayer.gender || state.player.gender || 'all';
+  state.parentConfig = { ...state.parentConfig, ...keepParentConfig };
+  state.taskPool = keepTaskPool.length ? keepTaskPool : state.taskPool;
+  state.tasks = [];
+  pickDailyTasks();
+  pickWeeklyTasks();
+  save();
+  parentUnlocked = false;
+  toast('目前孩子進度已重置，家長設定已保留。');
+  goScreen('home');
+}
 
 /* ── 跨裝置存檔轉移（匯出 / 匯入；純本機檔案，無帳號、不上傳） ── */
 function exportSave(){
@@ -3403,7 +3446,7 @@ function importSave(input){
   reader.onload = function(){
     try{
       const data = JSON.parse(reader.result);
-      if(!data || typeof data !== 'object' || !data.player){
+      if(!validateImportedSave(data)){
         toast('這不是有效的 AllRiseKids 存檔檔案。'); input.value=''; return;
       }
       if(!confirm('⚠️ 匯入會覆蓋這台裝置目前的進度，確定嗎？')){ input.value=''; return; }
