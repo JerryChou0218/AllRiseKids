@@ -4,7 +4,7 @@
   "created_at": "2026-06-13T00:00:00Z",
   "mode": "full",
   "is_ui": true,
-  "current_milestone_id": null,
+  "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
     "used_usd": 20.6,
@@ -507,6 +507,29 @@
         { "timestamp": "2026-06-16T02:00:00Z", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS（使用者核可開始 M23）：已完成不需活連線的雲端前置——(1) 新增 cloud-config.js（committed，公開安全值：publishableKey+googleClientId，supabaseUrl 留空待填）；(2) index.html 載入 cloud-config 並建 CLOUD_READY 旗標（有 supabaseUrl 才 true，否則純本機，與現狀相同）；(3) 家長登入畫面顯示雲端/本機狀態徽記；(4) 改寫 supabase/schema.sql 為家長為主模型（saves 家長整包 jsonb + RLS、leaderboard 公開讀寫自有、trades 雙方讀寫，皆 RLS）。CLOUD_READY=false 下 9 套件全綠。BLOCKED：仍缺使用者 Supabase Project URL（https://<ref>.supabase.co）才能寫 supabase-js 客戶端(Google 登入/blob 推拉同步)並對真專案驗證 RLS 隔離。" },
         { "timestamp": "2026-06-16T03:00:00Z", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS（已接線，待使用者瀏覽器實測）：使用者提供 Project URL=https://pfswpfdtclnoawmcodht.supabase.co，已填入 cloud-config.js。載入 supabase-js@2 CDN。新增 cloud 模組：cloudClient/cloudSignInGoogle(signInWithOAuth google,redirectTo 部署網址)/cloudSignOut/cloudCurrentUser/cloudPull(saves)/cloudPush(upsert saves)/cloudSchedulePush(去抖 1.5s)/cloudBoot(啟動拉雲端→灌本機家長→家長首頁)。save() 末呼叫 cloudSchedulePush；parent-login 在 CLOUD_READY 時顯示真 Google 鈕；parentLogout 一併 cloudSignOut；boot 後 if(CLOUD_READY) cloudBoot()。全部以 CLOUD_READY 為閘，false 時完全不影響本機。驗證：CLOUD_READY=false 下 9 套件全綠；CLOUD_READY=true 模擬(無 supabase global)載入不崩潰、cloudClient 安全回 null。待辦(需使用者於瀏覽器)：真 Google 登入往返、跨裝置同步、兩帳號 RLS 隔離；確認 Supabase Google provider 已 Enable+Client Secret、redirect URIs 含 callback。通過後 M23→complete。" },
         { "timestamp": "2026-06-16T04:00:00Z", "automated_tests": "PASS", "ai_verification": "PASS（使用者實測確認）：使用者於瀏覽器成功以 Google 登入並回到家長首頁。排錯過程：用 publishable key 查得 Google provider 已啟用、三張表(saves/leaderboard/trades)經使用者跑 schema 後存在且 RLS 生效(匿名查詢回 [])；以 /auth/v1/authorize 取得 Supabase→Google 的 client_id(正確)與 redirect_uri，判定『要求無效』為 Google 憑證缺 Authorized redirect URI；指引使用者在正確專案(編號 541985626153)加入 https://<ref>.supabase.co/auth/v1/callback 後登入成功。雲端設定全到位：URL/Google provider/RLS 表/redirect URI。本機降級不受影響、9 套件全綠。建議使用者另以跨裝置同登入做最終同步抽查。" }
+      ]
+    },
+    {
+      "id": 24,
+      "title": "產品架構與 UI/UX 重構",
+      "spec_file": "milestones/m24-product-architecture-ui-rework.md",
+      "spec_summary": "將 AllRiseKids 重構為孩子/家長雙模式 App Shell；孩子第一層導航收斂為首頁、任務、冒險、獎勵、我的角色；家長模式整理為六分頁管理介面；首頁突出今日任務與下一步；建立集中式功能解鎖設定並保留既有資料與功能。",
+      "status": "in_progress",
+      "attempts": 1,
+      "max_attempts": 3,
+      "require_human_approval": false,
+      "depends_on": [23],
+      "human_feedback": "2026-06-19 使用者要求完整產品架構與 UI/UX 重構，不能只改首頁，需分離孩子模式與家長模式並重新分類功能。",
+      "acceptance_criteria": [
+        "孩子模式第一層導航只有首頁、任務、冒險、獎勵、我的角色",
+        "家長模式有獨立總覽、審核、任務管理、獎勵管理、成長紀錄、設定六分頁 shell",
+        "首頁只突出角色摘要、今日任務進度、下一個推薦任務、近期成長與解鎖預告",
+        "地圖/技能/裝備歸入冒險，商店/真實獎勵/背包歸入獎勵，狀態/成就/戰績歸入我的角色",
+        "功能解鎖集中設定且舊玩家已有資料不被硬擋",
+        "既有核心功能與存檔/migration/雲端抽象層維持相容，九套測試全綠"
+      ],
+      "history": [
+        { "timestamp": "2026-06-19T00:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 已完成第一版 IA/App Shell 重構：新增 design token/glass panel/parent panel CSS；孩子模式五個第一層導航；新增孩子首頁；家長模式六分頁 shell；集中 FEATURE_UNLOCKS 與舊資料相容判斷；任務頁改今日/挑戰/紀錄；onboarding 加產品價值、角色資料、職業、家長 PIN 與第一任務提示。驗證 npm test 77/77、accounts 8/8、cloud-store 9/9、parent-queue 11/11、progression 10/10、debug-sim 9/9、leaderboard 7/7、trade 10/10、desktop-save 4/4 全綠。待續：更深層拆檔、實機響應式與動畫細節驗證。" }
       ]
     }
   ]

@@ -19,6 +19,25 @@
   :root{
     --sys-cyan:#00d2ff; --sys-blue:#1e4976; --sys-purple:#a855f7; --sys-gold:#f5c542;
     --sys-bg:#060b18; --sys-panel:rgba(8,18,38,.92); --sys-text:#cfe8ff; --sys-dim:#6b8cae;
+    --background-primary:#060b18;
+    --background-secondary:#0b1630;
+    --surface-glass:rgba(9,21,45,.78);
+    --surface-elevated:rgba(12,28,58,.92);
+    --border-subtle:rgba(132,178,220,.22);
+    --border-glow:rgba(0,210,255,.5);
+    --text-primary:#f7fbff;
+    --text-secondary:#cfe8ff;
+    --text-muted:#7f9cba;
+    --accent-cyan:#00d2ff;
+    --accent-violet:#a855f7;
+    --success:#47e6a3;
+    --warning:#ffd25c;
+    --danger:#ff6b8a;
+    --gold:#f5c542;
+    --exp:#6ee7ff;
+    --radius-sm:6px;
+    --radius-md:8px;
+    --radius-lg:12px;
   }
   /* #8 整體放大字級，讓 6–15 歲孩子在 4.7–6 吋手機上好讀（rem 類別會一併放大） */
   html{ font-size:17px; }
@@ -46,6 +65,33 @@
     border:1px solid rgba(0,210,255,.45);
     box-shadow:0 0 16px rgba(0,210,255,.18), inset 0 0 24px rgba(0,210,255,.05);
     border-radius:6px; position:relative;
+  }
+  .glass-panel{
+    background:var(--surface-glass);
+    border:1px solid var(--border-subtle);
+    border-radius:var(--radius-md);
+    box-shadow:0 10px 32px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.04);
+    backdrop-filter:blur(10px);
+  }
+  .page-title{ font-size:24px; line-height:1.2; font-weight:900; color:var(--text-primary); }
+  .section-title{ font-size:15px; font-weight:900; color:#bdeeff; letter-spacing:.04em; }
+  .caption{ font-size:12px; font-weight:700; color:var(--text-muted); line-height:1.55; }
+  .stat-value{ font-family:'Rajdhani','Noto Sans TC',sans-serif; font-weight:700; color:var(--text-primary); }
+  .shell-tabs{ display:flex; gap:8px; overflow-x:auto; padding-bottom:2px; }
+  .shell-tab{
+    border:1px solid var(--border-subtle); background:rgba(12,24,46,.72); color:var(--text-muted);
+    border-radius:999px; padding:9px 12px; font-size:13px; font-weight:900; white-space:nowrap; min-height:40px;
+  }
+  .shell-tab.active{ border-color:var(--border-glow); color:#dff8ff; background:rgba(0,210,255,.14); box-shadow:0 0 12px rgba(0,210,255,.16); }
+  .locked-feature{
+    opacity:.68; background:rgba(9,21,45,.48); border:1px dashed rgba(245,197,66,.38); border-radius:8px;
+  }
+  .parent-shell .sys-win{ border-color:rgba(132,178,220,.26); box-shadow:0 8px 24px rgba(0,0,0,.22); }
+  .parent-shell .sys-head{ background:rgba(132,178,220,.08); letter-spacing:.02em; color:#dbeafe; }
+  .parent-panel{ display:none; }
+  .parent-panel.active{ display:block; }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important; }
   }
   .sys-win::before, .sys-win::after{ content:''; position:absolute; width:14px; height:14px; pointer-events:none; }
   .sys-win::before{ top:-2px; left:-2px; border-top:2px solid var(--sys-cyan); border-left:2px solid var(--sys-cyan); }
@@ -275,9 +321,9 @@
     background:rgba(4,9,20,.96); border-top:1px solid rgba(0,210,255,.35); box-shadow:0 -4px 20px rgba(0,210,255,.12); }
   .app-nav .nav-inner{ display:flex; flex-wrap:wrap; justify-content:center; max-width:30rem; margin:0 auto; }
   .app-content{ padding-top:60px; padding-bottom:124px; }
-  /* #7 行動裝置：8 顆導覽改每列 4 顆、共 2 列，按鈕更大不擠 */
+  /* 行動裝置：孩子模式固定五個第一層導航。 */
   @media (max-width:1023px){
-    .app-nav .nav-btn{ flex:1 0 24%; max-width:25%; padding-top:9px; padding-bottom:9px; }
+    .app-nav .nav-btn{ flex:1 0 20%; max-width:20%; padding-top:9px; padding-bottom:9px; }
     .app-nav .nav-btn > div:first-child{ font-size:22px; }
   }
   @media (min-width:1024px){
@@ -298,15 +344,15 @@
   <div class="hero-wrap">
     <section class="text-center mb-5">
       <div class="hero-kicker">ALLRISEKIDS RPG SYSTEM</div>
-      <h1 class="hero-title">把孩子的日常任務，變成一場升級冒險</h1>
+      <h1 class="hero-title">把每天該做的事，變成一場升級冒險</h1>
       <p class="hero-subtitle">
-        刷牙、閱讀、運動、整理書包、做家事，都可以變成任務。
-        孩子完成後獲得<strong>經驗值</strong>與<strong>金幣</strong>，家長可以設定真實獎勵。
+        完成刷牙、閱讀、運動、整理書包和家事任務，獲得<strong>經驗值</strong>、<strong>金幣</strong>與真實獎勵。
       </p>
       <div class="hero-actions">
-        <button type="button" onclick="document.getElementById('ob-setup').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>document.getElementById('ob-name').focus(),350);" class="btn-gold hero-btn">開始建立任務</button>
+        <button type="button" onclick="document.getElementById('ob-setup').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>document.getElementById('ob-name').focus(),350);" class="btn-gold hero-btn">開始覺醒</button>
         <button type="button" onclick="document.getElementById('ob-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
       </div>
+      <p class="caption mt-3">由家長建立任務，孩子完成挑戰並持續成長。</p>
       <div id="ob-how">
         <div class="hero-guide-title">新手村先開放</div>
         <div class="hero-guide-sub">第一次進來只需要懂四件事：接任務、完成、升級、換獎勵。</div>
@@ -319,11 +365,11 @@
         <div class="hero-guide-title">後續解鎖</div>
         <div class="hero-guide-sub">進階功能先鎖起來，像遊戲進度一樣慢慢打開，不一開始塞滿首頁。</div>
         <div class="hero-locks text-left">
+          <div class="hero-chip locked"><div class="lock-row">🔒 背包與系統商店 <span class="level-tag">Lv3 解鎖</span></div><span>開始收集道具與整理自己的冒險背包。</span></div>
           <div class="hero-chip locked"><div class="lock-row">🔒 技能樹 <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 地圖冒險 <span class="level-tag">Lv10 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 進階地圖 <span class="level-tag">Lv8 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
           <div class="hero-chip locked"><div class="lock-row">🔒 成就系統 <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 排行榜 <span class="level-tag">Lv15 解鎖</span></div><span>和其他小獵人比較進度，不暴露私人資料。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 裝備系統 <span class="level-tag">Lv20 解鎖</span></div><span>用努力換來的金幣，收集更帥的裝備。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 冒險團戰績 <span class="level-tag">Lv15 解鎖</span></div><span>看見自己的進步與友善比較。</span></div>
         </div>
       </div>
     </section>
@@ -335,11 +381,11 @@
       </div>
     </div>
     <div id="ob-setup" class="sys-win mb-4">
-      <div class="sys-head"><span class="sys-i">i</span>建立第一位孩子</div>
+      <div class="sys-head"><span class="sys-i">1</span>建立孩子角色</div>
       <div class="p-4"><input id="ob-name" maxlength="12" placeholder="輸入孩子的名字..." class="inp text-lg"></div>
     </div>
     <div class="sys-win mb-4">
-      <div class="sys-head"><span class="sys-i">i</span>孩子資料（幫助抽選合適任務）</div>
+      <div class="sys-head"><span class="sys-i">2</span>孩子資料（幫助抽選合適任務）</div>
       <div class="p-4 grid grid-cols-2 gap-3 items-center text-sm font-bold">
         <span style="color:var(--sys-dim);">年齡（5–15）</span>
         <input id="ob-age" type="number" min="5" max="15" value="10" class="inp" style="padding:8px 10px;">
@@ -352,11 +398,18 @@
       </div>
     </div>
     <div class="sys-win mb-5">
-      <div class="sys-head"><span class="sys-i">i</span>選擇孩子的覺醒職業</div>
+      <div class="sys-head"><span class="sys-i">3</span>選擇孩子的覺醒職業</div>
       <div id="ob-classes" class="p-4 grid gap-3"></div>
     </div>
-    <button onclick="finishOnboarding()" class="btn-gold w-full py-4 text-xl">開始建立任務</button>
-    <p class="text-center text-xs mt-3" style="color:var(--sys-dim);">完成後會自動產生今天的 RPG 任務清單。</p>
+    <div class="sys-win mb-5">
+      <div class="sys-head"><span class="sys-i">4</span>建立家長 PIN</div>
+      <div class="p-4 grid gap-3">
+        <p class="caption">PIN 用來保護新增/修改任務、審核任務、管理獎勵、查看紀錄與修改設定。</p>
+        <input id="ob-pin" inputmode="numeric" maxlength="4" placeholder="預設 1234，可改成 4 位數 PIN" class="inp text-lg">
+      </div>
+    </div>
+    <button onclick="finishOnboarding()" class="btn-gold w-full py-4 text-xl">第一個任務已出現</button>
+    <p class="text-center text-xs mt-3" style="color:var(--sys-dim);">完成後會進入今日任務引導，先從一個任務開始。</p>
   </div>
 </div>
 
@@ -365,15 +418,15 @@
   <div class="hero-wrap">
     <section class="text-center mb-5">
       <div class="hero-kicker">ALLRISEKIDS RPG SYSTEM</div>
-      <h1 class="hero-title">把孩子的日常任務，變成一場升級冒險</h1>
+      <h1 class="hero-title">把每天該做的事，變成一場升級冒險</h1>
       <p class="hero-subtitle">
-        刷牙、閱讀、運動、整理書包、做家事，都可以變成任務。
-        孩子完成後獲得<strong>經驗值</strong>與<strong>金幣</strong>，家長可以設定真實獎勵。
+        完成刷牙、閱讀、運動、整理書包和家事任務，獲得<strong>經驗值</strong>、<strong>金幣</strong>與真實獎勵。
       </p>
       <div class="hero-actions">
-        <button type="button" onclick="document.getElementById('account-gate-body').scrollIntoView({behavior:'smooth',block:'center'});" class="btn-gold hero-btn">開始建立任務</button>
+        <button type="button" onclick="document.getElementById('account-gate-body').scrollIntoView({behavior:'smooth',block:'center'});" class="btn-gold hero-btn">開始覺醒</button>
         <button type="button" onclick="document.getElementById('gate-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
       </div>
+      <p class="caption mt-3">由家長建立任務，孩子完成挑戰並持續成長。</p>
       <div id="gate-how">
         <div class="hero-guide-title">新手村先開放</div>
         <div class="hero-guide-sub">第一次進來只需要懂四件事：接任務、完成、升級、換獎勵。</div>
@@ -386,11 +439,11 @@
         <div class="hero-guide-title">後續解鎖</div>
         <div class="hero-guide-sub">進階功能先鎖起來，像遊戲進度一樣慢慢打開，不一開始塞滿首頁。</div>
         <div class="hero-locks text-left">
+          <div class="hero-chip locked"><div class="lock-row">🔒 背包與系統商店 <span class="level-tag">Lv3 解鎖</span></div><span>開始收集道具與整理自己的冒險背包。</span></div>
           <div class="hero-chip locked"><div class="lock-row">🔒 技能樹 <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 地圖冒險 <span class="level-tag">Lv10 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 進階地圖 <span class="level-tag">Lv8 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
           <div class="hero-chip locked"><div class="lock-row">🔒 成就系統 <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 排行榜 <span class="level-tag">Lv15 解鎖</span></div><span>和其他小獵人比較進度，不暴露私人資料。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 裝備系統 <span class="level-tag">Lv20 解鎖</span></div><span>用努力換來的金幣，收集更帥的裝備。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 冒險團戰績 <span class="level-tag">Lv15 解鎖</span></div><span>看見自己的進步與友善比較。</span></div>
         </div>
       </div>
     </section>
@@ -429,8 +482,77 @@
       <div class="sys-win px-3 py-1.5 num text-base text-cyan-300">Lv.<span id="top-level">1</span></div>
     </div>
 
-    <!-- 1. 狀態 -->
+    <!-- 0. 孩子首頁 -->
+    <div id="screen-home" class="screen">
+      <div class="grid gap-3 lg:grid-cols-[1.35fr_.85fr] lg:items-start">
+        <div class="grid gap-3">
+          <section class="glass-panel p-4 scanline">
+            <div class="flex items-center gap-4">
+              <div class="avatar-hex" style="width:92px;height:104px;"><span class="char-idle text-5xl" id="home-sprite">🗡️</span></div>
+              <div class="flex-1 min-w-0">
+                <div class="caption">今日覺醒狀態</div>
+                <h1 class="page-title truncate" id="home-name">小獵人</h1>
+                <div class="flex flex-wrap gap-1.5 mt-1">
+                  <span class="chip" id="home-class">職業</span>
+                  <span class="chip">Lv.<span class="num" id="home-level">1</span></span>
+                  <span class="chip"><span class="streak-flame">🔥</span> <span class="num" id="home-streak">0</span> 連續</span>
+                  <span class="chip">🪙 <span class="num" id="home-coins">0</span></span>
+                </div>
+                <div class="mt-3">
+                  <div class="flex justify-between caption mb-1">
+                    <span>EXP</span>
+                    <span class="num"><span id="home-xp">0</span> / <span id="home-xpneed">100</span></span>
+                  </div>
+                  <div class="bar-track h-3"><div class="xp-fill" id="home-xpbar" style="width:0%;"></div></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="sys-win gold-win">
+            <div class="sys-head"><span class="sys-i">!</span>今日任務進度</div>
+            <div class="p-4">
+              <div class="flex items-end justify-between gap-3 mb-2">
+                <div>
+                  <div class="caption">今天的主線操作</div>
+                  <div class="text-2xl font-black text-white">已完成 <span class="num text-amber-300" id="home-done">0</span>／<span class="num" id="home-total">0</span> 個任務</div>
+                </div>
+                <button onclick="goScreen('quests')" class="btn-gold px-4 py-2 text-sm flex-none">前往任務</button>
+              </div>
+              <div class="bar-track h-4"><div class="stat-fill text-emerald-400" id="home-daybar" style="width:0%; background:linear-gradient(90deg,#0d9466,#34d399);"></div></div>
+              <p id="home-dailycopy" class="caption mt-2"></p>
+            </div>
+          </section>
+
+          <section class="sys-win">
+            <div class="sys-head"><span class="sys-i">★</span>下一個推薦任務</div>
+            <div class="p-4" id="home-next-task"></div>
+          </section>
+        </div>
+
+        <aside class="grid gap-3">
+          <section class="sys-win">
+            <div class="sys-head"><span class="sys-i">i</span>近期成長</div>
+            <div class="p-4 grid gap-2" id="home-growth"></div>
+          </section>
+          <section class="sys-win">
+            <div class="sys-head"><span class="sys-i">🔒</span>冒險預告</div>
+            <div class="p-4 grid gap-2" id="home-unlocks"></div>
+          </section>
+        </aside>
+      </div>
+    </div>
+
+    <!-- 1. 我的角色：狀態 -->
     <div id="screen-status" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">我的角色</div>
+        <div class="shell-tabs">
+          <button class="shell-tab active" onclick="goScreen('status')">角色狀態</button>
+          <button class="shell-tab" onclick="goScreen('achievements')">成就</button>
+          <button class="shell-tab" onclick="goScreen('leaderboard')">冒險團戰績</button>
+        </div>
+      </div>
       <div class="sys-win scanline mb-3">
         <div class="sys-head"><span class="sys-i">i</span>狀態視窗<span class="ml-auto text-xs num" id="status-rank-tag"></span></div>
         <div class="p-4">
@@ -516,19 +638,27 @@
             <span class="num text-cyan-300" id="quest-progress">0 / 0</span>
           </div>
           <div class="bar-track h-2.5 mb-2"><div class="xp-fill" id="quest-progbar" style="width:0%;"></div></div>
-          <div class="alert-line rounded px-3 py-2 text-xs font-bold">⚠ 警告：未完成全部每日任務，連續紀錄（🔥）將會中斷歸零。A/S 級挑戰不影響連續紀錄。</div>
+          <div class="rounded px-3 py-2 text-xs font-bold" style="border:1px solid rgba(71,230,163,.35); background:rgba(20,120,85,.14); color:#a8ffd4;">今天再完成幾個任務，就能守住連續紀錄。A/S 級挑戰是額外冒險，不影響今日連續。</div>
         </div>
       </div>
       <div class="flex gap-2 mb-3">
-        <button class="tab-btn active flex-1 py-2 text-sm" data-ttab="today" onclick="setTaskTab('today')">每日任務</button>
-        <button class="tab-btn flex-1 py-2 text-sm" data-ttab="weekly" onclick="setTaskTab('weekly')">A/S 挑戰</button>
-        <button class="tab-btn flex-1 py-2 text-sm" data-ttab="all" onclick="setTaskTab('all')">全部</button>
+        <button class="tab-btn active flex-1 py-2 text-sm" data-ttab="today" onclick="setTaskTab('today')">今日任務</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-ttab="weekly" onclick="setTaskTab('weekly')">挑戰任務</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-ttab="history" onclick="setTaskTab('history')">任務紀錄</button>
       </div>
       <div id="task-list" class="grid gap-2.5 mb-4 lg:grid-cols-2"></div>
     </div>
 
     <!-- 3. 傳送門地圖 -->
     <div id="screen-map" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">冒險</div>
+        <div class="shell-tabs">
+          <button class="shell-tab active" onclick="openAdventure('map')">地圖</button>
+          <button class="shell-tab" onclick="openAdventure('skills')">技能</button>
+          <button class="shell-tab" onclick="openAdventure('inventory')">裝備</button>
+        </div>
+      </div>
       <div class="sys-win mb-3">
         <div class="sys-head"><span class="sys-i">i</span>傳送門 — 家事地圖<span class="ml-auto text-xs num" id="map-count"></span></div>
       </div>
@@ -547,6 +677,14 @@
 
     <!-- 4. 技能樹 -->
     <div id="screen-skills" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">冒險</div>
+        <div class="shell-tabs">
+          <button class="shell-tab" onclick="openAdventure('map')">地圖</button>
+          <button class="shell-tab active" onclick="openAdventure('skills')">技能</button>
+          <button class="shell-tab" onclick="openAdventure('inventory')">裝備</button>
+        </div>
+      </div>
       <div class="sys-win mb-3">
         <div class="sys-head"><span class="sys-i">i</span>技能樹<span class="ml-auto text-xs">技能點數 <span class="num text-base text-amber-300" id="sp-count">0</span></span></div>
       </div>
@@ -565,13 +703,20 @@
 
     <!-- 5. 商店 -->
     <div id="screen-shop" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">獎勵中心</div>
+        <div class="shell-tabs">
+          <button class="shell-tab active" onclick="openRewards('shop')">系統商店 / 真實獎勵</button>
+          <button class="shell-tab" onclick="openRewards('inventory')">背包</button>
+        </div>
+      </div>
       <div class="sys-win mb-3">
         <div class="sys-head"><span class="sys-i">i</span>系統商店<span class="ml-auto text-xs num" style="color:var(--sys-gold);">🪙 <span id="shop-coins">0</span></span></div>
         <div class="px-4 py-2 text-xs font-bold" id="shop-discount-line" style="color:var(--sys-dim);"></div>
       </div>
       <div class="flex gap-2 mb-2">
         <button class="tab-btn active flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')">🎁 真實獎勵</button>
-        <button class="tab-btn flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')">🔒 裝備道具 Lv20</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')">🛒 系統商店 Lv3</button>
       </div>
       <div class="flex gap-1.5 mb-3 flex-wrap" id="shop-filter-row"></div>
       <div id="shop-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
@@ -579,6 +724,14 @@
 
     <!-- 6. 背包 -->
     <div id="screen-inventory" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">獎勵與裝備</div>
+        <div class="shell-tabs">
+          <button class="shell-tab" onclick="openRewards('shop')">系統商店 / 真實獎勵</button>
+          <button class="shell-tab active" onclick="openRewards('inventory')">背包</button>
+          <button class="shell-tab" onclick="openAdventure('map')">冒險地圖</button>
+        </div>
+      </div>
       <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>背包 — 點擊道具裝備 / 卸下</div></div>
       <div id="inv-list" class="grid grid-cols-3 gap-2.5 mb-4 lg:grid-cols-6"></div>
       <div id="inv-empty" class="hidden text-center font-bold py-10" style="color:var(--sys-dim);">背包是空的。完成任務賺金幣，去商店補給吧。</div>
@@ -590,15 +743,31 @@
 
     <!-- 7. 成就 -->
     <div id="screen-achievements" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">我的角色</div>
+        <div class="shell-tabs">
+          <button class="shell-tab" onclick="goScreen('status')">角色狀態</button>
+          <button class="shell-tab active" onclick="goScreen('achievements')">成就</button>
+          <button class="shell-tab" onclick="goScreen('leaderboard')">冒險團戰績</button>
+        </div>
+      </div>
       <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>成就紀錄<span class="ml-auto text-xs num" id="ach-count"></span></div></div>
       <div id="ach-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
     </div>
 
     <div id="screen-leaderboard" class="screen">
+      <div class="mb-3">
+        <div class="page-title mb-2">我的角色</div>
+        <div class="shell-tabs">
+          <button class="shell-tab" onclick="goScreen('status')">角色狀態</button>
+          <button class="shell-tab" onclick="goScreen('achievements')">成就</button>
+          <button class="shell-tab active" onclick="goScreen('leaderboard')">冒險團戰績</button>
+        </div>
+      </div>
       <div class="sys-win mb-3">
-        <div class="sys-head"><span class="sys-i">i</span>世界戰績排行榜</div>
+        <div class="sys-head"><span class="sys-i">i</span>冒險團戰績</div>
         <div class="p-3">
-          <p class="text-[11px] mb-2" style="color:var(--sys-dim);">和全世界的小獵人比拚成長。只顯示遊戲暱稱與戰績，不顯示真實姓名或家長資訊。</p>
+          <p class="text-[11px] mb-2" style="color:var(--sys-dim);">優先看自己的本週進步、同齡完成比例與友善比較。只顯示遊戲暱稱與戰績，不顯示真實姓名或家長資訊。</p>
           <div class="flex gap-2" id="lb-filters">
             <button onclick="setLbFilter('all')"  class="btn-sys flex-1 py-2 text-xs" data-lb="all">總榜</button>
             <button onclick="setLbFilter('week')" class="btn-dark flex-1 py-2 text-xs" data-lb="week">週榜</button>
@@ -610,36 +779,51 @@
     </div>
 
     <!-- 8. 家長後台 -->
-    <div id="screen-parent" class="screen">
+    <div id="screen-parent" class="screen parent-shell">
       <div class="sys-win mb-3">
-        <div class="sys-head"><span class="sys-i">i</span>管理者模式
+        <div class="sys-head"><span class="sys-i">i</span>家長模式
           <button onclick="lockParent()" class="btn-dark ml-auto text-xs px-3 py-1">🔒 鎖定離開</button>
+        </div>
+        <div class="p-3">
+          <div class="shell-tabs" id="parent-nav">
+            <button class="shell-tab active" data-ptab="overview" onclick="setParentTab('overview')">總覽</button>
+            <button class="shell-tab" data-ptab="review" onclick="setParentTab('review')">審核</button>
+            <button class="shell-tab" data-ptab="tasks" onclick="setParentTab('tasks')">任務管理</button>
+            <button class="shell-tab" data-ptab="rewards" onclick="setParentTab('rewards')">獎勵管理</button>
+            <button class="shell-tab" data-ptab="records" onclick="setParentTab('records')">成長紀錄</button>
+            <button class="shell-tab" data-ptab="settings" onclick="setParentTab('settings')">設定</button>
+          </div>
         </div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel active" data-parent-panel="overview">
         <div class="sys-head text-sm"><span class="sys-i">i</span>本週統計</div>
         <div class="p-3 grid grid-cols-2 gap-2 text-center" id="parent-stats"></div>
       </div>
 
-      <div class="sys-win gold-win mb-3">
+      <div class="sys-win mb-3 parent-panel active" data-parent-panel="overview">
+        <div class="sys-head text-sm"><span class="sys-i">!</span>需要關注的項目</div>
+        <div class="p-3 grid gap-2" id="parent-attention"></div>
+      </div>
+
+      <div class="sys-win gold-win mb-3 parent-panel" data-parent-panel="review">
         <div class="sys-head text-sm"><span class="sys-i">!</span>待審核任務 <span id="pending-count" class="text-xs text-red-300 num"></span></div>
         <div class="p-3 grid gap-2" id="pending-list"></div>
       </div>
 
-      <div class="sys-win gold-win mb-3">
+      <div class="sys-win gold-win mb-3 parent-panel" data-parent-panel="review">
         <div class="sys-head text-sm"><span class="sys-i">!</span>待處理真實獎勵申請 <span id="rewardreq-count" class="text-xs text-red-300 num"></span></div>
         <div class="p-3 grid gap-2" id="parent-rewardreqs"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel active" data-parent-panel="overview">
         <div class="sys-head text-sm"><span class="sys-i">i</span>經濟摘要</div>
         <div class="p-3" id="parent-economy"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="tasks">
         <div class="sys-head text-sm"><span class="sys-i">i</span>今日任務設定
-          <button onclick="rerollDaily()" class="btn-sys ml-auto text-xs px-3 py-1">🎲 重新抽選今日任務</button>
+          <button onclick="confirmRerollDaily()" class="btn-sys ml-auto text-xs px-3 py-1">🎲 重新抽選今日任務</button>
         </div>
         <div class="p-3 grid gap-2.5">
           <div class="flex items-center gap-2 text-xs font-bold">
@@ -661,41 +845,41 @@
         </div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="tasks">
         <div class="sys-head text-sm"><span class="sys-i">i</span>任務池管理 <span class="text-xs num" id="pool-count"></span>
           <button onclick="openTaskForm()" class="btn-sys ml-auto text-xs px-3 py-1">＋ 新增</button>
         </div>
         <div class="p-3 grid gap-2 max-h-96 overflow-y-auto" id="parent-pool"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="rewards">
         <div class="sys-head text-sm"><span class="sys-i">i</span>真實獎勵管理
           <button onclick="openRewardForm()" class="btn-sys ml-auto text-xs px-3 py-1">＋ 新增</button>
         </div>
         <div class="p-3 grid gap-2 max-h-72 overflow-y-auto" id="parent-rewards"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="records">
         <div class="sys-head text-sm"><span class="sys-i">i</span>紀錄</div>
         <div class="p-3 grid gap-1.5 max-h-60 overflow-y-auto text-xs" id="parent-history"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="settings">
         <div class="sys-head text-sm"><span class="sys-i">i</span>帳號管理</div>
         <div class="p-3 grid gap-2" id="parent-accounts"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="settings">
         <div class="sys-head text-sm"><span class="sys-i">⚙</span>除錯 / 平衡測試（僅家長）</div>
         <div class="p-3 grid gap-2" id="parent-debug"></div>
       </div>
 
-      <div class="sys-win mb-3">
+      <div class="sys-win mb-3 parent-panel" data-parent-panel="settings">
         <div class="sys-head text-sm"><span class="sys-i">🔁</span>物品交換管理</div>
         <div class="p-3 grid gap-2" id="parent-trade"></div>
       </div>
 
-      <div class="sys-win mb-4">
+      <div class="sys-win mb-4 parent-panel" data-parent-panel="settings">
         <div class="sys-head text-sm"><span class="sys-i">i</span>設定</div>
         <div class="p-3 grid gap-2">
           <p class="text-xs" style="color:var(--sys-dim)">換裝置 / 換瀏覽器？用「匯出存檔」存成檔案，到新裝置「匯入存檔」即可延續進度。純本機檔案，不上傳、不需帳號。</p>
@@ -711,15 +895,11 @@
   <!-- 底部導覽 -->
   <nav class="app-nav">
     <div class="nav-inner">
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">今日任務</div></button>
-      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="status" onclick="goScreen('status')"><div class="text-xl">⭐</div><div class="text-[11px] font-bold">等級</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="wallet" onclick="goScreen('wallet')"><div class="text-xl">🪙</div><div class="text-[11px] font-bold">金幣</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="shop" onclick="openRewardShop()"><div class="text-xl">🎁</div><div class="text-[11px] font-bold">獎勵</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="skills" data-unlock-level="5" data-lock="Lv5" onclick="gatedGoScreen('skills',5,'技能樹')"><div class="text-xl">✨</div><div class="text-[11px] font-bold">技能</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="map" data-unlock-level="10" data-lock="Lv10" onclick="gatedGoScreen('map',10,'地圖冒險')"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">地圖</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="achievements" data-unlock-level="12" data-lock="Lv12" onclick="gatedGoScreen('achievements',12,'成就系統')"><div class="text-xl">🏆</div><div class="text-[11px] font-bold">成就</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="leaderboard" data-unlock-level="15" data-lock="Lv15" onclick="gatedGoScreen('leaderboard',15,'排行榜')"><div class="text-xl">🏅</div><div class="text-[11px] font-bold">排行</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="inventory" data-unlock-level="20" data-lock="Lv20" onclick="gatedGoScreen('inventory',20,'裝備系統')"><div class="text-xl">🎒</div><div class="text-[11px] font-bold">裝備</div></button>
+      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="home" onclick="goScreen('home')"><div class="text-xl">🏠</div><div class="text-[11px] font-bold">首頁</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="adventure" onclick="openAdventure()"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">冒險</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="rewards" onclick="openRewards()"><div class="text-xl">🎁</div><div class="text-[11px] font-bold">獎勵</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="profile" onclick="openProfile()"><div class="text-xl">⭐</div><div class="text-[11px] font-bold">我的角色</div></button>
     </div>
   </nav>
 </div>
@@ -1012,6 +1192,18 @@ const RAR_POWER = { common:100, rare:300, epic:700, legendary:1500 };
 const SLOT_NAMES = { hat:'頭部', outfit:'服裝', weapon:'武器', accessory:'飾品', pet:'隨從', title:'稱號', emote:'徽記', consumable:'特殊' };
 const SCHEDULE_NAMES = { daily:'每日', weekly:'每週S', weekend:'週末限定' };
 const AGE_NAMES = { all:'全年齡', '8-10':'8–10', '10-12':'10–12' };
+const FEATURE_UNLOCKS = {
+  today: { level:1, name:'今日任務', desc:'每天最重要的任務與完成進度。' },
+  status: { level:1, name:'角色狀態', desc:'查看等級、EXP、金幣與連續紀錄。' },
+  realRewards: { level:1, name:'真實獎勵', desc:'用金幣申請家長設定的生活獎勵。' },
+  backpack: { level:3, name:'背包與系統商店', desc:'購買道具、整理背包與收藏品。' },
+  skills: { level:5, name:'技能樹', desc:'用升級取得的技能點強化能力。' },
+  map: { level:8, name:'進階地圖', desc:'把任務變成區域冒險與傳送門挑戰。' },
+  equipment: { level:10, name:'裝備強化', desc:'整理裝備欄位，提升角色戰鬥力。' },
+  achievements: { level:12, name:'完整成就系統', desc:'累積任務、連續與能力成長成就。' },
+  leaderboard: { level:15, name:'冒險團戰績', desc:'查看友善比較、同齡進度與個人最佳。' },
+  advanced: { level:20, name:'高階挑戰', desc:'開啟更高階的 A/S 級成長挑戰。' }
+};
 
 /* ═══════════════════ 任務池（49 個）═══════════════════ */
 /* 任務欄位：id, name, emoji, category, difficulty, ageRange[min,max], estimatedMinutes, why, repeatRule
@@ -1355,11 +1547,13 @@ let state = null;
 let pinBuffer = '';
 let parentUnlocked = false;
 let editingTaskId = null;
-let currentScreen = 'status';
+let currentScreen = 'home';
 let taskTab = 'today';
 let shopTab = 'real';
 let shopFilter = 'all';
 let mapFilter = 'all';
+let parentTab = 'overview';
+let inventoryContext = 'rewards';
 let allocPending = {};
 let selectedSkill = null;
 let buyTarget = null;
@@ -1651,11 +1845,47 @@ function calcRewards(task){
 }
 
 /* ═══════════════════ 畫面切換 ═══════════════════ */
+function featureUnlock(key){ return FEATURE_UNLOCKS[key] || { level:1, name:key, desc:'' }; }
+function hasUsedFeature(key){
+  if(key==='skills') return (state.player.skills||[]).length>0 || (state.player.skillPoints||0)>0;
+  if(key==='map') return state.tasks.some(t=>CHALLENGE.has(t.difficulty) || t.status==='completed');
+  if(key==='backpack' || key==='equipment') return (state.inventory||[]).length>0;
+  if(key==='achievements') return (state.achievements||[]).some(a=>a.unlocked);
+  if(key==='leaderboard') return state.history.some(h=>h.kind==='task');
+  return false;
+}
+function isFeatureUnlocked(key){
+  const u = featureUnlock(key);
+  return (state.player.level||1) >= u.level || hasUsedFeature(key);
+}
+function lockedFeatureHTML(key){
+  const u = featureUnlock(key);
+  const gap = Math.max(0, u.level - (state.player.level||1));
+  return `<div class="locked-feature p-3">
+    <div class="flex items-center justify-between gap-3">
+      <div class="font-black text-white">🔒 ${u.name}</div>
+      <span class="level-tag">Lv${u.level} 解鎖</span>
+    </div>
+    <div class="caption mt-1">${u.desc}</div>
+    <div class="text-[11px] font-bold mt-2 text-amber-200">${gap>0?`再升 ${gap} 級就能開啟。`:'已達成解鎖條件。'}</div>
+  </div>`;
+}
+function screenGroup(name){
+  if(['home'].includes(name)) return 'home';
+  if(['quests'].includes(name)) return 'quests';
+  if(['map','skills'].includes(name)) return 'adventure';
+  if(name==='inventory') return inventoryContext;
+  if(['shop','wallet'].includes(name)) return 'rewards';
+  if(['status','achievements','leaderboard'].includes(name)) return 'profile';
+  if(name==='parent') return 'parent';
+  return name;
+}
 function goScreen(name){
   currentScreen = name;
   document.querySelectorAll('#game .screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('screen-'+name).classList.add('active');
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.nav===name));
+  const group = screenGroup(name);
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.nav===group));
   renderTop();
   renderScreen(name);
   window.scrollTo(0,0);
@@ -1667,12 +1897,35 @@ function gatedGoScreen(name, level, label){
   }
   goScreen(name);
 }
+function goLockedFeature(screen, featureKey){
+  const u = featureUnlock(featureKey);
+  if(!isFeatureUnlocked(featureKey)){
+    toast(`🔒 ${u.name} 會在 Lv${u.level} 解鎖。${Math.max(0,u.level-(state.player.level||1))} 級後再回來看看。`);
+    return;
+  }
+  goScreen(screen);
+}
+function openAdventure(tab){
+  if(tab==='skills') return goLockedFeature('skills','skills');
+  if(tab==='inventory'){ inventoryContext='adventure'; return goLockedFeature('inventory','equipment'); }
+  if(tab==='map') return goLockedFeature('map','map');
+  if(isFeatureUnlocked('map')) return goScreen('map');
+  if(isFeatureUnlocked('skills')) return goScreen('skills');
+  goScreen('map');
+}
+function openRewards(tab){
+  if(tab==='inventory'){ inventoryContext='rewards'; return goLockedFeature('inventory','backpack'); }
+  openRewardShop();
+}
+function openProfile(){ goScreen('status'); }
 function openRewardShop(){
+  inventoryContext='rewards';
   shopTab = 'real';
   goScreen('shop');
 }
 function renderScreen(name){
-  if(name==='status') renderStatus();
+  if(name==='home') renderHome();
+  else if(name==='status') renderStatus();
   else if(name==='wallet') renderWallet();
   else if(name==='quests') renderQuests();
   else if(name==='map') renderMap();
@@ -1688,10 +1941,6 @@ function renderTop(){
   document.getElementById('top-coins').textContent = state.player.coins;
   document.getElementById('top-streak').textContent = state.player.streak;
   document.getElementById('top-level').textContent = state.player.level;
-  document.querySelectorAll('.nav-btn[data-unlock-level]').forEach(btn=>{
-    const need = parseInt(btn.dataset.unlockLevel, 10) || 0;
-    btn.classList.toggle('locked', (state.player.level||1) < need);
-  });
   // 頂部列：目前遊玩中的小孩（點擊＝登出小孩回家長首頁）＋ 家長
   const accBtn = document.getElementById('tb-account');
   if(accBtn){
@@ -1729,6 +1978,11 @@ function finishOnboarding(){
   const ageInput = parseInt((document.getElementById('ob-age')||{}).value, 10);
   state.player.age = (ageInput>=5 && ageInput<=15) ? ageInput : (state.player.age||10);
   state.player.gender = (document.getElementById('ob-gender')||{}).value || 'all';
+  const pin = ((document.getElementById('ob-pin')||{}).value||'').trim();
+  if(pin){
+    if(!/^\d{4}$/.test(pin)){ toast('家長 PIN 需要是 4 位數字。'); return; }
+    state.parentConfig.pin = pin;
+  }
   state.player.lastActiveDate = todayStr();
   // 依年齡/性別重新抽選合適的今日任務（保留已完成 / 待審核）
   state.tasks = state.tasks.filter(t=>CHALLENGE.has(t.difficulty) || t.status!=='available');
@@ -1738,8 +1992,8 @@ function finishOnboarding(){
   ob.classList.remove('active'); ob.style.display='none';
   document.getElementById('game').classList.remove('hidden');
   spawnShards(window.innerWidth/2, window.innerHeight/3);
-  toast(`玩家「${name}」登錄完成。歡迎來到系統。`);
-  goScreen('status');
+  toast(`第一個任務已出現。${name}，今天從一個小挑戰開始。`);
+  goScreen('home');
 }
 
 /* ═══════════════════ 狀態畫面 ═══════════════════ */
@@ -1752,6 +2006,81 @@ function spriteHTML(){
       ${hat?`<span class="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl">${hat.emoji}</span>`:''}
     </span>
     ${wp?`<span class="absolute -right-8 bottom-2 text-2xl">${wp.emoji}</span>`:''}`;
+}
+function nextRecommendedTask(){
+  const period = periodNow();
+  const avail = state.tasks.filter(t=>!CHALLENGE.has(t.difficulty) && t.status==='available');
+  return [...avail].sort((a,b)=>
+    ((a.tod===period?0:1)-(b.tod===period?0:1)) || (DIFFS[a.difficulty].xp - DIFFS[b.difficulty].xp))[0] || null;
+}
+function renderHome(){
+  const p = state.player;
+  const cls = CLASSES[p.class] || CLASSES.warrior;
+  const need = xpNeeded(p.level);
+  document.getElementById('home-sprite').innerHTML = spriteHTML();
+  document.getElementById('home-name').textContent = p.name || '小獵人';
+  document.getElementById('home-class').textContent = `${cls.emoji} ${cls.name}`;
+  document.getElementById('home-level').textContent = p.level;
+  document.getElementById('home-streak').textContent = p.streak;
+  document.getElementById('home-coins').textContent = p.coins.toLocaleString();
+  document.getElementById('home-xp').textContent = p.level>=MAX_LEVEL ? 'MAX' : p.xp;
+  document.getElementById('home-xpneed').textContent = need;
+  document.getElementById('home-xpbar').style.width = (p.level>=MAX_LEVEL?100:Math.min(100,p.xp/need*100))+'%';
+
+  const daily = state.tasks.filter(t=>!CHALLENGE.has(t.difficulty) && t.pickedDate===todayStr());
+  const done = daily.filter(t=>t.status==='completed').length;
+  const left = Math.max(0, daily.length-done);
+  document.getElementById('home-done').textContent = done;
+  document.getElementById('home-total').textContent = daily.length;
+  document.getElementById('home-daybar').style.width = (daily.length?done/daily.length*100:0)+'%';
+  document.getElementById('home-dailycopy').textContent = left
+    ? `再完成 ${left} 個任務，就能守住連續紀錄；全清可獲得 ${ALL_DONE_BONUS} 金幣與額外 EXP。`
+    : '今日攻略完成。明天也會出現新的任務。';
+
+  const next = nextRecommendedTask();
+  const nextBox = document.getElementById('home-next-task');
+  if(next){
+    const c = CATS[next.category]||CATS.other;
+    const d = DIFFS[next.difficulty];
+    const r = calcRewards(next);
+    nextBox.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="rank-ring ${rankClass(next.difficulty)}" style="width:54px;height:54px;font-size:24px;">${d.rank}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-black text-white">${next.emoji||c.emoji} ${next.name}</div>
+          <div class="flex flex-wrap gap-1 mt-1">
+            <span class="chip">${c.name}</span><span class="chip">⏱ ${next.time||'—'}</span>
+            <span class="chip">+${r.xp} EXP</span><span class="chip">+${r.coins} 🪙</span>
+          </div>
+        </div>
+      </div>
+      <button onclick="openGate('${next.id}')" class="btn-gold w-full py-3 mt-3">查看任務</button>`;
+  }else{
+    nextBox.innerHTML = `<div class="text-center py-3">
+      <div class="text-3xl mb-1">✨</div>
+      <div class="font-black text-white">今天沒有下一個任務</div>
+      <div class="caption mt-1">可以到獎勵中心看看能兌換什麼，或等待明天的新任務。</div>
+    </div>`;
+  }
+
+  const g = growthSnapshot();
+  const topStat = Object.entries(p.stats||{}).sort((a,b)=>b[1]-a[1])[0];
+  const statName = topStat ? (STATS[topStat[0]]||{}).name : '自律';
+  const newestAch = (state.achievements||[]).find(a=>a.unlocked);
+  document.getElementById('home-growth').innerHTML = `
+    <div class="flex justify-between gap-3"><span class="caption">本週完成任務</span><span class="stat-value">${state.history.filter(h=>h.kind==='task' && h.date>=weekKey()).length}</span></div>
+    <div class="flex justify-between gap-3"><span class="caption">最常成長能力</span><span class="font-black text-cyan-200">${statName}</span></div>
+    <div class="flex justify-between gap-3"><span class="caption">新取得成就</span><span class="font-black text-amber-200">${newestAch ? (ACHIEVEMENTS.find(a=>a.id===newestAch.id)||{}).name : '尚未解鎖'}</span></div>
+    <div class="flex justify-between gap-3"><span class="caption">下一等級還差</span><span class="stat-value">${p.level>=MAX_LEVEL?'MAX':Math.max(0, need-p.xp)+' EXP'}</span></div>
+    <div class="caption pt-2" style="border-top:1px solid var(--border-subtle);">${g.beatYesterday?'今天已經比昨天更進步。':'今天再完成一個任務，就能往個人最佳靠近。'}</div>`;
+
+  const previews = Object.entries(FEATURE_UNLOCKS)
+    .filter(([k,u])=>u.level>1 && !isFeatureUnlocked(k))
+    .sort((a,b)=>a[1].level-b[1].level)
+    .slice(0,3);
+  document.getElementById('home-unlocks').innerHTML = previews.length
+    ? previews.map(([k])=>lockedFeatureHTML(k)).join('')
+    : `<div class="caption">目前階段的功能都已開啟。繼續完成任務，挑戰更高階的冒險。</div>`;
 }
 function renderStatus(){
   const p = state.player;
@@ -1939,9 +2268,23 @@ function renderQuests(){
   document.getElementById('quest-progbar').style.width = (daily.length?done/daily.length*100:0)+'%';
 
   let tasks = state.tasks;
+  const list = document.getElementById('task-list');
   if(taskTab==='today') tasks = tasks.filter(t=>!CHALLENGE.has(t.difficulty));
   else if(taskTab==='weekly') tasks = tasks.filter(t=>CHALLENGE.has(t.difficulty));
-  const list = document.getElementById('task-list');
+  else if(taskTab==='history'){
+    list.innerHTML = state.history.filter(h=>h.kind==='task' || h.kind==='reject').slice(0,40).map(h=>`
+      <div class="sys-win p-3 flex justify-between gap-3">
+        <div class="min-w-0">
+          <div class="font-black text-white text-sm truncate">${h.kind==='reject'?'↩️':'✔'} ${h.name}</div>
+          <div class="caption">${h.date}</div>
+        </div>
+        <div class="num font-bold text-right flex-none">
+          ${h.xpEarned?`<span class="text-cyan-300">+${h.xpEarned} EXP</span><br>`:''}
+          ${h.coinsEarned?`<span style="color:var(--sys-gold);">+${h.coinsEarned} 🪙</span>`:''}
+        </div>
+      </div>`).join('') || `<div class="text-center font-bold py-8" style="color:var(--sys-dim);">還沒有任務紀錄。完成第一個任務後會出現在這裡。</div>`;
+    return;
+  }
   if(!tasks.length){ list.innerHTML = `<div class="text-center font-bold py-8" style="color:var(--sys-dim);">沒有任務。</div>`; return; }
   list.innerHTML = tasks.map(t=>{
     const d = DIFFS[t.difficulty], c = CATS[t.category]||CATS.other;
@@ -2000,6 +2343,11 @@ function gateSlots(n){
 }
 function renderMap(){
   const map = document.getElementById('gate-map');
+  if(!isFeatureUnlocked('map')){
+    document.getElementById('map-count').textContent = `Lv${featureUnlock('map').level} 解鎖`;
+    map.innerHTML = `<div class="p-4 grid gap-3">${lockedFeatureHTML('map')}${lockedFeatureHTML('skills')}${lockedFeatureHTML('equipment')}</div>`;
+    return;
+  }
   let tasks = state.tasks;
   if(mapFilter!=='all') tasks = tasks.filter(t=>t.difficulty===mapFilter);
   tasks = tasks.slice(0, 21);
@@ -2524,9 +2872,9 @@ function renderAchievements(){
 /* ═══════════════════ 商店 ═══════════════════ */
 const SHOP_FILTERS = [ ['all','全部'],['hat','頭部'],['outfit','服裝'],['weapon','武器'],['accessory','飾品'],['pet','隨從'],['title','稱號'],['emote','徽記'] ];
 function setShopTab(tab){
-  if(tab==='virtual' && (state.player.level||1) < 20){
+  if(tab==='virtual' && !isFeatureUnlocked('backpack')){
     shopTab = 'real';
-    toast('🔒 裝備系統會在 Lv20 解鎖。現在先使用真實獎勵商店。');
+    toast('🔒 背包與系統商店會在 Lv3 解鎖。現在先使用真實獎勵。');
     renderShop();
     return;
   }
@@ -2536,7 +2884,7 @@ function setShopTab(tab){
 }
 function setShopFilter(f){ shopFilter = f; renderShop(); }
 function renderShop(){
-  if(shopTab==='virtual' && (state.player.level||1) < 20) shopTab = 'real';
+  if(shopTab==='virtual' && !isFeatureUnlocked('backpack')) shopTab = 'real';
   document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('active', b.dataset.stab===shopTab));
   document.getElementById('shop-coins').textContent = state.player.coins;
   const disc = shopDiscount();
@@ -2676,7 +3024,7 @@ function tryParent(){
   document.getElementById('pin-modal').classList.add('show');
 }
 function closePin(){ document.getElementById('pin-modal').classList.remove('show'); }
-function lockParent(){ parentUnlocked=false; goScreen('status'); toast('管理者模式已鎖定。'); }
+function lockParent(){ parentUnlocked=false; goScreen('home'); toast('已離開家長模式，回到孩子首頁。'); }
 function renderPinDots(){
   document.querySelectorAll('#pin-dots .pin-dot').forEach((d,i)=>d.classList.toggle('fill', i<pinBuffer.length));
 }
@@ -2708,8 +3056,17 @@ function pinPress(n){
   });
 })();
 
+function setParentTab(tab){
+  parentTab = tab || 'overview';
+  document.querySelectorAll('[data-ptab]').forEach(b=>b.classList.toggle('active', b.dataset.ptab===parentTab));
+  document.querySelectorAll('[data-parent-panel]').forEach(p=>p.classList.toggle('active', p.dataset.parentPanel===parentTab));
+}
+function confirmRerollDaily(){
+  if(!confirm('重新抽選會替換目前尚未完成的今日任務，待審核與已完成任務會保留。確定要重抽嗎？')) return;
+  rerollDaily();
+}
 function renderParent(){
-  if(!parentUnlocked){ goScreen('status'); return; }
+  if(!parentUnlocked){ goScreen('home'); return; }
   const pending = state.tasks.filter(t=>t.status==='pending');
   document.getElementById('pending-count').textContent = pending.length ? pending.length+' 筆' : '';
   const batchBar = pending.length>1 ? `<div class="flex gap-2 mb-1">
@@ -2761,6 +3118,17 @@ function renderParent(){
   document.getElementById('parent-stats').innerHTML =
     statBox(weekDone,'本週完成任務','#5cb8ff') + statBox('🔥 '+state.player.streak,'連續天數','#ff9d5c') +
     statBox('Lv.'+state.player.level,'目前等級','#c98aff') + statBox('🪙 '+state.player.coins,'金幣餘額','#ffd25c');
+  const attention = document.getElementById('parent-attention');
+  if(attention){
+    const reqCount = reqs.length;
+    attention.innerHTML = `
+      <div class="grid grid-cols-2 gap-2">
+        <button onclick="setParentTab('review')" class="btn-${pending.length?'gold':'dark'} py-2 text-sm">待審核任務：${pending.length}</button>
+        <button onclick="setParentTab('review')" class="btn-${reqCount?'gold':'dark'} py-2 text-sm">獎勵申請：${reqCount}</button>
+      </div>
+      <button onclick="setParentTab('tasks'); openTaskForm();" class="btn-sys py-2.5 text-sm">＋ 快速新增任務</button>
+      <div class="caption">${pending.length||reqCount?'優先處理孩子已送出的申請。':'目前沒有急件，可以查看本週紀錄或調整任務。'}</div>`;
+  }
 
   document.getElementById('pf-dailycount').value = state.parentConfig.dailyCount||8;
   document.getElementById('pf-age').value = state.player.age||10;
@@ -2815,6 +3183,7 @@ function renderParent(){
   renderAccounts();
   renderDebugPanel();
   renderParentTrades();
+  setParentTab(parentTab);
 }
 function renderParentTrades(){
   const box=document.getElementById('parent-trade'); if(!box) return;
@@ -3261,7 +3630,7 @@ function enterGame(){
   const ob = document.getElementById('onboarding'); ob.classList.remove('active'); ob.style.display='none';
   const g = document.getElementById('account-gate'); g.classList.remove('active'); g.style.display='none';
   document.getElementById('game').classList.remove('hidden');
-  goScreen('status');
+  goScreen('home');
 }
 /* ===== M17 家長/小孩登入閘門（parent-login → parent-home → child） ===== */
 function showAccountGate(){
