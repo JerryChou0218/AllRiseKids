@@ -65,6 +65,24 @@
   .gold-win{ border-color:rgba(245,197,66,.55); box-shadow:0 0 16px rgba(245,197,66,.2); }
   .gold-win::before{ border-color:var(--sys-gold); } .gold-win::after{ border-color:var(--sys-gold); }
 
+  .hero-wrap{ max-width:560px; margin:0 auto; padding:24px 18px 34px; }
+  .hero-kicker{ font-family:'Rajdhani','Noto Sans TC',sans-serif; letter-spacing:.26em; color:var(--sys-cyan);
+    font-weight:900; text-shadow:0 0 18px rgba(0,210,255,.85); }
+  .hero-title{ margin-top:10px; color:#fff; font-weight:900; line-height:1.14; font-size:clamp(34px, 9vw, 54px);
+    text-shadow:0 0 22px rgba(0,210,255,.72); }
+  .hero-subtitle{ margin-top:16px; color:#cfe8ff; font-size:clamp(16px, 4.2vw, 20px); line-height:1.72; font-weight:700; }
+  .hero-subtitle strong{ color:#ffe28a; white-space:nowrap; }
+  .hero-actions{ display:grid; grid-template-columns:1fr; gap:12px; margin-top:22px; }
+  .hero-btn{ display:flex; align-items:center; justify-content:center; min-height:52px; padding:13px 16px; font-size:17px; }
+  .hero-proof{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:18px; }
+  .hero-chip{ border:1px solid rgba(0,210,255,.35); background:rgba(8,18,38,.72); border-radius:8px;
+    padding:12px 13px; font-weight:900; color:#dff4ff; }
+  .hero-chip span{ display:block; margin-top:3px; color:var(--sys-dim); font-size:13px; line-height:1.45; }
+  @media (min-width:520px){
+    .hero-actions{ grid-template-columns:1fr 1fr; }
+    .hero-proof{ grid-template-columns:repeat(3,1fr); }
+  }
+
   .btn-sys{
     background:linear-gradient(180deg, rgba(0,210,255,.22), rgba(0,90,140,.3));
     border:1px solid rgba(0,210,255,.65); color:#bdeeff; font-weight:900;
@@ -266,25 +284,37 @@
 
 <!-- ════════ 覺醒（新手引導）════════ -->
 <div id="onboarding" class="screen fixed inset-0 z-50 overflow-y-auto">
-  <div class="max-w-md mx-auto px-5 py-8">
-    <div class="text-center mb-5">
-      <div class="lv-arise text-xl font-bold mb-1">SYSTEM</div>
-      <div class="text-3xl font-black text-white" style="text-shadow:0 0 18px rgba(0,210,255,.8);">⚠ 覺醒通知</div>
-    </div>
+  <div class="hero-wrap">
+    <section class="text-center mb-5">
+      <div class="hero-kicker">ALLRISEKIDS RPG SYSTEM</div>
+      <h1 class="hero-title">把孩子的日常任務，變成一場升級冒險</h1>
+      <p class="hero-subtitle">
+        刷牙、閱讀、運動、整理書包、做家事，都可以變成任務。
+        孩子完成後獲得<strong>經驗值</strong>與<strong>金幣</strong>，家長可以設定真實獎勵。
+      </p>
+      <div class="hero-actions">
+        <button type="button" onclick="document.getElementById('ob-setup').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>document.getElementById('ob-name').focus(),350);" class="btn-gold hero-btn">開始建立任務</button>
+        <button type="button" onclick="document.getElementById('ob-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
+      </div>
+      <div id="ob-how" class="hero-proof text-left">
+        <div class="hero-chip">任務化日常<span>把每天該做的事變成 E 到 S 級任務。</span></div>
+        <div class="hero-chip">完成就變強<span>孩子拿 EXP、金幣、技能點，看見自己的成長。</span></div>
+        <div class="hero-chip">獎勵由家長控<span>真實獎勵需家長審核，鼓勵但不失控。</span></div>
+      </div>
+    </section>
     <div class="sys-win scanline mb-4">
-      <div class="sys-head"><span class="sys-i">i</span>通知</div>
+      <div class="sys-head"><span class="sys-i">i</span>給家長的任務說明</div>
       <div class="p-4 text-sm font-bold leading-relaxed">
-        偵測到具備「玩家」資格的對象。<br>
-        完成現實世界的每日任務，即可獲得經驗值與金幣，不斷變強。<br>
-        <span class="text-cyan-300">你願意接受嗎？</span>
+        AllRiseKids 保留 RPG、獵人與覺醒感，但核心很簡單：
+        <span class="text-cyan-300">把「一直催」改成「孩子想升級」。</span>
       </div>
     </div>
-    <div class="sys-win mb-4">
-      <div class="sys-head"><span class="sys-i">i</span>登錄獵人名稱</div>
-      <div class="p-4"><input id="ob-name" maxlength="12" placeholder="輸入你的名字..." class="inp text-lg"></div>
+    <div id="ob-setup" class="sys-win mb-4">
+      <div class="sys-head"><span class="sys-i">i</span>建立第一位孩子</div>
+      <div class="p-4"><input id="ob-name" maxlength="12" placeholder="輸入孩子的名字..." class="inp text-lg"></div>
     </div>
     <div class="sys-win mb-4">
-      <div class="sys-head"><span class="sys-i">i</span>獵人檔案（影響任務推薦）</div>
+      <div class="sys-head"><span class="sys-i">i</span>孩子資料（幫助抽選合適任務）</div>
       <div class="p-4 grid grid-cols-2 gap-3 items-center text-sm font-bold">
         <span style="color:var(--sys-dim);">年齡（5–15）</span>
         <input id="ob-age" type="number" min="5" max="15" value="10" class="inp" style="padding:8px 10px;">
@@ -297,22 +327,34 @@
       </div>
     </div>
     <div class="sys-win mb-5">
-      <div class="sys-head"><span class="sys-i">i</span>選擇職業</div>
+      <div class="sys-head"><span class="sys-i">i</span>選擇孩子的覺醒職業</div>
       <div id="ob-classes" class="p-4 grid gap-3"></div>
     </div>
-    <button onclick="finishOnboarding()" class="btn-gold w-full py-4 text-xl">【 接 受 】</button>
-    <p class="text-center text-xs mt-3" style="color:var(--sys-dim);">※ 拒絕的話……系統會一直等你按下接受。</p>
+    <button onclick="finishOnboarding()" class="btn-gold w-full py-4 text-xl">開始建立任務</button>
+    <p class="text-center text-xs mt-3" style="color:var(--sys-dim);">完成後會自動產生今天的 RPG 任務清單。</p>
   </div>
 </div>
 
 <!-- ════════ 帳號登入閘門 ════════ -->
 <div id="account-gate" class="screen fixed inset-0 z-50 overflow-y-auto" style="display:none;">
-  <div class="max-w-md mx-auto px-5 py-8">
-    <div class="text-center mb-5">
-      <div class="lv-arise text-xl font-bold mb-1">ALLRISEKIDS</div>
-      <div class="text-3xl font-black text-white" style="text-shadow:0 0 18px rgba(0,210,255,.8);">⚔️ 孩子們覺醒吧!</div>
-      <div class="text-xs font-bold mt-1" style="color:var(--sys-dim);">完成現實任務，成為更好的自己</div>
-    </div>
+  <div class="hero-wrap">
+    <section class="text-center mb-5">
+      <div class="hero-kicker">ALLRISEKIDS RPG SYSTEM</div>
+      <h1 class="hero-title">把孩子的日常任務，變成一場升級冒險</h1>
+      <p class="hero-subtitle">
+        刷牙、閱讀、運動、整理書包、做家事，都可以變成任務。
+        孩子完成後獲得<strong>經驗值</strong>與<strong>金幣</strong>，家長可以設定真實獎勵。
+      </p>
+      <div class="hero-actions">
+        <button type="button" onclick="document.getElementById('account-gate-body').scrollIntoView({behavior:'smooth',block:'center'});" class="btn-gold hero-btn">開始建立任務</button>
+        <button type="button" onclick="document.getElementById('gate-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
+      </div>
+      <div id="gate-how" class="hero-proof text-left">
+        <div class="hero-chip">任務化日常<span>把家長每天要催的事，變成孩子看得懂的冒險任務。</span></div>
+        <div class="hero-chip">完成就升級<span>EXP、金幣、技能與稱號，讓進步被孩子看見。</span></div>
+        <div class="hero-chip">獎勵由家長控<span>真實獎勵可審核，鼓勵孩子但不失控。</span></div>
+      </div>
+    </section>
     <div class="sys-win scanline mb-4">
       <div class="sys-head"><span class="sys-i">i</span>家長 / 帳號</div>
       <div class="p-4 grid gap-3" id="account-gate-body"></div>
