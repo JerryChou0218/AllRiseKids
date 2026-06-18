@@ -78,9 +78,17 @@
   .hero-chip{ border:1px solid rgba(0,210,255,.35); background:rgba(8,18,38,.72); border-radius:8px;
     padding:12px 13px; font-weight:900; color:#dff4ff; }
   .hero-chip span{ display:block; margin-top:3px; color:var(--sys-dim); font-size:13px; line-height:1.45; }
+  .hero-guide-title{ margin-top:22px; text-align:left; font-size:14px; font-weight:900; color:#9fdcff; letter-spacing:.14em; }
+  .hero-guide-sub{ margin-top:4px; text-align:left; font-size:13px; font-weight:700; color:var(--sys-dim); line-height:1.55; }
+  .hero-locks{ display:grid; grid-template-columns:1fr; gap:9px; margin-top:12px; }
+  .hero-chip.locked{ opacity:.58; filter:saturate(.72); background:rgba(8,18,38,.42); border-color:rgba(126,168,204,.24); }
+  .hero-chip.locked .lock-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .level-tag{ display:inline-flex; align-items:center; white-space:nowrap; border-radius:999px; padding:3px 8px;
+    font-size:12px; font-weight:900; color:#ffe28a; border:1px solid rgba(245,197,66,.45); background:rgba(245,197,66,.10); }
   @media (min-width:520px){
     .hero-actions{ grid-template-columns:1fr 1fr; }
-    .hero-proof{ grid-template-columns:repeat(3,1fr); }
+    .hero-proof{ grid-template-columns:repeat(2,1fr); }
+    .hero-locks{ grid-template-columns:repeat(2,1fr); }
   }
 
   .btn-sys{
@@ -296,10 +304,24 @@
         <button type="button" onclick="document.getElementById('ob-setup').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>document.getElementById('ob-name').focus(),350);" class="btn-gold hero-btn">開始建立任務</button>
         <button type="button" onclick="document.getElementById('ob-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
       </div>
-      <div id="ob-how" class="hero-proof text-left">
-        <div class="hero-chip">任務化日常<span>把每天該做的事變成 E 到 S 級任務。</span></div>
-        <div class="hero-chip">完成就變強<span>孩子拿 EXP、金幣、技能點，看見自己的成長。</span></div>
-        <div class="hero-chip">獎勵由家長控<span>真實獎勵需家長審核，鼓勵但不失控。</span></div>
+      <div id="ob-how">
+        <div class="hero-guide-title">新手村先開放</div>
+        <div class="hero-guide-sub">第一次進來只需要懂四件事：接任務、完成、升級、換獎勵。</div>
+        <div class="hero-proof text-left">
+          <div class="hero-chip">📜 今日任務<span>刷牙、閱讀、運動、整理書包，先從今天要做的事開始。</span></div>
+          <div class="hero-chip">⭐ 等級 / EXP<span>完成任務就拿經驗值，孩子看得見自己正在升級。</span></div>
+          <div class="hero-chip">🪙 金幣<span>每次完成都有回饋，讓日常行動變得有期待感。</span></div>
+          <div class="hero-chip">🎁 獎勵商店<span>家長設定真實獎勵，孩子用金幣兌換並等待審核。</span></div>
+        </div>
+        <div class="hero-guide-title">後續解鎖</div>
+        <div class="hero-guide-sub">進階功能先鎖起來，像遊戲進度一樣慢慢打開，不一開始塞滿首頁。</div>
+        <div class="hero-locks text-left">
+          <div class="hero-chip locked"><div class="lock-row">🔒 技能樹 <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 地圖冒險 <span class="level-tag">Lv10 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 成就系統 <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 排行榜 <span class="level-tag">Lv15 解鎖</span></div><span>和其他小獵人比較進度，不暴露私人資料。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 裝備系統 <span class="level-tag">Lv20 解鎖</span></div><span>用努力換來的金幣，收集更帥的裝備。</span></div>
+        </div>
       </div>
     </section>
     <div class="sys-win scanline mb-4">
@@ -349,10 +371,24 @@
         <button type="button" onclick="document.getElementById('account-gate-body').scrollIntoView({behavior:'smooth',block:'center'});" class="btn-gold hero-btn">開始建立任務</button>
         <button type="button" onclick="document.getElementById('gate-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
       </div>
-      <div id="gate-how" class="hero-proof text-left">
-        <div class="hero-chip">任務化日常<span>把家長每天要催的事，變成孩子看得懂的冒險任務。</span></div>
-        <div class="hero-chip">完成就升級<span>EXP、金幣、技能與稱號，讓進步被孩子看見。</span></div>
-        <div class="hero-chip">獎勵由家長控<span>真實獎勵可審核，鼓勵孩子但不失控。</span></div>
+      <div id="gate-how">
+        <div class="hero-guide-title">新手村先開放</div>
+        <div class="hero-guide-sub">第一次進來只需要懂四件事：接任務、完成、升級、換獎勵。</div>
+        <div class="hero-proof text-left">
+          <div class="hero-chip">📜 今日任務<span>刷牙、閱讀、運動、整理書包，先從今天要做的事開始。</span></div>
+          <div class="hero-chip">⭐ 等級 / EXP<span>完成任務就拿經驗值，孩子看得見自己正在升級。</span></div>
+          <div class="hero-chip">🪙 金幣<span>每次完成都有回饋，讓日常行動變得有期待感。</span></div>
+          <div class="hero-chip">🎁 獎勵商店<span>家長設定真實獎勵，孩子用金幣兌換並等待審核。</span></div>
+        </div>
+        <div class="hero-guide-title">後續解鎖</div>
+        <div class="hero-guide-sub">進階功能先鎖起來，像遊戲進度一樣慢慢打開，不一開始塞滿首頁。</div>
+        <div class="hero-locks text-left">
+          <div class="hero-chip locked"><div class="lock-row">🔒 技能樹 <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 地圖冒險 <span class="level-tag">Lv10 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 成就系統 <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 排行榜 <span class="level-tag">Lv15 解鎖</span></div><span>和其他小獵人比較進度，不暴露私人資料。</span></div>
+          <div class="hero-chip locked"><div class="lock-row">🔒 裝備系統 <span class="level-tag">Lv20 解鎖</span></div><span>用努力換來的金幣，收集更帥的裝備。</span></div>
+        </div>
       </div>
     </section>
     <div class="sys-win scanline mb-4">
