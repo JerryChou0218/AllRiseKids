@@ -242,6 +242,9 @@
   .nav-btn{ color:#5d7da3; transition:all .15s; border-top:2px solid transparent; }
   .nav-btn.active{ color:#bdeeff; border-top-color:var(--sys-cyan); text-shadow:0 0 10px rgba(0,210,255,.8);
     background:linear-gradient(180deg, rgba(0,210,255,.12), transparent); }
+  .nav-btn.locked{ opacity:.42; filter:saturate(.65); position:relative; }
+  .nav-btn.locked::after{ content:attr(data-lock); position:absolute; right:4px; top:3px; font:900 10px/1 'Rajdhani','Noto Sans TC'; color:#ffe28a;
+    border:1px solid rgba(245,197,66,.45); border-radius:999px; padding:2px 5px; background:rgba(8,18,38,.9); }
   .alert-line{ border:1px solid rgba(255,90,110,.5); background:rgba(120,20,40,.18); color:#ff9fae; }
   .scanline{ position:relative; overflow:hidden; }
   .scanline::after{ content:''; position:absolute; left:0; right:0; height:46px; top:-50px;
@@ -483,6 +486,25 @@
       </div>
     </div>
 
+    <!-- 1b. 金幣 -->
+    <div id="screen-wallet" class="screen">
+      <div class="sys-win scanline mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>金幣錢包</div>
+        <div class="p-4">
+          <div class="text-center">
+            <div class="text-xs font-black mb-1" style="color:var(--sys-dim);">目前持有金幣</div>
+            <div class="power-num text-5xl leading-none">🪙 <span id="wallet-coins">0</span></div>
+            <div class="text-xs font-bold mt-2" style="color:var(--sys-dim);">完成今日任務可以獲得金幣，用來兌換家長設定的真實獎勵。</div>
+          </div>
+        </div>
+      </div>
+      <div class="sys-win mb-3">
+        <div class="sys-head"><span class="sys-i">i</span>新手村資源</div>
+        <div class="p-4 grid grid-cols-3 gap-2 text-center" id="wallet-economy"></div>
+      </div>
+      <button onclick="openRewardShop()" class="btn-gold w-full py-3 text-base">前往獎勵商店</button>
+    </div>
+
     <!-- 2. 任務欄 -->
     <div id="screen-quests" class="screen">
       <div class="sys-win gold-win mb-3" id="recommend-box"></div>
@@ -548,8 +570,8 @@
         <div class="px-4 py-2 text-xs font-bold" id="shop-discount-line" style="color:var(--sys-dim);"></div>
       </div>
       <div class="flex gap-2 mb-2">
-        <button class="tab-btn active flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')">⚔️ 裝備道具</button>
-        <button class="tab-btn flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')">🎁 真實獎勵</button>
+        <button class="tab-btn active flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')">🎁 真實獎勵</button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')">🔒 裝備道具 Lv20</button>
       </div>
       <div class="flex gap-1.5 mb-3 flex-wrap" id="shop-filter-row"></div>
       <div id="shop-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
@@ -689,14 +711,15 @@
   <!-- 底部導覽 -->
   <nav class="app-nav">
     <div class="nav-inner">
-      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="status" onclick="goScreen('status')"><div class="text-xl">👤</div><div class="text-[11px] font-bold">狀態</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="map" onclick="goScreen('map')"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">地圖</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="skills" onclick="goScreen('skills')"><div class="text-xl">✨</div><div class="text-[11px] font-bold">技能</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="inventory" onclick="goScreen('inventory')"><div class="text-xl">🎒</div><div class="text-[11px] font-bold">背包</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="achievements" onclick="goScreen('achievements')"><div class="text-xl">🏆</div><div class="text-[11px] font-bold">成就</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="leaderboard" onclick="goScreen('leaderboard')"><div class="text-xl">🏅</div><div class="text-[11px] font-bold">排行</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="shop" onclick="goScreen('shop')"><div class="text-xl">🛒</div><div class="text-[11px] font-bold">商店</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')"><div class="text-xl">📜</div><div class="text-[11px] font-bold">今日任務</div></button>
+      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="status" onclick="goScreen('status')"><div class="text-xl">⭐</div><div class="text-[11px] font-bold">等級</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="wallet" onclick="goScreen('wallet')"><div class="text-xl">🪙</div><div class="text-[11px] font-bold">金幣</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="shop" onclick="openRewardShop()"><div class="text-xl">🎁</div><div class="text-[11px] font-bold">獎勵</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="skills" data-unlock-level="5" data-lock="Lv5" onclick="gatedGoScreen('skills',5,'技能樹')"><div class="text-xl">✨</div><div class="text-[11px] font-bold">技能</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="map" data-unlock-level="10" data-lock="Lv10" onclick="gatedGoScreen('map',10,'地圖冒險')"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">地圖</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="achievements" data-unlock-level="12" data-lock="Lv12" onclick="gatedGoScreen('achievements',12,'成就系統')"><div class="text-xl">🏆</div><div class="text-[11px] font-bold">成就</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="leaderboard" data-unlock-level="15" data-lock="Lv15" onclick="gatedGoScreen('leaderboard',15,'排行榜')"><div class="text-xl">🏅</div><div class="text-[11px] font-bold">排行</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="inventory" data-unlock-level="20" data-lock="Lv20" onclick="gatedGoScreen('inventory',20,'裝備系統')"><div class="text-xl">🎒</div><div class="text-[11px] font-bold">裝備</div></button>
     </div>
   </nav>
 </div>
@@ -1334,7 +1357,7 @@ let parentUnlocked = false;
 let editingTaskId = null;
 let currentScreen = 'status';
 let taskTab = 'today';
-let shopTab = 'virtual';
+let shopTab = 'real';
 let shopFilter = 'all';
 let mapFilter = 'all';
 let allocPending = {};
@@ -1637,8 +1660,20 @@ function goScreen(name){
   renderScreen(name);
   window.scrollTo(0,0);
 }
+function gatedGoScreen(name, level, label){
+  if((state.player.level||1) < level){
+    toast(`🔒 ${label} 會在 Lv${level} 解鎖。目前先專心完成今日任務、升級、累積金幣。`);
+    return;
+  }
+  goScreen(name);
+}
+function openRewardShop(){
+  shopTab = 'real';
+  goScreen('shop');
+}
 function renderScreen(name){
   if(name==='status') renderStatus();
+  else if(name==='wallet') renderWallet();
   else if(name==='quests') renderQuests();
   else if(name==='map') renderMap();
   else if(name==='skills') renderSkills();
@@ -1653,6 +1688,10 @@ function renderTop(){
   document.getElementById('top-coins').textContent = state.player.coins;
   document.getElementById('top-streak').textContent = state.player.streak;
   document.getElementById('top-level').textContent = state.player.level;
+  document.querySelectorAll('.nav-btn[data-unlock-level]').forEach(btn=>{
+    const need = parseInt(btn.dataset.unlockLevel, 10) || 0;
+    btn.classList.toggle('locked', (state.player.level||1) < need);
+  });
   // 頂部列：目前遊玩中的小孩（點擊＝登出小孩回家長首頁）＋ 家長
   const accBtn = document.getElementById('tb-account');
   if(accBtn){
@@ -1783,6 +1822,19 @@ function renderStatus(){
         </div>
       </div>`;
   }
+}
+function renderWallet(){
+  const today = todayStr(), wk = weekKey();
+  const todayCoins = state.history.filter(h=>h.date===today).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
+  const weekCoins = state.history.filter(h=>h.date>=wk).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
+  const requested = (state.rewardRequests||[]).filter(r=>r.status==='requested').length;
+  const approved = (state.rewardRequests||[]).filter(r=>r.status==='approved' && (r.approvedDate||r.date||'').slice(0,7)===monthKey()).length;
+  const box = (v,l,c)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-lg font-bold" style="color:${c};">${v}</div><div class="text-[10px] font-bold" style="color:var(--sys-dim);">${l}</div></div>`;
+  document.getElementById('wallet-coins').textContent = state.player.coins.toLocaleString();
+  document.getElementById('wallet-economy').innerHTML =
+    box('🪙'+todayCoins,'今日獲得','#ffd25c') +
+    box('🪙'+weekCoins,'本週獲得','#5cb8ff') +
+    box('🎁'+(requested+approved),'獎勵進度','#5cffb8');
 }
 function renderEquipSummary(){
   const slots = ['hat','outfit','weapon','accessory','pet','title','emote'];
@@ -2472,12 +2524,20 @@ function renderAchievements(){
 /* ═══════════════════ 商店 ═══════════════════ */
 const SHOP_FILTERS = [ ['all','全部'],['hat','頭部'],['outfit','服裝'],['weapon','武器'],['accessory','飾品'],['pet','隨從'],['title','稱號'],['emote','徽記'] ];
 function setShopTab(tab){
+  if(tab==='virtual' && (state.player.level||1) < 20){
+    shopTab = 'real';
+    toast('🔒 裝備系統會在 Lv20 解鎖。現在先使用真實獎勵商店。');
+    renderShop();
+    return;
+  }
   shopTab = tab;
   document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('active', b.dataset.stab===tab));
   renderShop();
 }
 function setShopFilter(f){ shopFilter = f; renderShop(); }
 function renderShop(){
+  if(shopTab==='virtual' && (state.player.level||1) < 20) shopTab = 'real';
+  document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('active', b.dataset.stab===shopTab));
   document.getElementById('shop-coins').textContent = state.player.coins;
   const disc = shopDiscount();
   document.getElementById('shop-discount-line').innerHTML = disc>0
