@@ -30,4 +30,6 @@
 ## 目前進度
 
 - 已完成第一版 IA/App Shell 重構與測試綠燈。
-- 待續：更深層元件拆分、完整視覺細節、實機/瀏覽器響應式驗證、動畫細節補強、若未來導入 TypeScript 再補型別層。
+- 已新增 `test/ui-architecture.test.js` 鎖住 M24 資訊架構驗收。
+- 已新增 `test/browser-responsive.test.js`，用本機 Chrome headless 實測 390px 手機與 1280px 桌機，驗證無橫向捲動、導航尺寸、家長設定與 console error。
+- 待續：更深層元件拆分、完整視覺細節、動畫細節補強、若未來導入 TypeScript 再補型別層。
