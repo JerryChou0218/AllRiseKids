@@ -3058,7 +3058,15 @@ function cloudClient(){
 }
 async function cloudSignInGoogle(){
   const c=cloudClient(); if(!c){ toast('雲端尚未就緒，改用本機模式。'); return; }
-  try{ await c.auth.signInWithOAuth({ provider:'google', options:{ redirectTo: location.origin + location.pathname } }); }
+  try{
+    await c.auth.signInWithOAuth({
+      provider:'google',
+      options:{
+        redirectTo: location.origin + location.pathname,
+        queryParams:{ prompt:'select_account' }
+      }
+    });
+  }
   catch(e){ toast('Google 登入啟動失敗：'+(e&&e.message||e)); }
 }
 async function cloudSignOut(){ const c=cloudClient(); if(c){ try{ await c.auth.signOut(); }catch(e){} } _cloudUser=null; }

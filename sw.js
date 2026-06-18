@@ -7,7 +7,7 @@
  *     首次上線載入後即快取，之後離線也能維持完整介面。
  * 改版時請更新 CACHE_VERSION，activate 會自動清掉舊快取。
  */
-const CACHE_VERSION = 'kidquest-v1';
+const CACHE_VERSION = 'kidquest-v2';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -36,6 +36,36 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+  const sameOrigin = url.origin === self.location.origin;
+  const isAppShell = sameOrigin && (
+    req.mode === 'navigate' ||
+    url.pathname === '/' ||
+    url.pathname.endsWith('/index.html') ||
+    url.pathname.endsWith('/install.html') ||
+    url.pathname.endsWith('/manifest.webmanifest') ||
+    url.pathname.endsWith('/cloud-config.js') ||
+    url.pathname.endsWith('/sw.js')
+  );
+
+  if (isAppShell) {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(CACHE_VERSION).then((cache) => cache.put(req, copy));
+          }
+          return res;
+        })
+        .catch(() => {
+          if (req.mode === 'navigate') return caches.match('./index.html');
+          return caches.match(req).then((cached) => cached || Response.error());
+        })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(req).then((cached) => {
