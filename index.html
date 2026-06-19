@@ -4105,6 +4105,11 @@ function cloudSchedulePush(){
     if(p) cloudPush(_cloudUser.id, p);
   }, 1500);
 }
+async function cloudSyncParentNow(p){
+  if(!CLOUD_READY || !_cloudUser || !p) return false;
+  await cloudPush(_cloudUser.id, p);
+  return true;
+}
 // 啟動時若已有 Google 登入工作階段：拉雲端資料 → 灌入本機家長 → 進家長首頁
 async function cloudBoot(){
   if(!CLOUD_READY) return;
@@ -4409,13 +4414,14 @@ function renderAccounts(){
     <button onclick="exitChild()" class="btn-gold py-2.5 text-sm mt-1">🚪 登出小孩 / 切換</button>
     <button onclick="parentLogout()" class="btn-dark py-2 text-sm mt-1">登出家長帳號</button>`;
 }
-function deleteChild(id){
+async function deleteChild(id){
   const sess = cloudStore.getSession();
   const p = cloudStore.getParent(sess.parentId); if(!p) return;
   const ch = p.children.find(x=>x.id===id); if(!ch) return;
   if(!confirm(`確定刪除小孩「${ch.name}」？該帳號進度將永久消失！`)) return;
   p.children = p.children.filter(x=>x.id!==id);
   cloudStore.saveParent(p);
+  await cloudSyncParentNow(p);
   toast(`已刪除「${ch.name}」。`);
   if(sess.activeChildId===id){ cloudStore.setSession({ parentId:p.id, activeChildId:null }); currentAccountId=null; showAccountGate(); }
   else renderAccounts();

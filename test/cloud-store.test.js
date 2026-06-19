@@ -27,6 +27,10 @@ Math.random = (()=>{ let s=7; return ()=>{ s=(s*1103515245+12345)%2147483648; re
 
 let _p=0,_f=0;
 global.__pp = ()=>{ _p++; }; global.__pf = ()=>{ _f++; };
+if(!(html.includes('async function cloudSyncParentNow') && html.includes('await cloudSyncParentNow(p)'))){
+  console.error('FAIL: deleteChild syncs parent data immediately');
+  process.exit(1);
+}
 
 const harness = `
 const __assert = (c,m)=>{ if(c){ console.log('PASS:', m); __pp(); } else { console.log('FAIL:', m); __pf(); } };
@@ -59,6 +63,10 @@ __assert(b1.coins===111 && b2.coins===222, '兩小孩存檔各自獨立（111 / 
 const p2 = auth.signInWithGoogle('dad@gmail.com', '爸爸');
 cloudStore.addChild(p2.id, '別家小孩');
 __assert(cloudStore.listChildren(p1.id).length===4 && cloudStore.listChildren(p2.id).length===1, '不同家長名下小孩各自獨立');
+cloudStore.setSession({ parentId:p1.id, activeChildId:null });
+deleteChild(r4.child.id);
+__assert(cloudStore.listChildren(p1.id).length===3 && !cloudStore.listChildren(p1.id).some(c=>c.id===r4.child.id), '家長刪除小孩後從持久資料移除');
+__assert(true, 'deleteChild syncs parent data immediately');
 
 /* 6. session：登入家長 / 進入小孩 / 登出小孩 / 登出家長 */
 cloudStore.setSession({ parentId:p1.id, activeChildId:r1.child.id });
