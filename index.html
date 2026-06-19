@@ -3652,20 +3652,27 @@ function cloudClient(){
   try{ _supa = supabase.createClient(CLOUD.supabaseUrl, CLOUD.supabasePublishableKey); }catch(e){ _supa=null; }
   return _supa;
 }
-async function cloudSignInGoogle(){
+async function cloudSignInGoogle(options={}){
   const c=cloudClient(); if(!c){ toast('雲端尚未就緒，改用本機模式。'); return; }
   try{
     await c.auth.signInWithOAuth({
       provider:'google',
       options:{
         redirectTo: location.origin + location.pathname,
-        queryParams:{ prompt:'select_account' }
+        queryParams:{ prompt: options.forceAccountSelection ? 'select_account' : 'select_account' }
       }
     });
   }
   catch(e){ toast('Google 登入啟動失敗：'+(e&&e.message||e)); }
 }
 async function cloudSignOut(){ const c=cloudClient(); if(c){ try{ await c.auth.signOut(); }catch(e){} } _cloudUser=null; }
+async function cloudSwitchGoogleAccount(){
+  if(!CLOUD_READY){ parentLogout(); return; }
+  await cloudSignOut();
+  auth.signOutParent();
+  currentAccountId = null;
+  await cloudSignInGoogle({ forceAccountSelection:true });
+}
 async function cloudCurrentUser(){
   const c=cloudClient(); if(!c) return null;
   try{ const { data } = await c.auth.getSession(); return (data&&data.session)? data.session.user : null; }catch(e){ return null; }
@@ -3745,7 +3752,8 @@ function renderAccountGate(){
       ? `<div class="text-[11px] font-bold mb-1" style="color:#5cffb8;">☁️ 雲端同步已啟用 — 進度將跨裝置同步</div>`
       : `<div class="text-[11px] font-bold mb-1" style="color:#7ea8cc;">📱 本機模式（雲端待設定）— 進度存在這台裝置</div>`;
     const loginCtrl = CLOUD_READY
-      ? `<button onclick="cloudSignInGoogle()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`
+      ? `<button onclick="cloudSignInGoogle()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>
+         <button onclick="cloudSwitchGoogleAccount()" class="btn-dark w-full py-2.5 text-sm">改用其他 Google 帳號</button>`
       : `<label for="parent-email" class="sr-only">家長 Gmail</label>
          <input id="parent-email" type="email" maxlength="60" placeholder="你的 Gmail" class="inp" autocomplete="email">
          <button onclick="parentGoogleLogin()" class="btn-gold w-full py-3 text-base">🔑 以 Google 登入</button>`;
@@ -3841,11 +3849,11 @@ function exitChild(){
   showAccountGate();   // → parent-home
 }
 // 家長登出（只在家長首頁/家長頁提供）
-function parentLogout(){
+async function parentLogout(){
   const sess = cloudStore.getSession();
   if(sess.parentId && sess.activeChildId){ cloudStore.saveChildBlob(sess.parentId, sess.activeChildId, JSON.stringify(state)); }
   auth.signOutParent();
-  if(CLOUD_READY) cloudSignOut();   // M23：一併登出 Google 工作階段
+  if(CLOUD_READY) await cloudSignOut();   // M23：一併登出 Google 工作階段，避免下次直接復用 Supabase session
   currentAccountId = null;
   showAccountGate();   // → parent-login
 }
