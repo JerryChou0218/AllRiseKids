@@ -2270,6 +2270,22 @@ function setTaskTab(tab){
 }
 function rankClass(diff){ return 'rank-'+DIFFS[diff].rank; }
 function periodNow(){ const h=new Date().getHours(); return h<12?'morning':(h<18?'afternoon':'evening'); }
+function missionUiState(t){
+  if(t.status==='completed') return 'completed';
+  if(t.status==='pending') return 'pending';
+  if(t.status==='available' && t.startedAt) return 'in_progress';
+  return 'not_started';
+}
+function missionStatusBadge(t){
+  const map = {
+    not_started: ['尚未開始', 'var(--sys-dim)'],
+    in_progress: ['進行中', 'var(--accent-cyan)'],
+    pending: ['等待審核', '#ffd98a'],
+    completed: ['已完成', '#5cffb8'],
+  };
+  const [label, color] = map[missionUiState(t)] || map.not_started;
+  return `<span class="chip" style="color:${color}; border-color:rgba(130,190,255,.28);">${label}</span>`;
+}
 function renderRecommend(){
   const box = document.getElementById('recommend-box');
   const period = periodNow();
@@ -2286,7 +2302,7 @@ function renderRecommend(){
           <span class="font-bold text-white text-xs">${t.name}</span>
           <span class="chip ml-1">⏱ ${t.time||'—'}</span>
         </div>
-        <button onclick="markDone('${t.id}', event)" class="btn-gold px-3 py-1.5 text-xs flex-none">挑戰</button>
+        <button onclick="openGate('${t.id}')" class="btn-gold px-3 py-1.5 text-xs flex-none">查看</button>
       </div>`).join('')
       : '<div class="text-xs font-bold text-center py-1" style="color:var(--sys-dim);">目前沒有可挑戰的任務，太強了！</div>' }
     </div>`;
@@ -2320,8 +2336,10 @@ function renderQuests(){
   list.innerHTML = tasks.map(t=>{
     const d = DIFFS[t.difficulty], c = CATS[t.category]||CATS.other;
     const r = calcRewards(t);
+    const uiState = missionUiState(t);
     let btn;
-    if(t.status==='available') btn = `<button onclick="markDone('${t.id}', event)" class="btn-sys px-4 py-2 text-sm flex-none">挑戰完成</button>`;
+    if(uiState==='not_started') btn = `<button onclick="startTask('${t.id}', event)" class="btn-sys px-4 py-2 text-sm flex-none">開始任務</button>`;
+    else if(uiState==='in_progress') btn = `<button onclick="markDone('${t.id}', event)" class="btn-gold px-4 py-2 text-sm flex-none">提交完成</button>`;
     else if(t.status==='pending') btn = `<span class="text-xs font-bold text-amber-300 flex-none text-center">攻略確認中<br>⏳</span>`;
     else btn = `<span class="text-xs font-bold text-emerald-400 flex-none text-center">攻略完成<br>✔</span>`;
     return `<div class="sys-win p-3 flex items-center gap-3 ${t.status==='completed'?'opacity-50':''}" role="button" tabindex="0" aria-label="查看任務 ${t.name}" onclick="openGate('${t.id}')" onkeydown="taskCardKey(event,'${t.id}')" style="cursor:pointer;">
@@ -2330,6 +2348,7 @@ function renderQuests(){
         <div class="font-black text-white text-sm">${t.emoji||c.emoji} ${t.name}</div>
         <div class="mt-1 flex flex-wrap gap-1 items-center">
           <span class="chip">${c.name}</span>
+          ${missionStatusBadge(t)}
           <span class="chip">⏱ ${t.time||'—'}</span>
           <span class="text-[11px] font-bold num text-cyan-300">+${r.xp} EXP</span>
           <span class="text-[11px] font-bold num" style="color:var(--sys-gold);">+${r.coins} 🪙</span>
@@ -2346,10 +2365,23 @@ function taskCardKey(ev, id){
   }
 }
 
+function startTask(id, ev){
+  if(ev) ev.stopPropagation();
+  const t = state.tasks.find(t=>t.id===id);
+  if(!t || t.status!=='available') return;
+  if(!t.startedAt) t.startedAt = Date.now();
+  save();
+  toast(`任務開始：${t.name}。完成後再提交給家長確認。`);
+  const modalOpen = document.getElementById('gate-modal')?.classList.contains('show');
+  renderCurrent();
+  if(modalOpen) openGate(id);
+}
+
 function markDone(id, ev){
   if(ev) ev.stopPropagation();
   const t = state.tasks.find(t=>t.id===id);
   if(!t || t.status!=='available') return;
+  if(!t.startedAt) t.startedAt = Date.now();
   t.status = 'pending';
   t.completedDate = todayStr();
   t.doneHour = new Date().getHours();
@@ -2415,13 +2447,16 @@ function openGate(id){
   if(!t) return;
   const d = DIFFS[t.difficulty], c = CATS[t.category]||CATS.other;
   const r = calcRewards(t);
+  const uiState = missionUiState(t);
   let action;
-  if(t.status==='available') action = `<button onclick="markDone('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">【 攻 略 開 始 】</button>`;
+  if(uiState==='not_started') action = `<button onclick="startTask('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">開始任務</button>`;
+  else if(uiState==='in_progress') action = `<button onclick="markDone('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">提交完成，等待家長審核</button>`;
   else if(t.status==='pending') action = `<div class="rounded px-3 py-2.5 text-sm font-bold mt-1" style="border:1px solid rgba(245,197,66,.5); background:rgba(120,90,10,.18); color:#ffd98a;">⏳ 攻略確認中 — 等待管理者核可</div>`;
   else action = `<div class="rounded px-3 py-2.5 text-sm font-bold mt-1 text-emerald-300" style="border:1px solid rgba(60,200,140,.5); background:rgba(10,90,60,.18);">✔ 攻略完成</div>`;
   document.getElementById('gate-body').innerHTML = `
     <div class="rank-ring ${rankClass(t.difficulty)} mx-auto mb-3" style="width:64px;height:64px;font-size:32px;">${d.rank}</div>
     <div class="text-xl font-black text-white mb-1">${t.emoji} ${t.name}</div>
+    <div class="mb-2">${missionStatusBadge(t)}</div>
     <div class="text-xs font-bold mb-2" style="color:var(--sys-dim);">${c.name}任務・${d.name}傳送門・⏱ 預估 ${t.time||'—'}</div>
     ${t.why?`<div class="text-xs font-bold text-cyan-200 mb-3 px-2 py-2 rounded" style="background:rgba(0,120,190,.1); border:1px solid #1c5a86;">💡 ${t.why}</div>`:''}
     <div class="grid grid-cols-2 gap-2 mb-3 text-sm font-bold">
@@ -2551,7 +2586,7 @@ function approveTask(id){
 function rejectTask(id){
   const t = state.tasks.find(t=>t.id===id);
   if(!t || t.status!=='pending') return;
-  t.status='available'; t.completedDate=null; t.doneHour=null; t.submittedAt=null;
+  t.status='available'; t.completedDate=null; t.doneHour=null; t.submittedAt=null; t.startedAt=null;
   state.history.unshift({ date:todayStr(), kind:'reject', name:`退回：${t.name}`, xpEarned:0, coinsEarned:0 });  // M18+：退回也記入審核紀錄
   if(state.history.length>200) state.history.length = 200;
   save();

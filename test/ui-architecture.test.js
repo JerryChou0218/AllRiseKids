@@ -33,6 +33,8 @@ assert(html.includes('const FEATURE_UNLOCKS'), '功能解鎖集中設定存在')
 assert(html.includes('hasUsedFeature') && html.includes('isFeatureUnlocked'), '解鎖有舊資料相容判斷');
 
 assert(html.includes('今日任務') && html.includes('挑戰任務') && html.includes('任務紀錄'), '任務頁有三個分頁');
+assert(html.includes('function missionUiState') && html.includes('function startTask') && ['尚未開始','進行中','等待審核','已完成'].every(s=>html.includes(s)), '任務流程有派生狀態與開始任務導引');
+assert(html.includes('開始任務') && html.includes('提交完成，等待家長審核'), '任務詳情先開始再提交完成');
 assert(html.includes('冒險團戰績') && !html.includes('<span class="sys-i">i</span>世界戰績排行榜'), '排行榜弱化為冒險團戰績');
 assert(!html.includes('警告：未完成全部每日任務'), '任務頁不使用恐嚇式連續紀錄文案');
 

@@ -215,11 +215,13 @@ async function main(){
         dialogOpen: dialog.classList.contains('show'),
         ariaVisible: dialog.getAttribute('aria-hidden') === 'false',
         labelled: !!dialog.getAttribute('aria-labelledby'),
+        hasStartAction: dialog.innerText.includes('開始任務'),
       };
     })()`);
     assert(missionDialog.hasCard, '手機任務頁有可聚焦的任務卡');
     assert(missionDialog.focusedCard, '任務卡可取得鍵盤焦點');
     assert(missionDialog.dialogOpen && missionDialog.ariaVisible && missionDialog.labelled, 'Enter 可開啟任務詳情 dialog 且 aria 狀態正確');
+    assert(missionDialog.hasStartAction, '任務詳情先顯示開始任務 CTA');
 
     const escClose = await evalOnPage(client, `(() => {
       document.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape', bubbles:true }));
