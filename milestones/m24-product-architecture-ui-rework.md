@@ -33,4 +33,5 @@
 - 已新增 `test/ui-architecture.test.js` 鎖住 M24 資訊架構驗收。
 - 已新增 `test/browser-responsive.test.js`，用本機 Chrome headless 實測 390px 手機與 1280px 桌機，驗證無橫向捲動、導航尺寸、家長設定與 console error。
 - 已新增 `test/accessibility.test.js`，補強 dialog 語意、aria-hidden 同步、表單 label、ESC 關閉、任務卡鍵盤操作、家長入口與任務池控制 aria label；瀏覽器測試同步驗證手機任務卡 Enter 開啟詳情、Escape 關閉。
+- 已部署 production 並 alias 至 `https://allrisekids.vercel.app`；以 cache-buster 驗證線上 `index.html` 已包含新 dialog/keyboard/aria 標記且孩子導航仍為 5 個。
 - 待續：更深層元件拆分、完整視覺細節、動畫細節補強、若未來導入 TypeScript 再補型別層。
