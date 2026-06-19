@@ -202,6 +202,35 @@ async function main(){
     assert(mobile.overflowX <= 1, `手機沒有橫向捲動（overflow ${mobile.overflowX}px）`);
     assert(mobile.bodyText.includes('下一個推薦任務'), '手機首頁顯示下一個推薦任務');
 
+    const missionDialog = await evalOnPage(client, `(() => {
+      goScreen('quests');
+      const card = document.querySelector('#task-list [role="button"]');
+      if(!card) return { hasCard:false };
+      card.focus();
+      card.dispatchEvent(new KeyboardEvent('keydown', { key:'Enter', bubbles:true }));
+      const dialog = document.getElementById('gate-modal');
+      return {
+        hasCard:true,
+        focusedCard: document.activeElement === card,
+        dialogOpen: dialog.classList.contains('show'),
+        ariaVisible: dialog.getAttribute('aria-hidden') === 'false',
+        labelled: !!dialog.getAttribute('aria-labelledby'),
+      };
+    })()`);
+    assert(missionDialog.hasCard, '手機任務頁有可聚焦的任務卡');
+    assert(missionDialog.focusedCard, '任務卡可取得鍵盤焦點');
+    assert(missionDialog.dialogOpen && missionDialog.ariaVisible && missionDialog.labelled, 'Enter 可開啟任務詳情 dialog 且 aria 狀態正確');
+
+    const escClose = await evalOnPage(client, `(() => {
+      document.dispatchEvent(new KeyboardEvent('keydown', { key:'Escape', bubbles:true }));
+      const dialog = document.getElementById('gate-modal');
+      return {
+        dialogClosed: !dialog.classList.contains('show'),
+        ariaHidden: dialog.getAttribute('aria-hidden') === 'true',
+      };
+    })()`);
+    assert(escClose.dialogClosed && escClose.ariaHidden, 'Escape 可關閉任務詳情 dialog');
+
     await evalOnPage(client, `(() => { tryParent(); ['1','2','3','4'].forEach(pinPress); return true; })()`);
     await new Promise(r=>setTimeout(r, 250));
     const parent = await evalOnPage(client, `(() => {

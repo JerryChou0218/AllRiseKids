@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 20.6,
+    "used_usd": 22.4,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 12,
-    "verification_calls": 12,
+    "execution_calls": 13,
+    "verification_calls": 13,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -531,7 +531,8 @@
       "history": [
         { "timestamp": "2026-06-19T00:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 已完成第一版 IA/App Shell 重構：新增 design token/glass panel/parent panel CSS；孩子模式五個第一層導航；新增孩子首頁；家長模式六分頁 shell；集中 FEATURE_UNLOCKS 與舊資料相容判斷；任務頁改今日/挑戰/紀錄；onboarding 加產品價值、角色資料、職業、家長 PIN 與第一任務提示。驗證 npm test 77/77、accounts 8/8、cloud-store 9/9、parent-queue 11/11、progression 10/10、debug-sim 9/9、leaderboard 7/7、trade 10/10、desktop-save 4/4 全綠。待續：更深層拆檔、實機響應式與動畫細節驗證。" },
         { "timestamp": "2026-06-19T01:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強 M24 驗收保護：新增 test/ui-architecture.test.js（16/16）鎖住孩子五導覽、家長六分頁、首頁內容、集中解鎖、非恐嚇文案、進階設定收納、匯入驗證、重置二次確認與 aria-label；package.json 新增 test:all 一次跑 10 套測試；家長設定將除錯/交易收進進階設定；新增 validateImportedSave 與 resetCurrentChildData（保留家長設定、需輸入 RESET）。npm run test:all 全綠。待續：真瀏覽器/手機尺寸視覺驗證與更深層元件拆分。" },
-        { "timestamp": "2026-06-19T02:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 新增 test/browser-responsive.test.js，使用本機獨立 Chrome headless + DevTools Protocol + HTTP 靜態伺服器做真瀏覽器驗證，不依賴 Playwright/Puppeteer。覆蓋 390px 手機與 1280px 桌機：孩子首頁、5 個導航、導航按鈕 ≥44px、手機/家長/桌機無全頁橫向捲動、家長設定分頁、進階設定預設收合、桌機左側 App Shell、首頁雙欄、console/runtime 無 error。package.json 新增 test:browser，test:all 納入瀏覽器驗證。npm run test:all 全綠（含 browser-responsive 20/20）。待續：若要完全符合使用者原始長規格，仍需更深層模組拆分與更多互動動畫/無障礙逐項驗證。" }
+        { "timestamp": "2026-06-19T02:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 新增 test/browser-responsive.test.js，使用本機獨立 Chrome headless + DevTools Protocol + HTTP 靜態伺服器做真瀏覽器驗證，不依賴 Playwright/Puppeteer。覆蓋 390px 手機與 1280px 桌機：孩子首頁、5 個導航、導航按鈕 ≥44px、手機/家長/桌機無全頁橫向捲動、家長設定分頁、進階設定預設收合、桌機左側 App Shell、首頁雙欄、console/runtime 無 error。package.json 新增 test:browser，test:all 納入瀏覽器驗證。npm run test:all 全綠（含 browser-responsive 20/20）。待續：若要完全符合使用者原始長規格，仍需更深層模組拆分與更多互動動畫/無障礙逐項驗證。" },
+        { "timestamp": "2026-06-19T03:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強 M24 可用性與無障礙：所有主要 modal/overlay 加 role=dialog、aria-modal、aria-labelledby、aria-hidden 預設狀態；新增 openModal/closeModal 集中同步 aria-hidden、焦點與 Escape 關閉；任務卡加入 role=button/tabindex 與 Enter/Space 開啟詳情；onboarding、家長設定、任務/獎勵表單、帳號閘門、除錯等級欄位補 label；PIN 鍵盤、家長入口、任務池動態控制補 aria-label。新增 test/accessibility.test.js（43/43），browser-responsive 擴充手機任務卡鍵盤與 ESC dialog 驗證（24/24）。npm run test:all 全綠。M24 仍 in_progress，待續：更深層模組拆分與動畫細節。" }
       ]
     }
   ]
