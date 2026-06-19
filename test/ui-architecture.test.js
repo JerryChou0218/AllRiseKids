@@ -33,7 +33,8 @@ assert(html.includes('function requireParentMode') && html.includes('if(!require
 assert(html.includes('id="screen-home"'), '孩子首頁存在');
 assert(html.includes('下一個推薦任務') && html.includes('今日任務進度') && html.includes('冒險預告'), '首頁突出今日狀態與下一步');
 assert(html.includes('id="ob-progress"') && html.includes('function showOnboardingStep') && count(/data-ob-step="/g) >= 6, '初次使用流程改為分步 onboarding');
-assert(['ob-name','ob-age','ob-gender','ob-classes','ob-pin'].every(id=>html.includes(`id="${id}"`)), 'onboarding 保留角色、年齡、性別、職業與 PIN 欄位');
+assert(['ob-name','ob-age','ob-gender','ob-classes','ob-avatars','ob-pin'].every(id=>html.includes(`id="${id}"`)), 'onboarding 保留角色、年齡、性別、職業、代表圖示與 PIN 欄位');
+assert(html.includes('CHARACTER_AVATARS') && html.includes('pickAvatar') && html.includes('state.player.avatar') && html.includes('const base = state.player.avatar || cls.sprite'), 'onboarding 代表圖示會保存並顯示在角色圖框');
 assert(html.includes('const FEATURE_UNLOCKS'), '功能解鎖集中設定存在');
 assert(html.includes('hasUsedFeature') && html.includes('isFeatureUnlocked'), '解鎖有舊資料相容判斷');
 

@@ -74,8 +74,9 @@ state.player.age = 10;
 /* 2. 建立角色 */
 document.getElementById('ob-name').value='小宇';
 pickClass('mage');
+pickAvatar('📚');
 finishOnboarding();
-assert(state.player.name==='小宇' && state.player.class==='mage', '建立角色（魔法師）');
+assert(state.player.name==='小宇' && state.player.class==='mage' && state.player.avatar==='📚', '建立角色（魔法師與代表圖示）');
 
 /* 3. PIN 解鎖（預設 1234） */
 pinBuffer=''; ['1','2','3','4'].forEach(pinPress);

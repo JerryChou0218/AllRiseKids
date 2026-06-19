@@ -439,6 +439,10 @@
       <div class="sys-head"><span class="sys-i">3</span>選擇孩子的覺醒職業</div>
       <div class="p-4 grid gap-3">
         <div id="ob-classes" class="grid gap-3"></div>
+        <div>
+          <div class="caption mb-2">選一個孩子喜歡的代表圖示，之後會出現在角色狀態中。</div>
+          <div id="ob-avatars" class="grid grid-cols-4 gap-2" role="radiogroup" aria-label="角色代表圖示"></div>
+        </div>
         <div class="ob-step-actions">
           <button type="button" onclick="showOnboardingStep(3)" class="btn-dark py-3">返回孩子資料</button>
           <button type="button" onclick="showOnboardingStep(5)" class="btn-gold py-3">下一步：家長 PIN</button>
@@ -1262,6 +1266,7 @@ const CLASSES = {
   warrior:  { name:'戰士',     emoji:'⚔️', sprite:'🥷', bonusCat:'health', desc:'健康習慣任務 經驗值 +50%' },
   guardian: { name:'守護騎士', emoji:'🛡️', sprite:'🦸', bonusCat:'family', desc:'家庭教育任務 經驗值 +50%' },
 };
+const CHARACTER_AVATARS = ['🛡️','🧙','🥷','🦸','🌟','📚','⚡','🎨'];
 const HUNTER_RANKS = [ [91,'國家'],[76,'S'],[61,'A'],[46,'B'],[31,'C'],[16,'D'],[1,'E'] ];
 function hunterRank(lv){ for(const [min,r] of HUNTER_RANKS){ if(lv>=min) return r; } return 'E'; }
 
@@ -1670,7 +1675,7 @@ function xpNeeded(level){
 function defaultData(){
   return {
     version: VERSION,
-    player: { name:'', class:'', age:10, gender:'all', level:1, xp:0, coins:0,
+    player: { name:'', class:'', avatar:'🛡️', age:10, gender:'all', level:1, xp:0, coins:0,
       stats:{ str:0, agi:0, int:0, vit:0, sen:0 },
       statPoints:0, skillPoints:0, skills:[],
       streak:0, lastActiveDate:'', lastAllDoneDate:'', mainQuestClaimed:[] },
@@ -2062,6 +2067,7 @@ function renderTop(){
 
 /* ═══════════════════ 覺醒引導 ═══════════════════ */
 let obClass = 'warrior';
+let obAvatar = '🛡️';
 let obStep = 1;
 function updateOnboardingWizard(){
   document.querySelectorAll('[data-ob-step]').forEach(el=>{
@@ -2090,13 +2096,21 @@ function renderOnboarding(){
       <span class="text-xs font-bold" style="color:var(--sys-dim);">${c.desc}</span></span>
       ${k===obClass?'<span class="ml-auto text-cyan-300 font-black">✓</span>':''}
     </button>`).join('');
+  document.getElementById('ob-avatars').innerHTML = CHARACTER_AVATARS.map(a=>`
+    <button type="button" onclick="pickAvatar('${a}')" role="radio" aria-checked="${a===obAvatar?'true':'false'}" aria-label="選擇代表圖示 ${a}"
+      class="p-3 rounded text-3xl transition-all"
+      style="border:1px solid ${a===obAvatar?'var(--sys-cyan)':'#1c3a60'}; background:${a===obAvatar?'rgba(0,210,255,.12)':'rgba(12,24,46,.6)'}; ${a===obAvatar?'box-shadow:0 0 12px rgba(0,210,255,.3);':''}">
+      ${a}
+    </button>`).join('');
 }
 function pickClass(k){ obClass=k; renderOnboarding(); }
+function pickAvatar(a){ obAvatar=a; renderOnboarding(); }
 function finishOnboarding(){
   const name = document.getElementById('ob-name').value.trim();
   if(!name){ toast('請先登錄獵人名稱。'); return; }
   state.player.name = name;
   state.player.class = obClass;
+  state.player.avatar = obAvatar;
   const ageInput = parseInt((document.getElementById('ob-age')||{}).value, 10);
   state.player.age = (ageInput>=5 && ageInput<=15) ? ageInput : (state.player.age||10);
   state.player.gender = (document.getElementById('ob-gender')||{}).value || 'all';
@@ -2122,9 +2136,10 @@ function finishOnboarding(){
 function equippedItem(type){ return state.inventory.find(i=>i.type===type && i.equipped); }
 function spriteHTML(){
   const cls = CLASSES[state.player.class] || CLASSES.warrior;
+  const base = state.player.avatar || cls.sprite;
   const hat=equippedItem('hat'), wp=equippedItem('weapon'), pet=equippedItem('pet');
   return `${pet?`<span class="absolute -left-9 bottom-1 text-3xl">${pet.emoji}</span>`:''}
-    <span class="relative">${cls.sprite}
+    <span class="relative">${base}
       ${hat?`<span class="absolute -top-5 left-1/2 -translate-x-1/2 text-2xl">${hat.emoji}</span>`:''}
     </span>
     ${wp?`<span class="absolute -right-8 bottom-2 text-2xl">${wp.emoji}</span>`:''}`;
@@ -3761,6 +3776,7 @@ function resetCurrentChildData(){
   state = defaultData();
   state.player.name = keepPlayer.name || state.player.name;
   state.player.class = keepPlayer.class || state.player.class;
+  state.player.avatar = keepPlayer.avatar || state.player.avatar;
   state.player.age = keepPlayer.age || state.player.age;
   state.player.gender = keepPlayer.gender || state.player.gender || 'all';
   state.parentConfig = { ...state.parentConfig, ...keepParentConfig };
@@ -4222,7 +4238,7 @@ function enterChild(childId){
     document.getElementById('account-gate').style.display='none';
     document.getElementById('game').classList.add('hidden');
     const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
-    document.getElementById('ob-name').value = ch.name; obClass='warrior'; obStep=1; renderOnboarding();
+    document.getElementById('ob-name').value = ch.name; obClass='warrior'; obAvatar='🛡️'; obStep=1; renderOnboarding();
   }
 }
 // 小孩登出（回家長首頁）— 小孩端唯一的離開出口，無法登出家長
@@ -4317,7 +4333,7 @@ function createAccountSubmit(){
   document.getElementById('account-gate').style.display='none';
   document.getElementById('game').classList.add('hidden');
   const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
-  document.getElementById('ob-name').value = nm; obClass = 'warrior'; obStep=1; renderOnboarding();
+  document.getElementById('ob-name').value = nm; obClass = 'warrior'; obAvatar='🛡️'; obStep=1; renderOnboarding();
 }
 // M17：頂部「切換」＝登出小孩回家長首頁（小孩無法登出家長）
 function switchAccount(){ exitChild(); }
