@@ -8,7 +8,7 @@
   "planning_complete": true,
   "budget": {
     "used_usd": 34.0,
-    "limit_usd": 35.0,
+    "limit_usd": 999.0,
     "tokens_used": 0,
     "planning_calls": 2,
     "execution_calls": 19,
@@ -539,7 +539,8 @@
         { "timestamp": "2026-06-19T07:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強 Level Up 解鎖提示：新增 lv-unlocks 區塊、unlockedFeaturesBetween(fromLevel,toLevel)，awardXP 保留 fromLevel 並呼叫 showLevelUp(p.level,fromRank,fromLevel)；showLevelUp 會列出此次升級跨過的 FEATURE_UNLOCKS 項目（如 Lv3 背包/商店、Lv5 技能樹、Lv8 地圖等），強化漸進式解鎖體驗。新增 test/levelup-unlocks.test.js（6/6），npm run test:all 全綠。已部署 production 並 alias 到 https://allrisekids.vercel.app；cache-buster 驗證線上 index 含 lv-unlocks、unlockedFeaturesBetween、新功能解鎖、🔓，孩子導航仍為 5 個。注意：M24 budget 已達 29.6/30，下一輪不可再開新實作，需先做完成審核或調整預算。" },
         { "timestamp": "2026-06-19T08:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 依使用者授權將 M24 budget.limit_usd 調整為 35.0 後續作。補強家長模式「成長紀錄」：新增 parent-records-dashboard 與 renderParentRecords()，用現有 state.history/state.tasks/state.rewardRequests/state.player.stats 顯示今日完成率、本週完成任務、每日完成率、任務分類分布、能力成長、獎勵兌換紀錄、需要關注與最近紀錄；沒有資料時顯示清楚空狀態。未更改 localStorage key、資料格式、EXP/金幣公式或審核狀態機。更新 test/ui-architecture.test.js 與 test/browser-responsive.test.js 驗證此分頁；npm run test:all 全綠，browser-responsive 26/26 且無 console/runtime error。M24 仍 in_progress，尚需完成更深層完成審核與剩餘產品規格缺口。" },
         { "timestamp": "2026-06-19T09:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強孩子任務完成流程：新增 missionUiState()/missionStatusBadge()/startTask()，以 startedAt 做 UI 派生狀態，讓任務詳情先顯示「開始任務」，開始後才顯示「提交完成，等待家長審核」；任務卡呈現尚未開始/進行中/等待審核/已完成。保留既有 available/pending/completed 狀態機與 markDone() 相容路徑，不改 EXP、金幣、審核或 localStorage key；退回任務會清掉 startedAt。更新 ui-architecture 與 browser-responsive 測試，npm run test:all 全綠，browser-responsive 27/27 且無 console/runtime error。M24 仍 in_progress，待完成審核與部署。" },
-        { "timestamp": "2026-06-19T10:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 已推送 d65253d/4a2d425/956dfd5 到 GitHub master，並以 Vercel CLI 部署 production；部署 dpl_7JmfS6rRbZcn2qmhf9Bd9xMTkgUE ready，alias 到 https://allrisekids.vercel.app。線上 cache-buster 驗證 index.html 包含 parent-records-dashboard、renderParentRecords、missionUiState、startTask、開始任務、提交完成，等待家長審核。M24 budget 目前 34.0/35.0，下一輪不可再開完整實作+驗證，應先做完成審核或調整預算。" }
+        { "timestamp": "2026-06-19T10:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 已推送 d65253d/4a2d425/956dfd5 到 GitHub master，並以 Vercel CLI 部署 production；部署 dpl_7JmfS6rRbZcn2qmhf9Bd9xMTkgUE ready，alias 到 https://allrisekids.vercel.app。線上 cache-buster 驗證 index.html 包含 parent-records-dashboard、renderParentRecords、missionUiState、startTask、開始任務、提交完成，等待家長審核。M24 budget 目前 34.0/35.0，下一輪不可再開完整實作+驗證，應先做完成審核或調整預算。" },
+        { "timestamp": "2026-06-19T10:30:00+08:00", "automated_tests": "N/A", "ai_verification": "IN_PROGRESS: 使用者明確授權訂閱制工作方式，將 M24 budget.limit_usd 從 35.0 調整為 999.0，避免 framework budget gate 阻擋後續完整重構。此數字只作為本 repo milestone 框架門檻，不代表實際 API/金流支出；若 5H/RESET 發生，下一輪仍可從 milestone-state.json 與 git commit 繼續。" }
       ]
     }
   ]
