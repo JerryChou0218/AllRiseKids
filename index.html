@@ -881,6 +881,7 @@
 
       <div class="sys-win mb-3 parent-panel" data-parent-panel="records">
         <div class="sys-head text-sm"><span class="sys-i">i</span>紀錄</div>
+        <div class="p-3 grid gap-3" id="parent-records-dashboard"></div>
         <div class="p-3 grid gap-1.5 max-h-60 overflow-y-auto text-xs" id="parent-history"></div>
       </div>
 
@@ -3209,6 +3210,8 @@ function renderParent(){
       </div>`).join('')
     : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">尚未設定真實獎勵。</div>`;
 
+  renderParentRecords();
+
   const kindEmoji = { task:'✔', reject:'↩️', buy:'🛒', sell:'💰', redeem:'🎁', achievement:'🏆', drop:'💎', bonus:'🎉', mainquest:'⚔️' };
   document.getElementById('parent-history').innerHTML = state.history.length
     ? state.history.slice(0,50).map(h=>`
@@ -3222,6 +3225,127 @@ function renderParent(){
   renderDebugPanel();
   renderParentTrades();
   setParentTab(parentTab);
+}
+function renderParentRecords(){
+  const box = document.getElementById('parent-records-dashboard');
+  if(!box) return;
+
+  const today = todayStr();
+  const wk = weekKey();
+  const daily = state.tasks.filter(t=>!CHALLENGE.has(t.difficulty) && t.pickedDate===today);
+  const todayDone = daily.filter(t=>t.status==='completed').length;
+  const todayRate = daily.length ? Math.round(todayDone / daily.length * 100) : 0;
+  const weekTaskHistory = state.history.filter(h=>h.kind==='task' && h.date>=wk);
+  const weekDone = weekTaskHistory.length;
+  const rewardRequests = state.rewardRequests || [];
+  const approvedRewards = rewardRequests.filter(r=>r.status==='approved').length;
+  const pendingRewards = rewardRequests.filter(r=>r.status==='requested').length;
+  const historyHasData = state.history.length > 0 || daily.length > 0 || rewardRequests.length > 0;
+  const sourceTasks = [...(state.tasks||[]), ...(state.taskPool||[])];
+  const taskByName = new Map(sourceTasks.map(t=>[t.name, t]));
+  const taskFromHistory = h => taskByName.get(h.name) || sourceTasks.find(t=>h.name && h.name.includes(t.name));
+  const pct = (value, max) => Math.min(100, Math.round((value / Math.max(1, max)) * 100));
+  const statCard = (value, label, color) => `
+    <div class="p-2.5 rounded" style="background:rgba(12,26,50,.72); border:1px solid #1c3a60;">
+      <div class="num text-xl font-bold" style="color:${color};">${value}</div>
+      <div class="text-[11px] font-bold" style="color:var(--sys-dim);">${label}</div>
+    </div>`;
+
+  const last7 = Array.from({ length: 7 }, (_, i)=>{
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const key = d.toLocaleDateString('sv');
+    return { key, label: `${d.getMonth()+1}/${d.getDate()}`, count: state.history.filter(h=>h.kind==='task' && h.date===key).length };
+  });
+  const maxDaily = Math.max(1, ...last7.map(d=>d.count));
+  const dailyBars = last7.map(d=>`
+    <div class="grid gap-1">
+      <div class="h-16 rounded flex items-end overflow-hidden" style="background:rgba(8,18,36,.75); border:1px solid #1c3a60;">
+        <div class="w-full" style="height:${Math.max(6, pct(d.count,maxDaily))}%; background:linear-gradient(180deg,var(--accent-cyan),var(--accent-violet));"></div>
+      </div>
+      <div class="text-[10px] text-center font-bold" style="color:var(--sys-dim);">${d.label}</div>
+    </div>`).join('');
+
+  const categoryCounts = {};
+  weekTaskHistory.forEach(h=>{
+    const t = taskFromHistory(h);
+    const cat = (t && t.category) || 'other';
+    categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+  });
+  const categoryRows = Object.entries(categoryCounts)
+    .sort((a,b)=>b[1]-a[1])
+    .slice(0,5)
+    .map(([cat,count])=>{
+      const c = CATS[cat] || CATS.other;
+      return `<div class="grid gap-1">
+        <div class="flex justify-between text-[11px] font-bold"><span>${c.emoji} ${c.name}</span><span class="num">${count}</span></div>
+        <div class="bar-track h-2"><div class="bar-fill" style="width:${pct(count, weekDone)}%;"></div></div>
+      </div>`;
+    }).join('');
+
+  const abilityRows = Object.entries(STATS).map(([key, st])=>{
+    const recent = state.history.find(h=>{
+      if(h.kind!=='task') return false;
+      const t = taskFromHistory(h);
+      return t && (CATS[t.category]||CATS.other).stat === key;
+    });
+    const value = state.player.stats[key] || 0;
+    return `<div class="grid gap-1">
+      <div class="flex justify-between text-[11px] font-bold">
+        <span style="color:${st.color};">${st.name}</span>
+        <span class="num text-white">${value}</span>
+      </div>
+      <div class="bar-track h-2"><div class="stat-fill" style="width:${Math.min(100, value/50*100)}%; background:${st.color}; color:${st.color};"></div></div>
+      <div class="text-[10px] font-bold" style="color:var(--sys-dim);">${recent ? `最近：${recent.name}` : '最近尚無增加紀錄'}</div>
+    </div>`;
+  }).join('');
+
+  const latestReward = rewardRequests[0];
+  const rewardCopy = latestReward
+    ? `${latestReward.name}：${latestReward.status==='approved'?'已同意':latestReward.status==='rejected'?'已拒絕':'等待確認'}`
+    : '尚未送出真實獎勵申請';
+
+  box.innerHTML = `
+    <div class="grid grid-cols-2 gap-2 text-center">
+      ${statCard(`${todayDone}/${daily.length || 0}`, '今日任務完成', '#5cb8ff')}
+      ${statCard(`${todayRate}%`, '今日完成率', '#5cffb8')}
+      ${statCard(weekDone, '本週完成任務', '#ffd25c')}
+      ${statCard(`🔥 ${state.player.streak}`, '連續紀錄', '#ff9d5c')}
+    </div>
+    ${historyHasData ? `
+      <div class="grid gap-2 md:grid-cols-2">
+        <div class="p-3 rounded" style="background:rgba(12,26,50,.62); border:1px solid #1c3a60;">
+          <div class="section-title mb-2">每日完成率</div>
+          <div class="grid grid-cols-7 gap-1.5">${dailyBars}</div>
+        </div>
+        <div class="p-3 rounded grid gap-2" style="background:rgba(12,26,50,.62); border:1px solid #1c3a60;">
+          <div class="section-title">任務分類分布</div>
+          ${categoryRows || '<div class="caption">本週還沒有完成任務，先從今日任務開始。</div>'}
+        </div>
+      </div>
+      <div class="p-3 rounded grid gap-2" style="background:rgba(12,26,50,.62); border:1px solid #1c3a60;">
+        <div class="section-title">能力成長</div>
+        ${abilityRows}
+      </div>
+      <div class="grid gap-2 md:grid-cols-2">
+        <div class="p-3 rounded" style="background:rgba(12,26,50,.62); border:1px solid #1c3a60;">
+          <div class="section-title mb-1">獎勵兌換紀錄</div>
+          <div class="caption">已同意 ${approvedRewards} 筆，待確認 ${pendingRewards} 筆。</div>
+          <div class="font-bold text-white text-sm mt-1">${rewardCopy}</div>
+        </div>
+        <div class="p-3 rounded" style="background:rgba(12,26,50,.62); border:1px solid #1c3a60;">
+          <div class="section-title mb-1">需要關注</div>
+          <div class="caption">${todayDone < daily.length ? `今天再完成 ${daily.length - todayDone} 個任務，就能守住節奏。` : '今天任務節奏穩定，可以查看獎勵申請或明日任務。'}</div>
+        </div>
+      </div>
+      <div class="section-title">最近紀錄</div>
+    ` : `
+      <div class="p-4 rounded text-center" style="background:rgba(12,26,50,.62); border:1px solid #1c3a60;">
+        <div class="font-black text-white">還沒有成長紀錄</div>
+        <div class="caption mt-1">孩子完成第一個任務後，這裡會出現完成率、能力成長與獎勵兌換紀錄。</div>
+      </div>
+    `}
+  `;
 }
 function renderParentTrades(){
   const box=document.getElementById('parent-trade'); if(!box) return;

@@ -252,6 +252,22 @@ async function main(){
     assert(parent.hasAdvanced && parent.advancedClosed, '除錯與高風險操作預設收在進階設定');
     assert(parent.hasReset, '家長設定提供受保護的重置孩子進度入口');
 
+    const parentRecords = await evalOnPage(client, `(() => {
+      setParentTab('records');
+      const box = document.getElementById('parent-records-dashboard');
+      const text = box ? box.innerText : '';
+      return {
+        recordsTabActive: document.querySelector('[data-ptab="records"]').classList.contains('active'),
+        hasDashboard: !!box,
+        hasCompletion: text.includes('每日完成率'),
+        hasAbility: text.includes('能力成長'),
+        hasReward: text.includes('獎勵兌換紀錄'),
+        hasHistory: text.includes('最近紀錄') || text.includes('還沒有成長紀錄'),
+      };
+    })()`);
+    assert(parentRecords.recordsTabActive && parentRecords.hasDashboard, '家長成長紀錄分頁顯示儀表板');
+    assert(parentRecords.hasCompletion && parentRecords.hasAbility && parentRecords.hasReward && parentRecords.hasHistory, '家長成長紀錄包含完成率、能力、獎勵與歷史區塊');
+
     await loadApp(client, appUrl, 1280, 900);
     const desktop = await evalOnPage(client, `(() => {
       const root = document.documentElement;

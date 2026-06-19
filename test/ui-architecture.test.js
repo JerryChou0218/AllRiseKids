@@ -24,6 +24,8 @@ assert(!/data-nav="(skills|map|inventory|leaderboard|shop|parent)"/.test(html), 
 const parentTabs = [...html.matchAll(/data-ptab="([^"]+)"/g)].map(m=>m[1]);
 assert(['overview','review','tasks','rewards','records','settings'].every(t=>parentTabs.includes(t)), '家長模式六分頁存在');
 assert(count(/data-parent-panel="/g) >= 9, '家長內容依分頁分組');
+assert(html.includes('id="parent-records-dashboard"') && html.includes('function renderParentRecords'), 'parent records dashboard render helper exists');
+assert(['每日完成率','任務分類分布','能力成長','獎勵兌換紀錄','最近紀錄'].every(s=>html.includes(s)), 'parent records dashboard covers completion/category/ability/reward/history');
 
 assert(html.includes('id="screen-home"'), '孩子首頁存在');
 assert(html.includes('下一個推薦任務') && html.includes('今日任務進度') && html.includes('冒險預告'), '首頁突出今日狀態與下一步');
