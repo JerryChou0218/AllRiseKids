@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "test": "node test/smoke.js",
-    "test:all": "node test/smoke.js && node test/accounts.test.js && node test/cloud-store.test.js && node test/parent-queue.test.js && node test/progression.test.js && node test/debug-sim.test.js && node test/leaderboard.test.js && node test/trade.test.js && node test/desktop-save.test.js && node test/ui-architecture.test.js && node test/accessibility.test.js && node test/oauth-login.test.js && node test/cache-policy.test.js && node test/reward-feedback.test.js && node test/browser-responsive.test.js",
+    "test:all": "node test/smoke.js && node test/accounts.test.js && node test/cloud-store.test.js && node test/parent-queue.test.js && node test/progression.test.js && node test/debug-sim.test.js && node test/leaderboard.test.js && node test/trade.test.js && node test/desktop-save.test.js && node test/ui-architecture.test.js && node test/accessibility.test.js && node test/oauth-login.test.js && node test/cache-policy.test.js && node test/reward-feedback.test.js && node test/levelup-unlocks.test.js && node test/browser-responsive.test.js",
     "test:browser": "node test/browser-responsive.test.js",
     "pack": "node electron/pack.js"
   },

@@ -1081,6 +1081,7 @@
         <div class="text-amber-300">＋3 能力點數（可至狀態 → 能力值分配）</div>
         <div class="text-purple-300">＋1 技能點數（可至技能樹學習技能）</div>
         <div id="lv-rankup" class="hidden text-base text-white mt-1"></div>
+        <div id="lv-unlocks" class="hidden text-left mt-2 rounded p-3" style="border:1px solid rgba(245,197,66,.35); background:rgba(120,90,10,.14);"></div>
       </div>
       <button onclick="hideLevelUp()" class="btn-gold w-full py-3 text-lg">確 認</button>
     </div>
@@ -2586,7 +2587,7 @@ function awardXP(amount){
   const p = state.player;
   if(p.level>=MAX_LEVEL) return;
   p.xp += amount;
-  let leveled = false, fromRank = hunterRank(p.level);
+  let leveled = false, fromLevel = p.level, fromRank = hunterRank(p.level);
   while(p.level<MAX_LEVEL && p.xp >= xpNeeded(p.level)){
     p.xp -= xpNeeded(p.level);
     p.level++;
@@ -2595,7 +2596,7 @@ function awardXP(amount){
     leveled = true;
   }
   if(p.level>=MAX_LEVEL) p.xp = 0;
-  if(leveled){ showLevelUp(p.level, fromRank); checkMainQuest(); }
+  if(leveled){ showLevelUp(p.level, fromRank, fromLevel); checkMainQuest(); }
 }
 
 /* M19 主線推進：等級到達門檻時解鎖該章節並發金幣（只發一次）。回傳本次新解鎖章節。 */
@@ -3531,7 +3532,13 @@ function spawnShards(x, y){
     setTimeout(()=>s.remove(), 1300);
   }
 }
-function showLevelUp(level, fromRank){
+function unlockedFeaturesBetween(fromLevel, toLevel){
+  return Object.entries(FEATURE_UNLOCKS)
+    .filter(([,u])=>u.level > fromLevel && u.level <= toLevel)
+    .sort((a,b)=>a[1].level-b[1].level)
+    .map(([key,u])=>({ key, ...u }));
+}
+function showLevelUp(level, fromRank, fromLevel){
   document.getElementById('lv-num').textContent = level;
   const newRank = hunterRank(level);
   const ru = document.getElementById('lv-rankup');
@@ -3539,6 +3546,19 @@ function showLevelUp(level, fromRank){
     ru.innerHTML = `🎖️ 獵人等級升格：<span class="num" style="color:var(--sys-gold); text-shadow:0 0 12px rgba(245,197,66,.8);">${fromRank} → ${newRank}</span>`;
     ru.classList.remove('hidden');
   }else ru.classList.add('hidden');
+  const unlockBox = document.getElementById('lv-unlocks');
+  const unlocked = unlockedFeaturesBetween(fromLevel||level-1, level);
+  if(unlockBox && unlocked.length){
+    unlockBox.innerHTML = `<div class="text-amber-200 font-black mb-1">新功能解鎖</div>` +
+      unlocked.map(u=>`<div class="flex items-start gap-2 text-xs py-1">
+        <span class="text-amber-300">🔓</span>
+        <span><span class="font-black text-white">${u.name}</span><br><span style="color:var(--sys-dim);">${u.desc}</span></span>
+      </div>`).join('');
+    unlockBox.classList.remove('hidden');
+  }else if(unlockBox){
+    unlockBox.innerHTML = '';
+    unlockBox.classList.add('hidden');
+  }
   openModal('levelup-overlay');
   spawnShards(window.innerWidth/2, window.innerHeight/2);
 }
