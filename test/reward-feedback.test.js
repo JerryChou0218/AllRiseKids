@@ -19,7 +19,8 @@ assert(has(/function prefersReducedMotion\(\)[\s\S]*matchMedia\('\(prefers-reduc
 assert(has(/function showMissionRewardFeedback\(task, reward\)[\s\S]*prefersReducedMotion\(\)[\s\S]*reward-clear[\s\S]*\+\$\{reward\.xp\} EXP[\s\S]*\+\$\{reward\.coins\} 金幣/), 'mission reward feedback renders CLEAR, EXP, and coins');
 assert(has(/function showMissionRewardFeedback\(task, reward\)[\s\S]*spawnShards\(x, y\)[\s\S]*setTimeout\(\(\)=>box\.remove\(\), 1600\)/), 'mission reward feedback cleans itself up');
 assert(has(/function spawnShards\(x, y\)[\s\S]*if\(prefersReducedMotion\(\)\) return/), 'particle shards respect reduced motion');
-assert(has(/function approveTask\(id\)[\s\S]*state\.player\.coins \+= r\.coins[\s\S]*save\(\);[\s\S]*showMissionRewardFeedback\(t, r\)[\s\S]*toast\(`已核准/), 'approveTask shows reward feedback after save without changing reward formula');
+assert(has(/function completeTaskReward\(t\)[\s\S]*state\.player\.coins \+= r\.coins[\s\S]*return r;/), 'completeTaskReward keeps the reward formula centralized');
+assert(has(/function approveTask\(id\)[\s\S]*const r = completeTaskReward\(t\);[\s\S]*save\(\);[\s\S]*showMissionRewardFeedback\(t, r\)[\s\S]*toast\(`已核准/), 'approveTask shows reward feedback after save using the shared reward settlement');
 
 if(fail){
   console.error(`\nReward feedback checks failed: ${fail}`);

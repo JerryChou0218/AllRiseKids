@@ -216,9 +216,18 @@ document.getElementById('tf-cat').value='chore';
 document.getElementById('tf-diff').value='easy';
 document.getElementById('tf-schedule').value='daily';
 document.getElementById('tf-age').value='all';
+document.getElementById('tf-review').checked=false;
 editingTaskId=null;
 saveTaskForm();
 assert(state.taskPool.some(t=>t.name==='餵狗' && t.custom), '家長新增自訂任務到任務池');
+const nrPool = state.taskPool.find(t=>t.name==='餵狗' && t.custom);
+assert(nrPool.requiresReview===false, '家長可設定任務免審核');
+const nrTask = makeInstance(nrPool);
+state.tasks.push(nrTask);
+const nrCoins = state.player.coins;
+startTask(nrTask.id);
+markDone(nrTask.id);
+assert(state.tasks.find(t=>t.id===nrTask.id).status==='completed' && state.player.coins>nrCoins, '免審核任務完成後立即發放獎勵');
 
 /* 16. PIN 重設 */
 resetPin();

@@ -1070,6 +1070,10 @@
       </div>
       <label for="tf-why" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">為什麼這個任務重要（顯示在任務情報）</label>
       <input id="tf-why" maxlength="50" placeholder="一句給孩子的話" class="inp mb-4">
+      <label for="tf-review" class="flex items-center gap-2 mb-4 text-xs font-bold" style="color:var(--sys-dim);">
+        <input id="tf-review" type="checkbox" checked>
+        需要家長審核後才發放獎勵
+      </label>
       <div class="flex gap-3">
         <button onclick="closeModal('taskform-modal')" class="btn-dark flex-1 py-2.5">取消</button>
         <button onclick="saveTaskForm()" class="btn-gold flex-1 py-2.5">儲存</button>
@@ -1800,6 +1804,7 @@ function eligibleDaily(){
 function makeInstance(p){
   return { id:p.id, name:p.name, emoji:p.emoji, category:p.category, difficulty:p.difficulty,
     time:p.time||'', why:p.why||'', tod:p.tod||null,
+    requiresReview: p.requiresReview !== false,
     status:'available', completedDate:null, doneHour:null, pickedDate:todayStr() };
 }
 function pickDailyTasks(){
@@ -2403,6 +2408,7 @@ function renderQuests(){
         <div class="mt-1 flex flex-wrap gap-1 items-center">
           <span class="chip">${c.name}</span>
           ${missionStatusBadge(t)}
+          <span class="chip">${t.requiresReview===false?'免審核':'需審核'}</span>
           <span class="chip">⏱ ${t.time||'—'}</span>
           <span class="text-[11px] font-bold num text-cyan-300">+${r.xp} EXP</span>
           <span class="text-[11px] font-bold num" style="color:var(--sys-gold);">+${r.coins} 🪙</span>
@@ -2436,9 +2442,19 @@ function markDone(id, ev){
   const t = state.tasks.find(t=>t.id===id);
   if(!t || t.status!=='available') return;
   if(!t.startedAt) t.startedAt = Date.now();
-  t.status = 'pending';
   t.completedDate = todayStr();
   t.doneHour = new Date().getHours();
+  if(t.requiresReview === false){
+    const r = completeTaskReward(t);
+    save();
+    if(ev) spawnShards(ev.clientX||window.innerWidth/2, ev.clientY||window.innerHeight/2);
+    showMissionRewardFeedback(t, r);
+    toast(`任務完成：${t.name}，已獲得 +${r.xp} EXP、+${r.coins} 金幣。`);
+    closeModal('gate-modal');
+    renderCurrent();
+    return;
+  }
+  t.status = 'pending';
   t.submittedAt = Date.now();          // M18+：記錄送出時間，家長端顯示已等待多久
   save();
   if(ev) spawnShards(ev.clientX||window.innerWidth/2, ev.clientY||window.innerHeight/2);
@@ -2504,13 +2520,14 @@ function openGate(id){
   const uiState = missionUiState(t);
   let action;
   if(uiState==='not_started') action = `<button onclick="startTask('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">開始任務</button>`;
-  else if(uiState==='in_progress') action = `<button onclick="markDone('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">提交完成，等待家長審核</button>`;
+  else if(uiState==='in_progress') action = `<button onclick="markDone('${t.id}', event)" class="btn-gold w-full py-3 text-lg mt-1">${t.requiresReview===false?'完成並領取獎勵':'提交完成，等待家長審核'}</button>`;
   else if(t.status==='pending') action = `<div class="rounded px-3 py-2.5 text-sm font-bold mt-1" style="border:1px solid rgba(245,197,66,.5); background:rgba(120,90,10,.18); color:#ffd98a;">⏳ 攻略確認中 — 等待管理者核可</div>`;
   else action = `<div class="rounded px-3 py-2.5 text-sm font-bold mt-1 text-emerald-300" style="border:1px solid rgba(60,200,140,.5); background:rgba(10,90,60,.18);">✔ 攻略完成</div>`;
   document.getElementById('gate-body').innerHTML = `
     <div class="rank-ring ${rankClass(t.difficulty)} mx-auto mb-3" style="width:64px;height:64px;font-size:32px;">${d.rank}</div>
     <div class="text-xl font-black text-white mb-1">${t.emoji} ${t.name}</div>
     <div class="mb-2">${missionStatusBadge(t)}</div>
+    <div class="mb-2"><span class="chip">${t.requiresReview===false?'免家長審核，完成後立即發放獎勵':'需要家長審核，通過後發放獎勵'}</span></div>
     <div class="text-xs font-bold mb-2" style="color:var(--sys-dim);">${c.name}任務・${d.name}傳送門・⏱ 預估 ${t.time||'—'}</div>
     ${t.why?`<div class="text-xs font-bold text-cyan-200 mb-3 px-2 py-2 rounded" style="background:rgba(0,120,190,.1); border:1px solid #1c5a86;">💡 ${t.why}</div>`:''}
     <div class="grid grid-cols-2 gap-2 mb-3 text-sm font-bold">
@@ -2588,13 +2605,11 @@ function learnSkill(id){
 }
 
 /* ═══════════════════ 審核與獎勵發放 ═══════════════════ */
-function approveTask(id){
-  if(!requireParentMode()) return;
-  const t = state.tasks.find(t=>t.id===id);
-  if(!t || t.status!=='pending') return;
+function completeTaskReward(t){
   const d = DIFFS[t.difficulty];
   const r = calcRewards(t);
   t.status = 'completed';
+  t.submittedAt = null;
   awardXP(r.xp);
   state.player.coins += r.coins;
   state.counters.coinsEarned += r.coins;
@@ -2633,6 +2648,13 @@ function approveTask(id){
     }
   }
   checkAchievements();
+  return r;
+}
+function approveTask(id){
+  if(!requireParentMode()) return;
+  const t = state.tasks.find(t=>t.id===id);
+  if(!t || t.status!=='pending') return;
+  const r = completeTaskReward(t);
   save();
   showMissionRewardFeedback(t, r);
   toast(`已核准「${t.name}」 +${r.xp} EXP、+${r.coins} 🪙`);
@@ -3282,6 +3304,7 @@ function renderParent(){
       </div>
       <div class="flex items-center gap-1.5 text-[10px] font-bold flex-wrap">
         <span style="color:var(--sys-dim);">${c.name}・⏱${p.time||'—'}</span>
+        <span class="chip">${p.requiresReview===false?'免審核':'需審核'}</span>
         <select onchange="poolSet('${p.id}','schedule',this.value)" class="inp-mini" aria-label="設定 ${p.name} 的排程">
           ${Object.entries(SCHEDULE_NAMES).map(([k,n])=>`<option value="${k}" ${p.schedule===k?'selected':''}>${n}</option>`).join('')}
         </select>
@@ -3553,6 +3576,7 @@ function openTaskForm(id){
     diffSel.value = t.difficulty;
     document.getElementById('tf-schedule').value = t.schedule||'daily';
     document.getElementById('tf-age').value = t.age||'all';
+    document.getElementById('tf-review').checked = t.requiresReview !== false;
   }else{
     document.getElementById('tf-name').value='';
     document.getElementById('tf-emoji').value='';
@@ -3561,6 +3585,7 @@ function openTaskForm(id){
     catSel.value='chore'; diffSel.value='easy';
     document.getElementById('tf-schedule').value='daily';
     document.getElementById('tf-age').value='all';
+    document.getElementById('tf-review').checked = true;
   }
   openModal('taskform-modal', '#tf-name');
 }
@@ -3577,12 +3602,13 @@ function saveTaskForm(){
     difficulty: document.getElementById('tf-diff').value,
     schedule: document.getElementById('tf-schedule').value,
     age: document.getElementById('tf-age').value,
+    requiresReview: document.getElementById('tf-review').checked,
   };
   if(editingTaskId){
     const p = state.taskPool.find(t=>t.id===editingTaskId);
     if(p) Object.assign(p, fields);
     const inst = state.tasks.find(t=>t.id===editingTaskId);
-    if(inst) Object.assign(inst, { name:fields.name, emoji:fields.emoji, time:fields.time, why:fields.why, category:fields.category, difficulty:fields.difficulty });
+    if(inst) Object.assign(inst, { name:fields.name, emoji:fields.emoji, time:fields.time, why:fields.why, category:fields.category, difficulty:fields.difficulty, requiresReview:fields.requiresReview });
   }else{
     const ageMap = { 'all':[5,15], '8-10':[8,10], '10-12':[10,12] };
     const meta = {
