@@ -2205,7 +2205,7 @@ function renderStatus(){
   const today = todayStr(), wk = weekKey();
   const todayCoins = state.history.filter(h=>h.date===today).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
   const weekCoins = state.history.filter(h=>h.date>=wk).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
-  const monthRewards = (state.rewardRequests||[]).filter(r=>r.status==='approved' && (r.approvedDate||r.date||'').slice(0,7)===monthKey()).length;
+  const monthRewards = (state.rewardRequests||[]).filter(r=>['approved','fulfilled'].includes(r.status) && (r.approvedDate||r.date||'').slice(0,7)===monthKey()).length;
   const ecoBox = (v,l,c)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-lg font-bold" style="color:${c};">${v}</div><div class="text-[10px] font-bold" style="color:var(--sys-dim);">${l}</div></div>`;
   document.getElementById('status-economy').innerHTML =
     ecoBox('🪙'+todayCoins,'今日金幣','#ffd25c') + ecoBox('🪙'+weekCoins,'本週金幣','#5cb8ff') + ecoBox('🎁'+monthRewards,'本月已兌換獎勵','#5cffb8');
@@ -2236,7 +2236,7 @@ function renderWallet(){
   const todayCoins = state.history.filter(h=>h.date===today).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
   const weekCoins = state.history.filter(h=>h.date>=wk).reduce((a,h)=>a+Math.max(0,h.coinsEarned||0),0);
   const requested = (state.rewardRequests||[]).filter(r=>r.status==='requested').length;
-  const approved = (state.rewardRequests||[]).filter(r=>r.status==='approved' && (r.approvedDate||r.date||'').slice(0,7)===monthKey()).length;
+  const approved = (state.rewardRequests||[]).filter(r=>['approved','fulfilled'].includes(r.status) && (r.approvedDate||r.date||'').slice(0,7)===monthKey()).length;
   const box = (v,l,c)=>`<div class="p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-lg font-bold" style="color:${c};">${v}</div><div class="text-[10px] font-bold" style="color:var(--sys-dim);">${l}</div></div>`;
   document.getElementById('wallet-coins').textContent = state.player.coins.toLocaleString();
   document.getElementById('wallet-economy').innerHTML =
@@ -3210,15 +3210,25 @@ function renderParent(){
 
   // 待處理真實獎勵申請
   const reqs = (state.rewardRequests||[]).filter(r=>r.status==='requested');
-  document.getElementById('rewardreq-count').textContent = reqs.length ? reqs.length+' 筆' : '';
-  document.getElementById('parent-rewardreqs').innerHTML = reqs.length ? reqs.map(r=>`
+  const approvedReqs = (state.rewardRequests||[]).filter(r=>r.status==='approved');
+  const rewardActions = reqs.length + approvedReqs.length;
+  const requestRows = reqs.map(r=>`
     <div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(120,90,10,.12); border:1px solid rgba(245,197,66,.3);">
       <span class="text-xl">${r.emoji}</span>
       <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${r.name}</div>
       <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">🪙${r.cost}　≈ NT$${r.estimatedTwd}　${r.date}</div></div>
       <button onclick="approveReward('${r.id}')" class="btn-sys px-3 py-2 text-sm">核准 ✔</button>
       <button onclick="rejectReward('${r.id}')" class="btn-red px-3 py-2 text-sm">退回 ✖</button>
-    </div>`).join('') : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">目前沒有待處理的真實獎勵申請。</div>`;
+    </div>`).join('');
+  const fulfillmentRows = approvedReqs.map(r=>`
+    <div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(15,80,80,.12); border:1px solid rgba(92,255,184,.3);">
+      <span class="text-xl">${r.emoji}</span>
+      <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${r.name}</div>
+      <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">已同意兌換，等待家長實際兌現 · NT$${r.estimatedTwd} · ${r.approvedDate||r.date}</div></div>
+      <button onclick="fulfillReward('${r.id}')" class="btn-sys px-3 py-2 text-sm">標示已兌現</button>
+    </div>`).join('');
+  document.getElementById('rewardreq-count').textContent = rewardActions ? rewardActions+' 筆' : '';
+  document.getElementById('parent-rewardreqs').innerHTML = rewardActions ? requestRows + fulfillmentRows : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">目前沒有待處理的真實獎勵申請。</div>`;
 
   // 經濟摘要
   const approvedTwd = monthlyApprovedTwd();
@@ -3242,7 +3252,7 @@ function renderParent(){
     statBox('Lv.'+state.player.level,'目前等級','#c98aff') + statBox('🪙 '+state.player.coins,'金幣餘額','#ffd25c');
   const attention = document.getElementById('parent-attention');
   if(attention){
-    const reqCount = reqs.length;
+    const reqCount = rewardActions;
     attention.innerHTML = `
       <div class="grid grid-cols-2 gap-2">
         <button onclick="setParentTab('review')" class="btn-${pending.length?'gold':'dark'} py-2 text-sm">待審核任務：${pending.length}</button>
@@ -3321,7 +3331,7 @@ function renderParentRecords(){
   const weekTaskHistory = state.history.filter(h=>h.kind==='task' && h.date>=wk);
   const weekDone = weekTaskHistory.length;
   const rewardRequests = state.rewardRequests || [];
-  const approvedRewards = rewardRequests.filter(r=>r.status==='approved').length;
+  const approvedRewards = rewardRequests.filter(r=>['approved','fulfilled'].includes(r.status)).length;
   const pendingRewards = rewardRequests.filter(r=>r.status==='requested').length;
   const historyHasData = state.history.length > 0 || daily.length > 0 || rewardRequests.length > 0;
   const sourceTasks = [...(state.tasks||[]), ...(state.taskPool||[])];
@@ -3385,7 +3395,7 @@ function renderParentRecords(){
 
   const latestReward = rewardRequests[0];
   const rewardCopy = latestReward
-    ? `${latestReward.name}：${latestReward.status==='approved'?'已同意':latestReward.status==='rejected'?'已拒絕':'等待確認'}`
+    ? `${latestReward.name}：${latestReward.status==='fulfilled'?'已兌現':latestReward.status==='approved'?'已同意':latestReward.status==='rejected'?'已拒絕':'等待確認'}`
     : '尚未送出真實獎勵申請';
 
   box.innerHTML = `
@@ -3486,16 +3496,25 @@ function poolSet(id, field, value){
 function monthKey(){ return todayStr().slice(0,7); }
 function monthlyApprovedTwd(){
   return (state.rewardRequests||[])
-    .filter(r=>r.status==='approved' && (r.approvedDate||r.date||'').slice(0,7)===monthKey())
+    .filter(r=>['approved','fulfilled'].includes(r.status) && (r.approvedDate||r.date||'').slice(0,7)===monthKey())
     .reduce((a,r)=>a+(r.estimatedTwd||0),0);
 }
 function approveReward(id){
   const r = (state.rewardRequests||[]).find(x=>x.id===id);
   if(!r || r.status!=='requested') return;
   r.status = 'approved'; r.approvedDate = todayStr();
-  state.history.unshift({ date:todayStr(), kind:'redeem', name:`真實獎勵已發放：${r.name}`, xpEarned:0, coinsEarned:0 });
+  state.history.unshift({ date:todayStr(), kind:'redeem', name:`真實獎勵已核准，等待兌現：${r.name}`, xpEarned:0, coinsEarned:0 });
   save();
-  toast(`已核准發放「${r.name}」。`);
+  toast(`已同意兌換「${r.name}」，待實際兌現後再標示完成。`);
+  renderParent();
+}
+function fulfillReward(id){
+  const r = (state.rewardRequests||[]).find(x=>x.id===id);
+  if(!r || r.status!=='approved') return;
+  r.status = 'fulfilled'; r.fulfilledDate = todayStr();
+  state.history.unshift({ date:todayStr(), kind:'redeem', name:`真實獎勵已兌現：${r.name}`, xpEarned:0, coinsEarned:0 });
+  save();
+  toast(`已標示「${r.name}」為已兌現。`);
   renderParent();
 }
 function rejectReward(id){

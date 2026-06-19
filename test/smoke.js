@@ -130,6 +130,9 @@ assert(req && req.estimatedTwd===600, '建立真實獎勵申請（status=request
 approveReward(req.id);
 assert(state.rewardRequests.find(r=>r.id===req.id).status==='approved', '家長核准 → status=approved');
 assert(monthlyApprovedTwd()===600, '本月已核准真實獎勵估值 = NT$600');
+fulfillReward(req.id);
+assert(state.rewardRequests.find(r=>r.id===req.id).status==='fulfilled', '家長標示已兌現 → status=fulfilled');
+assert(monthlyApprovedTwd()===600, '已兌現獎勵仍計入本月核准估值 = NT$600');
 // 退回會退還金幣
 const before = state.player.coins;
 askBuy('r1','real');                  // 小型獎勵：cost 150
