@@ -1073,7 +1073,9 @@
         </div>
       </div>
       <label for="tf-why" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">為什麼這個任務重要（顯示在任務情報）</label>
-      <input id="tf-why" maxlength="50" placeholder="一句給孩子的話" class="inp mb-4">
+      <input id="tf-why" maxlength="50" placeholder="一句給孩子的話" class="inp mb-3">
+      <label for="tf-completion" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">完成條件</label>
+      <input id="tf-completion" maxlength="60" placeholder="例如：刷牙 2 分鐘，並把牙刷杯放回原位" class="inp mb-4">
       <label for="tf-review" class="flex items-center gap-2 mb-4 text-xs font-bold" style="color:var(--sys-dim);">
         <input id="tf-review" type="checkbox" checked>
         需要家長審核後才發放獎勵
@@ -1840,7 +1842,7 @@ function eligibleDaily(){
 }
 function makeInstance(p){
   return { id:p.id, name:p.name, emoji:p.emoji, category:p.category, difficulty:p.difficulty,
-    time:p.time||'', why:p.why||'', tod:p.tod||null,
+    time:p.time||'', why:p.why||'', completion:p.completion||'', tod:p.tod||null,
     requiresReview: p.requiresReview !== false,
     status:'available', completedDate:null, doneHour:null, pickedDate:todayStr() };
 }
@@ -2577,6 +2579,9 @@ function openGate(id){
     <div class="mb-2"><span class="chip">${t.requiresReview===false?'免家長審核，完成後立即發放獎勵':'需要家長審核，通過後發放獎勵'}</span></div>
     <div class="text-xs font-bold mb-2" style="color:var(--sys-dim);">${c.name}任務・${d.name}傳送門・⏱ 預估 ${t.time||'—'}</div>
     ${t.why?`<div class="text-xs font-bold text-cyan-200 mb-3 px-2 py-2 rounded" style="background:rgba(0,120,190,.1); border:1px solid #1c5a86;">💡 ${t.why}</div>`:''}
+    <div class="text-left text-xs font-bold mb-3 px-3 py-2 rounded" style="background:rgba(12,26,50,.72); border:1px solid #1c3a60; color:var(--sys-dim);">
+      <span class="text-cyan-200">完成條件：</span>${t.completion||'完成這個任務後，回來提交給家長確認。'}
+    </div>
     <div class="grid grid-cols-2 gap-2 mb-3 text-sm font-bold">
       <div class="p-2 rounded" style="background:rgba(0,120,190,.15); border:1px solid #1c5a86;">報酬 EXP<br><span class="num text-lg text-cyan-300">+${r.xp}</span></div>
       <div class="p-2 rounded" style="background:rgba(190,140,0,.12); border:1px solid #86671c;">報酬金幣<br><span class="num text-lg" style="color:var(--sys-gold);">+${r.coins}</span></div>
@@ -3636,6 +3641,7 @@ function openTaskForm(id){
     document.getElementById('tf-emoji').value = t.emoji||'';
     document.getElementById('tf-time').value = t.time||'';
     document.getElementById('tf-why').value = t.why||'';
+    document.getElementById('tf-completion').value = t.completion||'';
     catSel.value = CATS[t.category]&&t.category!=='other' ? t.category : 'chore';
     diffSel.value = t.difficulty;
     document.getElementById('tf-schedule').value = t.schedule||'daily';
@@ -3646,6 +3652,7 @@ function openTaskForm(id){
     document.getElementById('tf-emoji').value='';
     document.getElementById('tf-time').value='';
     document.getElementById('tf-why').value='';
+    document.getElementById('tf-completion').value='';
     catSel.value='chore'; diffSel.value='easy';
     document.getElementById('tf-schedule').value='daily';
     document.getElementById('tf-age').value='all';
@@ -3662,6 +3669,7 @@ function saveTaskForm(){
     emoji: document.getElementById('tf-emoji').value.trim() || '📌',
     time: document.getElementById('tf-time').value.trim(),
     why: document.getElementById('tf-why').value.trim(),
+    completion: document.getElementById('tf-completion').value.trim(),
     category: document.getElementById('tf-cat').value,
     difficulty: document.getElementById('tf-diff').value,
     schedule: document.getElementById('tf-schedule').value,
@@ -3672,7 +3680,7 @@ function saveTaskForm(){
     const p = state.taskPool.find(t=>t.id===editingTaskId);
     if(p) Object.assign(p, fields);
     const inst = state.tasks.find(t=>t.id===editingTaskId);
-    if(inst) Object.assign(inst, { name:fields.name, emoji:fields.emoji, time:fields.time, why:fields.why, category:fields.category, difficulty:fields.difficulty, requiresReview:fields.requiresReview });
+    if(inst) Object.assign(inst, { name:fields.name, emoji:fields.emoji, time:fields.time, why:fields.why, completion:fields.completion, category:fields.category, difficulty:fields.difficulty, requiresReview:fields.requiresReview });
   }else{
     const ageMap = { 'all':[5,15], '8-10':[8,10], '10-12':[10,12] };
     const meta = {

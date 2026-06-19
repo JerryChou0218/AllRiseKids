@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 54.8,
+    "used_usd": 56.6,
     "limit_usd": 999.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 27,
-    "verification_calls": 36,
+    "execution_calls": 28,
+    "verification_calls": 37,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -556,7 +556,8 @@
         { "timestamp": "2026-06-19T17:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added real reward management controls for paused state, stock, and expiry. Child reward cards now show availability reasons, unavailable rewards cannot be requested, stock is decremented when a request is submitted and restored on parent rejection, and existing rewards without these fields remain available for compatibility. Verification: node test/smoke.js PASS 83/83, node test/ui-architecture.test.js PASS 27/27, node test/accessibility.test.js PASS 47/47, npm run test:all PASS, npm run pack PASS. lint/typecheck scripts are not present." },
         { "timestamp": "2026-06-19T17:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 40abf83 to GitHub master and deployed production with Vercel deployment dpl_6Zgw1YRtuTx9mmRVkmtgaCZ9yFuR, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed rf-stock, rf-expires, rf-paused, rewardAvailability, restoreRewardStock, sold-out copy, and paused copy are present." },
         { "timestamp": "2026-06-19T18:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added onboarding representative avatar selection. New saves include player.avatar, existing saves fall back through defaultData merge and spriteHTML() uses player.avatar || class sprite, reset preserves avatar, and new-child onboarding resets the avatar default. Verification: node test/smoke.js PASS 83/83, node test/ui-architecture.test.js PASS 28/28, node test/browser-responsive.test.js PASS 31/31, npm run test:all PASS, npm run pack PASS. lint/typecheck scripts are not present." },
-        { "timestamp": "2026-06-19T18:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 12b64d9 to GitHub master and deployed production with Vercel deployment dpl_GP2hD3zd6og5H8oQqkTTaJQw9DiV, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed ob-avatars, CHARACTER_AVATARS, pickAvatar, state.player.avatar, avatar sprite fallback, and representative avatar copy are present." }
+        { "timestamp": "2026-06-19T18:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 12b64d9 to GitHub master and deployed production with Vercel deployment dpl_GP2hD3zd6og5H8oQqkTTaJQw9DiV, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed ob-avatars, CHARACTER_AVATARS, pickAvatar, state.player.avatar, avatar sprite fallback, and representative avatar copy are present." },
+        { "timestamp": "2026-06-19T19:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added task completion criteria. Parent task form now has tf-completion, task pool saves completion, makeInstance copies it into daily/weekly tasks, task detail shows a completion criteria panel with a compatibility fallback, and editing a live task syncs completion. Verification: node test/smoke.js PASS 84/84, node test/ui-architecture.test.js PASS 29/29, node test/accessibility.test.js PASS 48/48, npm run test:all PASS, npm run pack PASS. lint/typecheck scripts are not present." }
       ]
     }
   ]

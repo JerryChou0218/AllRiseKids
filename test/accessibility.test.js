@@ -38,7 +38,7 @@ assert(has(/lastFocusBeforeModal/) && has(/lastFocusBeforeModal\.focus/), 'modal
 const labelledControls = [
   'ob-name','ob-age','ob-gender','ob-pin',
   'pf-dailycount','pf-age','pf-gender',
-  'tf-name','tf-emoji','tf-time','tf-cat','tf-diff','tf-schedule','tf-age','tf-why','tf-review',
+  'tf-name','tf-emoji','tf-time','tf-cat','tf-diff','tf-schedule','tf-age','tf-why','tf-completion','tf-review',
   'rf-name','rf-emoji','rf-cost','rf-stock','rf-expires','rf-paused','setpass-inp','dbg-level',
   'parent-email','child-new-name',
 ];
