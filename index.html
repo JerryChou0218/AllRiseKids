@@ -1965,6 +1965,12 @@ function goLockedFeature(screen, featureKey){
   }
   goScreen(screen);
 }
+function requireParentMode(){
+  if(parentUnlocked) return true;
+  toast('需要家長 PIN 驗證。');
+  tryParent();
+  return false;
+}
 function openAdventure(tab){
   if(tab==='skills') return goLockedFeature('skills','skills');
   if(tab==='inventory'){ inventoryContext='adventure'; return goLockedFeature('inventory','equipment'); }
@@ -2583,6 +2589,7 @@ function learnSkill(id){
 
 /* ═══════════════════ 審核與獎勵發放 ═══════════════════ */
 function approveTask(id){
+  if(!requireParentMode()) return;
   const t = state.tasks.find(t=>t.id===id);
   if(!t || t.status!=='pending') return;
   const d = DIFFS[t.difficulty];
@@ -2632,6 +2639,7 @@ function approveTask(id){
   renderParent();
 }
 function rejectTask(id){
+  if(!requireParentMode()) return;
   const t = state.tasks.find(t=>t.id===id);
   if(!t || t.status!=='pending') return;
   t.status='available'; t.completedDate=null; t.doneHour=null; t.submittedAt=null; t.startedAt=null;
@@ -2643,6 +2651,7 @@ function rejectTask(id){
 }
 // M18+：一鍵批次審核（作用於目前審核中的小孩）
 function approveAllPending(){
+  if(!requireParentMode()) return;
   const ids = state.tasks.filter(t=>t.status==='pending').map(t=>t.id);
   if(!ids.length){ toast('沒有待審核的任務。'); return; }
   if(!confirm(`一鍵核准全部 ${ids.length} 筆任務並發放報酬？`)) return;
@@ -2650,6 +2659,7 @@ function approveAllPending(){
   toast(`已核准全部 ${ids.length} 筆。`);
 }
 function rejectAllPending(){
+  if(!requireParentMode()) return;
   const ids = state.tasks.filter(t=>t.status==='pending').map(t=>t.id);
   if(!ids.length){ toast('沒有待審核的任務。'); return; }
   if(!confirm(`一鍵退回全部 ${ids.length} 筆任務（不發放報酬）？`)) return;
@@ -2897,6 +2907,7 @@ function cancelTrade(tradeId){
   tr.status='cancelled'; cloudStore.saveTrade(tr); renderInventory&&renderInventory(); return { ok:true };
 }
 function parentApproveTrade(tradeId, ok){
+  if(!requireParentMode()) return { ok:false, reason:'pin-required' };
   const tr=cloudStore.tradesAll().find(t=>t.id===tradeId);
   if(!tr || tr.status!=='pending_parent') return { ok:false };
   if(!ok){ tr.status='declined'; cloudStore.saveTrade(tr); renderParent(); return { ok:true, status:'declined' }; }
@@ -3469,6 +3480,7 @@ function setChildGender(v){
   toast('已更新孩子性別設定。可按「重新抽選」立即套用。');
 }
 function poolToggle(id){
+  if(!requireParentMode()) return;
   const p = state.taskPool.find(t=>t.id===id);
   if(!p) return;
   p.enabled = p.enabled===false;
@@ -3476,6 +3488,7 @@ function poolToggle(id){
   renderParent();
 }
 function poolSet(id, field, value){
+  if(!requireParentMode()) return;
   const p = state.taskPool.find(t=>t.id===id);
   if(!p) return;
   p[field] = value;
@@ -3489,6 +3502,7 @@ function monthlyApprovedTwd(){
     .reduce((a,r)=>a+(r.estimatedTwd||0),0);
 }
 function approveReward(id){
+  if(!requireParentMode()) return;
   const r = (state.rewardRequests||[]).find(x=>x.id===id);
   if(!r || r.status!=='requested') return;
   r.status = 'approved'; r.approvedDate = todayStr();
@@ -3498,6 +3512,7 @@ function approveReward(id){
   renderParent();
 }
 function fulfillReward(id){
+  if(!requireParentMode()) return;
   const r = (state.rewardRequests||[]).find(x=>x.id===id);
   if(!r || r.status!=='approved') return;
   r.status = 'fulfilled'; r.fulfilledDate = todayStr();
@@ -3507,6 +3522,7 @@ function fulfillReward(id){
   renderParent();
 }
 function rejectReward(id){
+  if(!requireParentMode()) return;
   const r = (state.rewardRequests||[]).find(x=>x.id===id);
   if(!r || r.status!=='requested') return;
   r.status = 'rejected'; r.rejectedDate = todayStr();
@@ -3519,6 +3535,7 @@ function rejectReward(id){
 
 /* ── 任務池編輯表單 ── */
 function openTaskForm(id){
+  if(!requireParentMode()) return;
   editingTaskId = id || null;
   document.getElementById('taskform-title').textContent = id ? '編輯任務' : '新增任務';
   const catSel = document.getElementById('tf-cat');
@@ -3548,6 +3565,7 @@ function openTaskForm(id){
   openModal('taskform-modal', '#tf-name');
 }
 function saveTaskForm(){
+  if(!requireParentMode()) return;
   const name = document.getElementById('tf-name').value.trim();
   if(!name){ toast('請輸入任務名稱。'); return; }
   const fields = {
@@ -3581,6 +3599,7 @@ function saveTaskForm(){
   renderParent();
 }
 function deleteTask(id){
+  if(!requireParentMode()) return;
   const p = state.taskPool.find(t=>t.id===id);
   if(!p) return;
   if(!confirm(`確定要從任務池刪除「${p.name}」嗎？`)) return;
@@ -3593,6 +3612,7 @@ function deleteTask(id){
 /* ── 真實獎勵 ── */
 let editingRewardId = null;
 function openRewardForm(id){
+  if(!requireParentMode()) return;
   editingRewardId = id || null;
   document.getElementById('rewardform-title').textContent = id ? '編輯真實獎勵' : '新增真實獎勵';
   const r = id ? state.parentConfig.customRewards.find(x=>x.id===id) : null;
@@ -3602,6 +3622,7 @@ function openRewardForm(id){
   openModal('rewardform-modal', '#rf-name');
 }
 function saveRewardForm(){
+  if(!requireParentMode()) return;
   const name = document.getElementById('rf-name').value.trim();
   const cost = parseInt(document.getElementById('rf-cost').value, 10);
   const emoji = document.getElementById('rf-emoji').value.trim() || '🎁';
@@ -3620,11 +3641,15 @@ function saveRewardForm(){
   renderParent();
 }
 function deleteReward(id){
+  if(!requireParentMode()) return;
+  const r = state.parentConfig.customRewards.find(r=>r.id===id);
+  if(r && !confirm(`確定刪除真實獎勵「${r.name}」嗎？`)) return;
   state.parentConfig.customRewards = state.parentConfig.customRewards.filter(r=>r.id!==id);
   save();
   renderParent();
 }
 function resetPin(){
+  if(!requireParentMode()) return;
   const np = prompt('請輸入新的 4 位數 PIN 碼：');
   if(np===null) return;
   if(!/^\d{4}$/.test(np)){ toast('PIN 碼必須是 4 位數字。'); return; }
@@ -3643,6 +3668,7 @@ function validateImportedSave(data){
   return true;
 }
 function resetCurrentChildData(){
+  if(!requireParentMode()) return;
   if(!confirm('確定要重置目前孩子的進度嗎？這會清除等級、金幣、任務紀錄、背包與成就，但保留家長設定。')) return;
   const code = prompt('這是高風險操作。請輸入 RESET 確認重置：');
   if(code !== 'RESET'){ toast('未輸入 RESET，已取消重置。'); return; }
@@ -3667,6 +3693,7 @@ function resetCurrentChildData(){
 
 /* ── 跨裝置存檔轉移（匯出 / 匯入；純本機檔案，無帳號、不上傳） ── */
 function exportSave(){
+  if(!requireParentMode()) return;
   try{
     const raw = kqStorage.read() || JSON.stringify(state);
     const blob = new Blob([raw], { type:'application/json' });
@@ -3680,8 +3707,9 @@ function exportSave(){
     toast('存檔已匯出，請保存這個檔案。');
   }catch(e){ toast('匯出失敗：' + e.message); }
 }
-function triggerImport(){ document.getElementById('import-file').click(); }
+function triggerImport(){ if(!requireParentMode()) return; document.getElementById('import-file').click(); }
 function importSave(input){
+  if(!requireParentMode()){ input.value=''; return; }
   const file = input.files && input.files[0];
   if(!file) return;
   const reader = new FileReader();

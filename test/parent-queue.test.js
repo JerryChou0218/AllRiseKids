@@ -55,6 +55,11 @@ __assert(parentPendingCount(pid)===2, '兩小孩各送一筆 → 家長待審核
 const q = parentQueue(pid);
 __assert(q.length===2 && q.every(g=>g.items.length===1), '佇列依小孩分組，各 1 筆');
 
+const blockedPending = state.tasks.find(x=>x.status==='pending');
+const blockedCoins = state.player.coins;
+approveTask(blockedPending.id);
+__assert(blockedPending.status==='pending' && state.player.coins===blockedCoins, '孩子模式不可直接核准待審核任務');
+
 /* 核准小宇那筆 */
 const A = cloudStore.listChildren(pid).find(c=>c.name==='小宇');
 reviewChild(A.id);

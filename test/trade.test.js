@@ -85,6 +85,7 @@ activate(dad,B);
 const resp4 = respondTrade(r4.trade.id, true);
 __assert(resp4.status==='pending_parent', '核可開：接受後進入 pending_parent（尚未成交）');
 __assert(invIds(mom,A)==='n10' && invIds(dad,B)==='n20', 'pending_parent 期間背包尚未變動');
+parentUnlocked = true;
 const ap = parentApproveTrade(r4.trade.id, true);
 __assert(ap.status==='accepted' && invIds(mom,A)==='n20' && invIds(dad,B)==='n10', '家長核准後才成交（守恆交換）');
 

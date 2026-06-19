@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 44.4,
+    "used_usd": 46.2,
     "limit_usd": 999.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 23,
-    "verification_calls": 28,
+    "execution_calls": 24,
+    "verification_calls": 29,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -548,7 +548,8 @@
         { "timestamp": "2026-06-19T13:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Removed fake global leaderboard demo users. Adventure squad records now use only actual child records returned by cloudStore.publicChildren(); DEMO_RIVALS was removed, empty state explains that only family/synced real child data is shown, and tests now assert no fake global player names are present. Verification: node test/leaderboard.test.js PASS 9/9, node test/ui-architecture.test.js PASS 24/24, npm run test:all PASS, npm run pack PASS. lint/typecheck scripts are not present." },
         { "timestamp": "2026-06-19T13:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed e90601d to GitHub master and deployed production with Vercel deployment dpl_BVELdaikWrSiL9qX81Gh9oMUuiYh, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed index.html no longer contains DEMO_RIVALS and includes the real-data-only adventure squad records copy. M24 remains in_progress." },
         { "timestamp": "2026-06-19T14:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Refined adventure squad records relationship labels. cloudStore.publicChildren() now marks only the active child as self and same-parent sibling records as family, and renderLeaderboard shows distinct self/family labels instead of marking every local child as self. Verification: node test/leaderboard.test.js PASS 9/9, npm run test:all PASS, npm run pack PASS." },
-        { "timestamp": "2026-06-19T14:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 7421b25 to GitHub master and deployed production with Vercel deployment dpl_ASXAUtXDDfKuo8mKWyuHCf7xucwB, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed family/self leaderboard labels are present." }
+        { "timestamp": "2026-06-19T14:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 7421b25 to GitHub master and deployed production with Vercel deployment dpl_ASXAUtXDDfKuo8mKWyuHCf7xucwB, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed family/self leaderboard labels are present." },
+        { "timestamp": "2026-06-19T15:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added requireParentMode() guard to parent-only operations so child mode cannot directly approve/reject tasks, approve/fulfill/reject real rewards, manage task/reward catalogs, change PIN, import/export saves, reset child data, or approve trades without PIN-unlocked parent mode. Added behavior coverage that direct approveTask in child mode keeps the task pending and does not grant coins. Verification: node test/parent-queue.test.js PASS 12/12, node test/trade.test.js PASS 10/10, node test/ui-architecture.test.js PASS 25/25, npm run test:all PASS, npm run pack PASS." }
       ]
     }
   ]
