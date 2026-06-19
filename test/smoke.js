@@ -142,6 +142,13 @@ assert(state.player.coins===before-150, '再申請一筆 → 扣住 150 金幣')
 rejectReward(rej.id);
 assert(state.player.coins===before, '家長退回 → 金幣全額退還');
 assert(state.rewardRequests.find(r=>r.id===rej.id).status==='rejected', '退回 → status=rejected');
+state.parentConfig.customRewards.push({ id:'stock1', name:'限量貼紙', emoji:'🌟', cost:50, estimatedTwd:10, tier:'custom', stock:1, expiresAt:null, paused:false });
+askBuy('stock1','real');
+document.getElementById('buy-confirm').onclick();
+const stockReq = state.rewardRequests.find(r=>r.rewardId==='stock1' && r.status==='requested');
+assert(state.parentConfig.customRewards.find(r=>r.id==='stock1').stock===0, '限量真實獎勵申請後扣庫存');
+rejectReward(stockReq.id);
+assert(state.parentConfig.customRewards.find(r=>r.id==='stock1').stock===1, '限量真實獎勵退回後回補庫存');
 
 /* 9. 商店篩選 */
 setShopFilter('weapon'); renderShop();

@@ -25,6 +25,7 @@ const parentTabs = [...html.matchAll(/data-ptab="([^"]+)"/g)].map(m=>m[1]);
 assert(['overview','review','tasks','rewards','records','settings'].every(t=>parentTabs.includes(t)), '家長模式六分頁存在');
 assert(count(/data-parent-panel="/g) >= 9, '家長內容依分頁分組');
 assert(html.includes('id="parent-records-dashboard"') && html.includes('function renderParentRecords'), 'parent records dashboard render helper exists');
+assert(html.includes('id="rf-stock"') && html.includes('id="rf-expires"') && html.includes('id="rf-paused"') && html.includes('function rewardAvailability'), 'real reward management supports stock, expiry, and paused state');
 assert(['每日完成率','任務分類分布','能力成長','獎勵兌換紀錄','最近紀錄'].every(s=>html.includes(s)), 'parent records dashboard covers completion/category/ability/reward/history');
 assert(html.includes('function fulfillReward') && html.includes('標示已兌現') && html.includes("status = 'fulfilled'"), '真實獎勵核准後仍需家長標示已兌現');
 assert(html.includes('function requireParentMode') && html.includes('if(!requireParentMode()) return'), '家長高風險操作有 PIN guard');

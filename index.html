@@ -1092,7 +1092,21 @@
       <label for="rf-emoji" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">圖示（emoji）</label>
       <input id="rf-emoji" maxlength="4" placeholder="💵" class="inp mb-3">
       <label for="rf-cost" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">所需金幣</label>
-      <input id="rf-cost" type="number" min="1" max="99999" class="inp mb-4">
+      <input id="rf-cost" type="number" min="1" max="99999" class="inp mb-3">
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <div>
+          <label for="rf-stock" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">庫存（空白 = 不限）</label>
+          <input id="rf-stock" type="number" min="0" max="999" class="inp">
+        </div>
+        <div>
+          <label for="rf-expires" class="block font-bold text-xs mb-1" style="color:var(--sys-dim);">有效期限</label>
+          <input id="rf-expires" type="date" class="inp">
+        </div>
+      </div>
+      <label for="rf-paused" class="flex items-center gap-2 mb-4 text-xs font-bold" style="color:var(--sys-dim);">
+        <input id="rf-paused" type="checkbox">
+        暫停此獎勵，不開放孩子申請
+      </label>
       <div class="flex gap-3">
         <button onclick="closeModal('rewardform-modal')" class="btn-dark flex-1 py-2.5">取消</button>
         <button onclick="saveRewardForm()" class="btn-gold flex-1 py-2.5">儲存</button>
@@ -1621,6 +1635,24 @@ let inventoryContext = 'rewards';
 let allocPending = {};
 let selectedSkill = null;
 let buyTarget = null;
+
+function rewardAvailability(r){
+  if(!r) return { available:false, reason:'找不到獎勵' };
+  if(r.paused) return { available:false, reason:'家長暫停供應' };
+  if(r.expiresAt && r.expiresAt < todayStr()) return { available:false, reason:'已過有效期限' };
+  if(r.stock !== undefined && r.stock !== null && Number(r.stock) <= 0) return { available:false, reason:'庫存已兌換完' };
+  return { available:true, reason:'' };
+}
+function rewardMetaLine(r){
+  const parts = ['需家長核准'];
+  if(r.stock !== undefined && r.stock !== null) parts.push(`庫存 ${Math.max(0, Number(r.stock)||0)}`);
+  if(r.expiresAt) parts.push(`期限 ${r.expiresAt}`);
+  return parts.join('・');
+}
+function restoreRewardStock(rewardId){
+  const r = state.parentConfig.customRewards.find(x=>x.id===rewardId);
+  if(r && r.stock !== undefined && r.stock !== null) r.stock = Math.max(0, Number(r.stock)||0) + 1;
+}
 
 function todayStr(){ return new Date().toLocaleDateString('sv'); }
 function yesterdayStr(){ const d=new Date(); d.setDate(d.getDate()-1); return d.toLocaleDateString('sv'); }
@@ -3062,12 +3094,15 @@ function renderShop(){
     const rewards = state.parentConfig.customRewards;
     list.innerHTML = rewards.length ? rewards.map(r=>{
       const days = Math.max(1, Math.ceil(r.cost/ECONOMY.dailyTargetCoins));
-      return `<div class="sys-win gold-win p-3 text-center">
+      const availability = rewardAvailability(r);
+      const canRequest = availability.available && state.player.coins>=r.cost;
+      return `<div class="sys-win gold-win p-3 text-center ${availability.available?'':'opacity-60'}">
         <span class="text-[10px] font-black px-2 py-0.5 rounded" style="background:#a87b14; color:#fff3cf;">真實獎勵</span>
         <div class="text-4xl my-2">${r.emoji||'🎁'}</div>
         <div class="font-black text-white text-xs leading-tight mb-1">${r.name}</div>
-        <div class="text-[10px] font-bold mb-1.5" style="color:var(--sys-dim);">約需努力 ${days} 天・需家長核准</div>
-        <button onclick="askBuy('${r.id}','real')" class="btn-gold w-full py-1.5 text-xs num ${state.player.coins>=r.cost?'':'opacity-40'}">🪙 ${r.cost}</button>
+        <div class="text-[10px] font-bold mb-1.5" style="color:var(--sys-dim);">約需努力 ${days} 天・${rewardMetaLine(r)}</div>
+        ${availability.available ? '' : `<div class="chip mb-1.5">${availability.reason}</div>`}
+        <button onclick="askBuy('${r.id}','real')" class="btn-gold w-full py-1.5 text-xs num ${canRequest?'':'opacity-40'}" ${canRequest?'':'aria-disabled="true"'}>🪙 ${r.cost}</button>
       </div>`;
     }).join('')
       : `<div class="col-span-2 lg:col-span-4 text-center font-bold py-8" style="color:var(--sys-dim);">管理者尚未設定真實獎勵。</div>`;
@@ -3076,6 +3111,10 @@ function renderShop(){
 function askBuy(id, kind){
   const item = kind==='virtual' ? state.shop.find(s=>s.id===id) : state.parentConfig.customRewards.find(r=>r.id===id);
   if(!item) return;
+  if(kind==='real'){
+    const availability = rewardAvailability(item);
+    if(!availability.available){ toast(availability.reason); return; }
+  }
   const price = kind==='virtual' ? discounted(item.cost) : item.cost;
   if(state.player.coins < price){ toast('金幣不足。完成更多任務累積資金吧。'); return; }
   buyTarget = { item, kind, price };
@@ -3097,6 +3136,9 @@ document.getElementById('buy-confirm').onclick = function(){
     toast(`「${item.name}」入手！到背包裝備，提升戰鬥力。`);
   }else{
     // 真實獎勵：建立兌換申請（金幣先扣住），等家長核准或退回（退回則退還金幣）
+    const availability = rewardAvailability(item);
+    if(!availability.available){ toast(availability.reason); closeBuy(); renderShop(); return; }
+    if(item.stock !== undefined && item.stock !== null) item.stock = Math.max(0, Number(item.stock)||0) - 1;
     state.rewardRequests.unshift({ id:uid(), rewardId:item.id, name:item.name, emoji:item.emoji||'🎁',
       estimatedTwd: item.estimatedTwd || Math.round(price/ECONOMY.coinsPerTwd), cost:price, status:'requested', date:todayStr() });
     state.history.unshift({ date:todayStr(), kind:'redeem', name:`申請真實獎勵（待核准）：${item.name}`, xpEarned:0, coinsEarned:-price });
@@ -3316,14 +3358,20 @@ function renderParent(){
   }).join('');
 
   document.getElementById('parent-rewards').innerHTML = state.parentConfig.customRewards.length
-    ? state.parentConfig.customRewards.map(r=>`
-      <div class="flex items-center gap-2 p-2 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
+    ? state.parentConfig.customRewards.map(r=>{
+      const availability = rewardAvailability(r);
+      return `
+      <div class="flex items-center gap-2 p-2 rounded ${availability.available?'':'opacity-70'}" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;">
         <span class="text-lg">${r.emoji||'🎁'}</span>
-        <div class="flex-1 min-w-0 font-bold text-white text-xs truncate">${r.name}</div>
+        <div class="flex-1 min-w-0">
+          <div class="font-bold text-white text-xs truncate">${r.name}</div>
+          <div class="text-[10px] font-bold truncate" style="color:var(--sys-dim);">${rewardMetaLine(r)}${availability.available?'':`・${availability.reason}`}</div>
+        </div>
         <span class="num font-bold text-xs text-right" style="color:var(--sys-gold);">🪙${r.cost}<br><span class="text-[10px]" style="color:var(--sys-dim);">≈NT$${r.estimatedTwd||Math.round(r.cost/ECONOMY.coinsPerTwd)}</span></span>
-        <button onclick="openRewardForm('${r.id}')" class="btn-sys px-2.5 py-1.5 text-xs" title="編輯名稱 / 點數">✏️</button>
+        <button onclick="openRewardForm('${r.id}')" class="btn-sys px-2.5 py-1.5 text-xs" title="編輯獎勵">✏️</button>
         <button onclick="deleteReward('${r.id}')" class="btn-red px-2.5 py-1.5 text-xs">🗑️</button>
-      </div>`).join('')
+      </div>`;
+    }).join('')
     : `<div class="text-sm font-bold text-center py-2" style="color:var(--sys-dim);">尚未設定真實獎勵。</div>`;
 
   renderParentRecords();
@@ -3550,6 +3598,7 @@ function rejectReward(id){
   if(!r || r.status!=='requested') return;
   r.status = 'rejected'; r.rejectedDate = todayStr();
   state.player.coins += r.cost;   // 退還金幣
+  restoreRewardStock(r.rewardId);
   state.history.unshift({ date:todayStr(), kind:'redeem', name:`真實獎勵退回，退還 ${r.cost} 🪙：${r.name}`, xpEarned:0, coinsEarned:r.cost });
   save();
   toast(`已退回「${r.name}」，已退還 ${r.cost} 🪙。`);
@@ -3645,6 +3694,9 @@ function openRewardForm(id){
   document.getElementById('rf-name').value = r ? r.name : '';
   document.getElementById('rf-emoji').value = r ? (r.emoji||'') : '';
   document.getElementById('rf-cost').value = r ? r.cost : '100';
+  document.getElementById('rf-stock').value = r && r.stock !== undefined && r.stock !== null ? r.stock : '';
+  document.getElementById('rf-expires').value = r ? (r.expiresAt||'') : '';
+  document.getElementById('rf-paused').checked = !!(r && r.paused);
   openModal('rewardform-modal', '#rf-name');
 }
 function saveRewardForm(){
@@ -3652,14 +3704,19 @@ function saveRewardForm(){
   const name = document.getElementById('rf-name').value.trim();
   const cost = parseInt(document.getElementById('rf-cost').value, 10);
   const emoji = document.getElementById('rf-emoji').value.trim() || '🎁';
+  const stockRaw = document.getElementById('rf-stock').value.trim();
+  const stock = stockRaw==='' ? null : parseInt(stockRaw, 10);
+  const expiresAt = document.getElementById('rf-expires').value || null;
+  const paused = document.getElementById('rf-paused').checked;
   if(!name || !cost || cost<1){ toast('請填寫名稱與有效的金幣數。'); return; }
+  if(stockRaw!=='' && (!Number.isFinite(stock) || stock<0)){ toast('庫存需為 0 以上，或留空表示不限。'); return; }
   const estimatedTwd = Math.round(cost / ECONOMY.coinsPerTwd);
   if(editingRewardId){
     const r = state.parentConfig.customRewards.find(x=>x.id===editingRewardId);
-    if(r){ r.name=name; r.emoji=emoji; r.cost=cost; r.estimatedTwd=estimatedTwd; }
+    if(r){ Object.assign(r, { name, emoji, cost, estimatedTwd, stock, expiresAt, paused }); }
     toast('獎勵已更新。');
   }else{
-    state.parentConfig.customRewards.push({ id:uid(), name, emoji, cost, estimatedTwd, tier:'custom', status:'available' });
+    state.parentConfig.customRewards.push({ id:uid(), name, emoji, cost, estimatedTwd, tier:'custom', status:'available', stock, expiresAt, paused });
     toast('獎勵已新增。');
   }
   save();

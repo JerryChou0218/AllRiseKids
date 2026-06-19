@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 49.6,
+    "used_usd": 51.4,
     "limit_usd": 999.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 25,
-    "verification_calls": 32,
+    "execution_calls": 26,
+    "verification_calls": 33,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -552,7 +552,8 @@
         { "timestamp": "2026-06-19T15:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added requireParentMode() guard to parent-only operations so child mode cannot directly approve/reject tasks, approve/fulfill/reject real rewards, manage task/reward catalogs, change PIN, import/export saves, reset child data, or approve trades without PIN-unlocked parent mode. Added behavior coverage that direct approveTask in child mode keeps the task pending and does not grant coins. Verification: node test/parent-queue.test.js PASS 12/12, node test/trade.test.js PASS 10/10, node test/ui-architecture.test.js PASS 25/25, npm run test:all PASS, npm run pack PASS." },
         { "timestamp": "2026-06-19T15:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 889549f to GitHub master and deployed production with Vercel deployment dpl_8SDGxWFvEpCkcAD7Cgo5AyByJD1a, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed requireParentMode and parent PIN guard copy are present." },
         { "timestamp": "2026-06-19T16:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added task-level requiresReview support. Parent task form now defaults to requiring review for compatibility, can mark a task as no-review, shows review state on mission cards/detail and task pool, and no-review tasks complete immediately through shared completeTaskReward() without duplicating XP/coin formulas. Verification: node test/smoke.js PASS 81/81, node test/ui-architecture.test.js PASS 26/26, node test/accessibility.test.js PASS 44/44, npm run test:all PASS, npm run pack PASS. lint/typecheck scripts are not present." },
-        { "timestamp": "2026-06-19T16:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 8c5f679 to GitHub master and deployed production with Vercel deployment dpl_2Htbh79PKUzm7WTuicj6RUKrpQQM, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed id=\"tf-review\", requiresReview, function completeTaskReward, no-review completion CTA, and no-review detail copy are present." }
+        { "timestamp": "2026-06-19T16:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed 8c5f679 to GitHub master and deployed production with Vercel deployment dpl_2Htbh79PKUzm7WTuicj6RUKrpQQM, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed id=\"tf-review\", requiresReview, function completeTaskReward, no-review completion CTA, and no-review detail copy are present." },
+        { "timestamp": "2026-06-19T17:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added real reward management controls for paused state, stock, and expiry. Child reward cards now show availability reasons, unavailable rewards cannot be requested, stock is decremented when a request is submitted and restored on parent rejection, and existing rewards without these fields remain available for compatibility. Verification: node test/smoke.js PASS 83/83, node test/ui-architecture.test.js PASS 27/27, node test/accessibility.test.js PASS 47/47, npm run test:all PASS, npm run pack PASS. lint/typecheck scripts are not present." }
       ]
     }
   ]
