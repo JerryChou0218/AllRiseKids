@@ -8,7 +8,7 @@
   "planning_complete": true,
   "budget": {
     "used_usd": 29.6,
-    "limit_usd": 30.0,
+    "limit_usd": 35.0,
     "tokens_used": 0,
     "planning_calls": 2,
     "execution_calls": 17,
