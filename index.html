@@ -2823,11 +2823,12 @@ function renderLeaderboard(){
   box.innerHTML = entries.map(e=>{
     const medal = e.place===1?'🥇':e.place===2?'🥈':e.place===3?'🥉':('#'+e.place);
     const metric = lbFilter==='week' ? `本週 ${e.weekTasks} 任務` : `Lv.${e.level}・${e.tasks} 任務`;
-    const hl = e.self ? 'border:1px solid var(--sys-cyan); background:rgba(0,210,255,.10);' : 'border:1px solid #1c3a60; background:rgba(12,24,46,.6);';
+    const hl = e.self ? 'border:1px solid var(--sys-cyan); background:rgba(0,210,255,.10);' : (e.family ? 'border:1px solid rgba(245,197,66,.35); background:rgba(120,90,10,.10);' : 'border:1px solid #1c3a60; background:rgba(12,24,46,.6);');
+    const rel = e.self ? ' <span class="text-cyan-300 text-[10px]">（我）</span>' : (e.family ? ' <span class="text-amber-200 text-[10px]">（家人）</span>' : '');
     return `<div class="flex items-center gap-3 p-2.5 rounded" style="${hl}">
       <span class="num font-black text-lg w-9 text-center flex-none" style="color:#ffd25c;">${medal}</span>
       <span class="text-2xl flex-none">${rankBadge(e.level)}</span>
-      <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${e.name}${e.self?' <span class="text-cyan-300 text-[10px]">（我）</span>':''}</div>
+      <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${e.name}${rel}</div>
       <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${hunterRank(e.level)} 級・${e.age} 歲</div></div>
       <div class="num font-bold text-xs flex-none" style="color:#5cb8ff;">${metric}</div>
     </div>`;
@@ -3879,11 +3880,13 @@ const cloudStore = (function(){
     // M21：所有本機家長名下小孩的「公開」排行資料（只含非敏感欄位）。M23 改讀 Supabase 公開排行表。
     publicChildren(wk){
       const c=_read(); const out=[];
+      const sess = c.session || {};
       c.parents.forEach(p=>(p.children||[]).forEach(ch=>{
         let b={}; try{ b=JSON.parse(ch.blob||'{}'); }catch(e){}
         const pl=b.player||{}, co=b.counters||{};
         const weekTasks = wk ? (b.history||[]).filter(h=>h.kind==='task' && h.date>=wk).length : 0;
-        out.push({ id:ch.id, name:(pl.name||ch.name||'小獵人'), level:(pl.level||1), tasks:(co.total||0), weekTasks, age:(pl.age||10), self:true });
+        const isSelf = ch.id === sess.activeChildId;
+        out.push({ id:ch.id, name:(pl.name||ch.name||'小獵人'), level:(pl.level||1), tasks:(co.total||0), weekTasks, age:(pl.age||10), self:isSelf, family:!isSelf && p.id===sess.parentId });
       }));
       return out;
     },

@@ -65,7 +65,7 @@ const keysOk = all.every(e=> !('email' in e) && !('parentId' in e) && !('blob' i
 __assert(keysOk, '排行項目不含 email/家長/存檔/密碼欄位');
 
 /* 4. 本機小孩標記為自己，顯示遊戲暱稱 */
-__assert(all.some(e=>e.self && e.name==='小宇') && all.some(e=>e.self && e.name==='小美'), '本機小孩以遊戲暱稱出現且標記為自己');
+__assert(all.some(e=>e.family && e.name==='小宇') && all.some(e=>e.self && e.name==='小美'), '本機小孩以遊戲暱稱出現，活躍孩子標記為自己，手足標記為家人');
 
 /* 5. 同齡榜：只含 ±1 歲（self 小美 8 歲 → 7/8/9） */
 const ageB = worldLeaderboard('age');
