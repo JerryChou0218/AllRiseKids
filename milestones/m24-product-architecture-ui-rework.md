@@ -35,5 +35,6 @@
 - 已新增 `test/accessibility.test.js`，補強 dialog 語意、aria-hidden 同步、表單 label、ESC 關閉、任務卡鍵盤操作、家長入口與任務池控制 aria label；瀏覽器測試同步驗證手機任務卡 Enter 開啟詳情、Escape 關閉。
 - 已補強 Google OAuth 家長帳號切換：登入頁提供「改用其他 Google 帳號」，流程會先清除 Supabase/app session 再以 `prompt=select_account` 重新登入；`parentLogout` 會等待 Supabase signOut 完成。新增 `test/oauth-login.test.js` 鎖住此行為。
 - 已修正 PWA 舊版快取問題：`sw.js` cache 版本升至 `kidquest-v3`，app shell (`index.html`/`cloud-config.js`/manifest/sw) fetch 改 `cache: 'no-store'`，避免普通進既有網址時吃到舊 HTML。新增 `test/cache-policy.test.js`。
+- 已補強任務核准後的 RPG 回饋：顯示 CLEAR、EXP / 金幣浮動與碎片效果，並支援 `prefers-reduced-motion`；不改 EXP/金幣公式與存檔。新增 `test/reward-feedback.test.js`。
 - 已部署 production 並 alias 至 `https://allrisekids.vercel.app`；以 cache-buster 驗證線上 `index.html` 已包含新 dialog/keyboard/aria、Google 帳號切換與 PWA 快取策略標記且孩子導航仍為 5 個。
 - 待續：更深層元件拆分、完整視覺細節、動畫細節補強、若未來導入 TypeScript 再補型別層。

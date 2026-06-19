@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 26.0,
+    "used_usd": 27.8,
     "limit_usd": 30.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 15,
-    "verification_calls": 15,
+    "execution_calls": 16,
+    "verification_calls": 16,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -534,7 +534,8 @@
         { "timestamp": "2026-06-19T02:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 新增 test/browser-responsive.test.js，使用本機獨立 Chrome headless + DevTools Protocol + HTTP 靜態伺服器做真瀏覽器驗證，不依賴 Playwright/Puppeteer。覆蓋 390px 手機與 1280px 桌機：孩子首頁、5 個導航、導航按鈕 ≥44px、手機/家長/桌機無全頁橫向捲動、家長設定分頁、進階設定預設收合、桌機左側 App Shell、首頁雙欄、console/runtime 無 error。package.json 新增 test:browser，test:all 納入瀏覽器驗證。npm run test:all 全綠（含 browser-responsive 20/20）。待續：若要完全符合使用者原始長規格，仍需更深層模組拆分與更多互動動畫/無障礙逐項驗證。" },
         { "timestamp": "2026-06-19T03:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強 M24 可用性與無障礙：所有主要 modal/overlay 加 role=dialog、aria-modal、aria-labelledby、aria-hidden 預設狀態；新增 openModal/closeModal 集中同步 aria-hidden、焦點與 Escape 關閉；任務卡加入 role=button/tabindex 與 Enter/Space 開啟詳情；onboarding、家長設定、任務/獎勵表單、帳號閘門、除錯等級欄位補 label；PIN 鍵盤、家長入口、任務池動態控制補 aria-label。新增 test/accessibility.test.js（43/43），browser-responsive 擴充手機任務卡鍵盤與 ESC dialog 驗證（24/24）。npm run test:all 全綠。已部署 production 並 alias 到 https://allrisekids.vercel.app，cache-buster 驗證線上檔含新 dialog/keyboard/aria 標記且孩子導航仍為 5 個。M24 仍 in_progress，待續：更深層模組拆分與動畫細節。" },
         { "timestamp": "2026-06-19T04:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 修正家長 Google 帳號切換痛點：cloudSignInGoogle 接受 options 並持續送出 prompt=select_account；新增 cloudSwitchGoogleAccount，會先 await cloudSignOut、清除 app parent session，再啟動 Google OAuth；parentLogout 改為 async 並等待 Supabase signOut 完成，避免下次直接復用舊 Supabase session；雲端登入頁新增『改用其他 Google 帳號』按鈕。新增 test/oauth-login.test.js（6/6），npm run test:all 全綠。已部署 production 並 alias 到 https://allrisekids.vercel.app；cache-buster 驗證線上檔含『改用其他 Google 帳號』、cloudSwitchGoogleAccount、await cloudSignOut 且孩子導航仍為 5 個。" },
-        { "timestamp": "2026-06-19T05:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 修正既有網址偶爾看到舊版、Ctrl+F5 才更新的 PWA 快取問題：sw.js CACHE_VERSION kidquest-v2→kidquest-v3，app shell 分支改 fetch(req,{cache:'no-store'})，讓 index.html/cloud-config/manifest/sw 一律先抓網路且 bypass HTTP cache，activate 會刪舊 cache。新增 test/cache-policy.test.js（5/5），npm run test:all 全綠。已部署 production 並 alias 到 https://allrisekids.vercel.app；cache-buster 驗證線上 index 含新 Google/dialog 標記，sw.js 含 kidquest-v3 與 cache:'no-store'，孩子導航仍為 5 個。" }
+        { "timestamp": "2026-06-19T05:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 修正既有網址偶爾看到舊版、Ctrl+F5 才更新的 PWA 快取問題：sw.js CACHE_VERSION kidquest-v2→kidquest-v3，app shell 分支改 fetch(req,{cache:'no-store'})，讓 index.html/cloud-config/manifest/sw 一律先抓網路且 bypass HTTP cache，activate 會刪舊 cache。新增 test/cache-policy.test.js（5/5），npm run test:all 全綠。已部署 production 並 alias 到 https://allrisekids.vercel.app；cache-buster 驗證線上 index 含新 Google/dialog 標記，sw.js 含 kidquest-v3 與 cache:'no-store'，孩子導航仍為 5 個。" },
+        { "timestamp": "2026-06-19T06:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強任務核准後 RPG 回饋：新增 reward-float / reward-clear / reward-pill CSS，approveTask 在 save() 後呼叫 showMissionRewardFeedback(t,r)，顯示 CLEAR、+EXP、+金幣與碎片效果；新增 prefersReducedMotion helper，showMissionRewardFeedback/spawnShards 在 reduced motion 下不播放動畫。此變更不寫 state、不改 EXP/金幣公式。新增 test/reward-feedback.test.js（7/7），npm run test:all 全綠。待部署 production 驗證。" }
       ]
     }
   ]

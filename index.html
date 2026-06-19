@@ -262,6 +262,17 @@
 
   .coin-pop{ position:fixed; font-weight:700; pointer-events:none; z-index:90; animation:coinFloat 1.4s ease-out forwards; }
   @keyframes coinFloat{ 0%{opacity:0; transform:translateY(0) scale(.6);} 15%{opacity:1; transform:translateY(-10px) scale(1.1);} 100%{opacity:0; transform:translateY(-80px);} }
+  .reward-float{ position:fixed; left:50%; top:45%; transform:translate(-50%,-50%); z-index:94; pointer-events:none;
+    display:grid; gap:5px; justify-items:center; animation:rewardFloat 1.45s cubic-bezier(.22,1,.36,1) forwards; }
+  .reward-clear{ font-family:'Rajdhani','Noto Sans TC',sans-serif; font-size:34px; font-weight:700; letter-spacing:.16em; color:#eaffff;
+    text-shadow:0 0 12px rgba(0,210,255,.9), 0 0 28px rgba(0,210,255,.55); }
+  .reward-lines{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; font-family:'Rajdhani','Noto Sans TC',sans-serif; font-weight:700; }
+  .reward-pill{ border-radius:999px; padding:5px 10px; border:1px solid rgba(255,255,255,.22); background:rgba(8,18,38,.86);
+    box-shadow:0 0 14px rgba(0,0,0,.35); white-space:nowrap; }
+  .reward-pill.exp{ color:#9be9ff; border-color:rgba(0,210,255,.38); }
+  .reward-pill.coin{ color:#ffe28a; border-color:rgba(245,197,66,.45); }
+  @keyframes rewardFloat{ 0%{opacity:0; transform:translate(-50%,-36%) scale(.82);} 16%{opacity:1; transform:translate(-50%,-50%) scale(1.04);}
+    72%{opacity:1; transform:translate(-50%,-62%) scale(1);} 100%{opacity:0; transform:translate(-50%,-82%) scale(.96);} }
   .shard{ position:fixed; z-index:95; pointer-events:none; animation:shardFly 1.2s ease-out forwards;
     width:5px; height:14px; clip-path:polygon(50% 0, 100% 60%, 50% 100%, 0 60%); }
   @keyframes shardFly{ 0%{opacity:1; transform:translate(0,0) rotate(0) scale(1);} 100%{opacity:0; transform:translate(var(--dx),var(--dy)) rotate(540deg) scale(.4);} }
@@ -2531,6 +2542,7 @@ function approveTask(id){
   }
   checkAchievements();
   save();
+  showMissionRewardFeedback(t, r);
   toast(`已核准「${t.name}」 +${r.xp} EXP、+${r.coins} 🪙`);
   renderParent();
 }
@@ -3480,7 +3492,32 @@ function toast(msg){
   clearTimeout(toast._timer);
   toast._timer = setTimeout(()=>t.classList.remove('show'), 2800);
 }
+function prefersReducedMotion(){
+  return typeof window !== 'undefined'
+    && typeof window.matchMedia === 'function'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+function showMissionRewardFeedback(task, reward){
+  if(prefersReducedMotion()) return;
+  if(!document || typeof document.createElement !== 'function' || !document.body) return;
+  const box = document.createElement('div');
+  box.className = 'reward-float';
+  if(typeof box.setAttribute === 'function') box.setAttribute('aria-hidden','true');
+  box.innerHTML = `
+    <div class="reward-clear">CLEAR</div>
+    <div class="reward-lines">
+      <span class="reward-pill exp">+${reward.xp} EXP</span>
+      <span class="reward-pill coin">+${reward.coins} 金幣</span>
+    </div>`;
+  document.body.appendChild(box);
+  const x = window.innerWidth ? window.innerWidth/2 : 240;
+  const y = window.innerHeight ? window.innerHeight/2 : 320;
+  spawnShards(x, y);
+  setTimeout(()=>box.remove(), 1600);
+}
 function spawnShards(x, y){
+  if(prefersReducedMotion()) return;
+  if(!document || typeof document.createElement !== 'function' || !document.body) return;
   const colors = ['#00d2ff','#7fb4e8','#b06bff','#ffd24a','#ffffff'];
   for(let i=0;i<24;i++){
     const s = document.createElement('div');
