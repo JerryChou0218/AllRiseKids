@@ -7,6 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+const rpgIcons = fs.readFileSync(path.join(__dirname, '..', 'assets', 'rpg-icons.svg'), 'utf8');
 let pass = 0, fail = 0;
 function assert(cond, msg){
   if(cond){ console.log('PASS:', msg); pass++; }
@@ -51,6 +52,8 @@ assert(html.includes('advanced-box') && html.includes('進階設定 / 除錯'), 
 assert(html.includes('validateImportedSave'), '匯入資料前有格式驗證');
 assert(html.includes('resetCurrentChildData') && html.includes("code !== 'RESET'"), '重置資料有二次確認');
 assert(html.includes('aria-label="孩子模式主要導覽"') && html.includes('aria-label="家長模式分頁"'), '主要導覽有 aria-label');
+assert(html.includes('assets/rpg-icons.svg') && html.includes('nav-rpg-icon') && html.includes('function rpgIcon'), '主要 UI 使用 RPG 圖像化 icon helper');
+assert(['icon-quest','icon-exp','icon-coins','icon-reward','icon-adventure','icon-bag','icon-achievement'].every(id=>rpgIcons.includes(`id="${id}"`)), 'RPG icon sprite 包含核心功能圖示');
 
 if(fail){
   console.error(`\nUI architecture checks failed: ${fail}`);

@@ -111,6 +111,24 @@
     display:inline-flex; align-items:center; justify-content:center; flex:none;
     box-shadow:0 0 8px rgba(0,210,255,.6); font-family:'Rajdhani';
   }
+  .rpg-img-icon{
+    width:34px; height:34px; display:inline-block; flex:none; vertical-align:middle;
+    filter:drop-shadow(0 7px 8px rgba(0,0,0,.38)) drop-shadow(0 0 8px rgba(0,210,255,.28));
+  }
+  .rpg-img-icon.sm{ width:22px; height:22px; }
+  .rpg-img-icon.md{ width:28px; height:28px; }
+  .rpg-img-icon.lg{ width:44px; height:44px; }
+  .rpg-img-icon.xl{ width:56px; height:56px; }
+  .rpg-icon-chip{ display:flex; align-items:flex-start; gap:10px; }
+  .rpg-icon-chip .rpg-img-icon{ margin-top:-2px; }
+  .rpg-icon-title{ display:flex; align-items:center; gap:8px; min-width:0; }
+  .rpg-sys-icon{ width:24px; height:24px; border-radius:8px; padding:2px; border:1px solid rgba(0,210,255,.34);
+    background:rgba(2,12,28,.55); box-shadow:0 0 12px rgba(0,210,255,.18); }
+  .nav-icon-wrap{ display:flex; justify-content:center; margin-bottom:2px; }
+  .nav-rpg-icon{ width:31px; height:31px; transition:transform .15s, filter .15s; }
+  .nav-btn.active .nav-rpg-icon{ transform:translateY(-1px) scale(1.08);
+    filter:drop-shadow(0 8px 8px rgba(0,0,0,.42)) drop-shadow(0 0 12px rgba(0,210,255,.55)); }
+  .coin-icon-inline{ width:22px; height:22px; margin-right:4px; }
   .gold-win{ border-color:rgba(245,197,66,.55); box-shadow:0 0 16px rgba(245,197,66,.2); }
   .gold-win::before{ border-color:var(--sys-gold); } .gold-win::after{ border-color:var(--sys-gold); }
 
@@ -385,19 +403,19 @@
         <div class="hero-guide-title">新手村先開放</div>
         <div class="hero-guide-sub">第一次進來只需要懂四件事：接任務、完成、升級、換獎勵。</div>
         <div class="hero-proof text-left">
-          <div class="hero-chip">📜 今日任務<span>刷牙、閱讀、運動、整理書包，先從今天要做的事開始。</span></div>
-          <div class="hero-chip">⭐ 等級 / EXP<span>完成任務就拿經驗值，孩子看得見自己正在升級。</span></div>
-          <div class="hero-chip">🪙 金幣<span>每次完成都有回饋，讓日常行動變得有期待感。</span></div>
-          <div class="hero-chip">🎁 獎勵商店<span>家長設定真實獎勵，孩子用金幣兌換並等待審核。</span></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-quest"></use></svg><div>今日任務<span>刷牙、閱讀、運動、整理書包，先從今天要做的事開始。</span></div></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-exp"></use></svg><div>等級 / EXP<span>完成任務就拿經驗值，孩子看得見自己正在升級。</span></div></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-coins"></use></svg><div>金幣<span>每次完成都有回饋，讓日常行動變得有期待感。</span></div></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-reward"></use></svg><div>獎勵商店<span>家長設定真實獎勵，孩子用金幣兌換並等待審核。</span></div></div>
         </div>
         <div class="hero-guide-title">後續解鎖</div>
         <div class="hero-guide-sub">進階功能先鎖起來，像遊戲進度一樣慢慢打開，不一開始塞滿首頁。</div>
         <div class="hero-locks text-left">
-          <div class="hero-chip locked"><div class="lock-row">🔒 背包與系統商店 <span class="level-tag">Lv3 解鎖</span></div><span>開始收集道具與整理自己的冒險背包。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 技能樹 <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 進階地圖 <span class="level-tag">Lv8 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 成就系統 <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 冒險團戰績 <span class="level-tag">Lv15 解鎖</span></div><span>看見自己的進步與友善比較。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-bag"></use></svg><span>背包與系統商店</span></span> <span class="level-tag">Lv3 解鎖</span></div><span>開始收集道具與整理自己的冒險背包。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-skill"></use></svg><span>技能樹</span></span> <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-adventure"></use></svg><span>進階地圖</span></span> <span class="level-tag">Lv8 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-achievement"></use></svg><span>成就系統</span></span> <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-adventure"></use></svg><span>冒險團戰績</span></span> <span class="level-tag">Lv15 解鎖</span></div><span>看見自己的進步與友善比較。</span></div>
         </div>
       </div>
     </section>
@@ -484,19 +502,19 @@
         <div class="hero-guide-title">新手村先開放</div>
         <div class="hero-guide-sub">第一次進來只需要懂四件事：接任務、完成、升級、換獎勵。</div>
         <div class="hero-proof text-left">
-          <div class="hero-chip">📜 今日任務<span>刷牙、閱讀、運動、整理書包，先從今天要做的事開始。</span></div>
-          <div class="hero-chip">⭐ 等級 / EXP<span>完成任務就拿經驗值，孩子看得見自己正在升級。</span></div>
-          <div class="hero-chip">🪙 金幣<span>每次完成都有回饋，讓日常行動變得有期待感。</span></div>
-          <div class="hero-chip">🎁 獎勵商店<span>家長設定真實獎勵，孩子用金幣兌換並等待審核。</span></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-quest"></use></svg><div>今日任務<span>刷牙、閱讀、運動、整理書包，先從今天要做的事開始。</span></div></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-exp"></use></svg><div>等級 / EXP<span>完成任務就拿經驗值，孩子看得見自己正在升級。</span></div></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-coins"></use></svg><div>金幣<span>每次完成都有回饋，讓日常行動變得有期待感。</span></div></div>
+          <div class="hero-chip rpg-icon-chip"><svg class="rpg-img-icon lg" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-reward"></use></svg><div>獎勵商店<span>家長設定真實獎勵，孩子用金幣兌換並等待審核。</span></div></div>
         </div>
         <div class="hero-guide-title">後續解鎖</div>
         <div class="hero-guide-sub">進階功能先鎖起來，像遊戲進度一樣慢慢打開，不一開始塞滿首頁。</div>
         <div class="hero-locks text-left">
-          <div class="hero-chip locked"><div class="lock-row">🔒 背包與系統商店 <span class="level-tag">Lv3 解鎖</span></div><span>開始收集道具與整理自己的冒險背包。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 技能樹 <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 進階地圖 <span class="level-tag">Lv8 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 成就系統 <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
-          <div class="hero-chip locked"><div class="lock-row">🔒 冒險團戰績 <span class="level-tag">Lv15 解鎖</span></div><span>看見自己的進步與友善比較。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-bag"></use></svg><span>背包與系統商店</span></span> <span class="level-tag">Lv3 解鎖</span></div><span>開始收集道具與整理自己的冒險背包。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-skill"></use></svg><span>技能樹</span></span> <span class="level-tag">Lv5 解鎖</span></div><span>開始分配技能點，強化孩子的冒險能力。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-adventure"></use></svg><span>進階地圖</span></span> <span class="level-tag">Lv8 解鎖</span></div><span>任務不只是清單，會變成探索路線。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-achievement"></use></svg><span>成就系統</span></span> <span class="level-tag">Lv12 解鎖</span></div><span>累積好習慣，解開專屬成就。</span></div>
+          <div class="hero-chip locked"><div class="lock-row"><span class="rpg-icon-title"><svg class="rpg-img-icon md" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-adventure"></use></svg><span>冒險團戰績</span></span> <span class="level-tag">Lv15 解鎖</span></div><span>看見自己的進步與友善比較。</span></div>
         </div>
       </div>
     </section>
@@ -524,13 +542,13 @@
       <span id="tb-account-name" class="tb-name"></span>
     </div>
     <div class="tb-title">⚔️ AllRiseKids</div>
-    <button id="tb-parent" class="tb-btn" onclick="tryParent()" aria-label="進入家長模式，需要 PIN 驗證">🔒 家長</button>
+    <button id="tb-parent" class="tb-btn" onclick="tryParent()" aria-label="進入家長模式，需要 PIN 驗證"><svg class="rpg-img-icon sm" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-parent"></use></svg> 家長</button>
   </header>
 
   <div class="app-content max-w-md mx-auto lg:max-w-5xl xl:max-w-6xl px-3 relative z-10">
 
     <div class="flex justify-between items-center mb-3 text-sm font-bold">
-      <div class="sys-win px-3 py-1.5 num text-base" style="color:var(--sys-gold);">🪙 <span id="top-coins">0</span></div>
+      <div class="sys-win px-3 py-1.5 num text-base rpg-icon-title" style="color:var(--sys-gold);"><svg class="rpg-img-icon sm coin-icon-inline" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-coins"></use></svg><span id="top-coins">0</span></div>
       <div class="sys-win px-3 py-1.5"><span class="streak-flame">🔥</span> <span class="num text-base text-orange-300" id="top-streak">0</span> <span class="text-xs" style="color:var(--sys-dim);">連續</span></div>
       <div class="sys-win px-3 py-1.5 num text-base text-cyan-300">Lv.<span id="top-level">1</span></div>
     </div>
@@ -549,7 +567,7 @@
                   <span class="chip" id="home-class">職業</span>
                   <span class="chip">Lv.<span class="num" id="home-level">1</span></span>
                   <span class="chip"><span class="streak-flame">🔥</span> <span class="num" id="home-streak">0</span> 連續</span>
-                  <span class="chip">🪙 <span class="num" id="home-coins">0</span></span>
+                  <span class="chip rpg-icon-title"><svg class="rpg-img-icon sm" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-coins"></use></svg><span class="num" id="home-coins">0</span></span>
                 </div>
                 <div class="mt-3">
                   <div class="flex justify-between caption mb-1">
@@ -563,7 +581,7 @@
           </section>
 
           <section class="sys-win gold-win">
-            <div class="sys-head"><span class="sys-i">!</span>今日任務進度</div>
+            <div class="sys-head"><svg class="rpg-img-icon rpg-sys-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-quest"></use></svg>今日任務進度</div>
             <div class="p-4">
               <div class="flex items-end justify-between gap-3 mb-2">
                 <div>
@@ -578,18 +596,18 @@
           </section>
 
           <section class="sys-win">
-            <div class="sys-head"><span class="sys-i">★</span>下一個推薦任務</div>
+            <div class="sys-head"><svg class="rpg-img-icon rpg-sys-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-quest"></use></svg>下一個推薦任務</div>
             <div class="p-4" id="home-next-task"></div>
           </section>
         </div>
 
         <aside class="grid gap-3">
           <section class="sys-win">
-            <div class="sys-head"><span class="sys-i">i</span>近期成長</div>
+            <div class="sys-head"><svg class="rpg-img-icon rpg-sys-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-exp"></use></svg>近期成長</div>
             <div class="p-4 grid gap-2" id="home-growth"></div>
           </section>
           <section class="sys-win">
-            <div class="sys-head"><span class="sys-i">🔒</span>冒險預告</div>
+            <div class="sys-head"><svg class="rpg-img-icon rpg-sys-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-adventure"></use></svg>冒險預告</div>
             <div class="p-4 grid gap-2" id="home-unlocks"></div>
           </section>
         </aside>
@@ -764,12 +782,12 @@
         </div>
       </div>
       <div class="sys-win mb-3">
-        <div class="sys-head"><span class="sys-i">i</span>系統商店<span class="ml-auto text-xs num" style="color:var(--sys-gold);">🪙 <span id="shop-coins">0</span></span></div>
+        <div class="sys-head"><svg class="rpg-img-icon rpg-sys-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-reward"></use></svg>系統商店<span class="ml-auto text-xs num rpg-icon-title" style="color:var(--sys-gold);"><svg class="rpg-img-icon sm coin-icon-inline" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-coins"></use></svg><span id="shop-coins">0</span></span></div>
         <div class="px-4 py-2 text-xs font-bold" id="shop-discount-line" style="color:var(--sys-dim);"></div>
       </div>
       <div class="flex gap-2 mb-2">
-        <button class="tab-btn active flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')">🎁 真實獎勵</button>
-        <button class="tab-btn flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')">🛒 系統商店 Lv3</button>
+        <button class="tab-btn active flex-1 py-2 text-sm" data-stab="real" onclick="setShopTab('real')"><span class="rpg-icon-title justify-center"><svg class="rpg-img-icon sm" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-reward"></use></svg><span>真實獎勵</span></span></button>
+        <button class="tab-btn flex-1 py-2 text-sm" data-stab="virtual" onclick="setShopTab('virtual')"><span class="rpg-icon-title justify-center"><svg class="rpg-img-icon sm" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-bag"></use></svg><span>系統商店 Lv3</span></span></button>
       </div>
       <div class="flex gap-1.5 mb-3 flex-wrap" id="shop-filter-row"></div>
       <div id="shop-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
@@ -804,7 +822,7 @@
           <button class="shell-tab" onclick="goScreen('leaderboard')">冒險團戰績</button>
         </div>
       </div>
-      <div class="sys-win mb-3"><div class="sys-head"><span class="sys-i">i</span>成就紀錄<span class="ml-auto text-xs num" id="ach-count"></span></div></div>
+      <div class="sys-win mb-3"><div class="sys-head"><svg class="rpg-img-icon rpg-sys-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-achievement"></use></svg>成就紀錄<span class="ml-auto text-xs num" id="ach-count"></span></div></div>
       <div id="ach-list" class="grid grid-cols-2 gap-2.5 mb-4 lg:grid-cols-4 xl:grid-cols-5"></div>
     </div>
 
@@ -957,11 +975,11 @@
   <!-- 底部導覽 -->
   <nav class="app-nav" aria-label="孩子模式主要導覽">
     <div class="nav-inner">
-      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="home" onclick="goScreen('home')" aria-label="首頁"><div class="text-xl">🏠</div><div class="text-[11px] font-bold">首頁</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')" aria-label="任務"><div class="text-xl">📜</div><div class="text-[11px] font-bold">任務</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="adventure" onclick="openAdventure()" aria-label="冒險"><div class="text-xl">🌀</div><div class="text-[11px] font-bold">冒險</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="rewards" onclick="openRewards()" aria-label="獎勵"><div class="text-xl">🎁</div><div class="text-[11px] font-bold">獎勵</div></button>
-      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="profile" onclick="openProfile()" aria-label="我的角色"><div class="text-xl">⭐</div><div class="text-[11px] font-bold">我的角色</div></button>
+      <button class="nav-btn active flex-1 py-2.5 text-center" data-nav="home" onclick="goScreen('home')" aria-label="首頁"><div class="nav-icon-wrap"><svg class="rpg-img-icon nav-rpg-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-profile"></use></svg></div><div class="text-[11px] font-bold">首頁</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="quests" onclick="goScreen('quests')" aria-label="任務"><div class="nav-icon-wrap"><svg class="rpg-img-icon nav-rpg-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-quest"></use></svg></div><div class="text-[11px] font-bold">任務</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="adventure" onclick="openAdventure()" aria-label="冒險"><div class="nav-icon-wrap"><svg class="rpg-img-icon nav-rpg-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-adventure"></use></svg></div><div class="text-[11px] font-bold">冒險</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="rewards" onclick="openRewards()" aria-label="獎勵"><div class="nav-icon-wrap"><svg class="rpg-img-icon nav-rpg-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-reward"></use></svg></div><div class="text-[11px] font-bold">獎勵</div></button>
+      <button class="nav-btn flex-1 py-2.5 text-center" data-nav="profile" onclick="openProfile()" aria-label="我的角色"><div class="nav-icon-wrap"><svg class="rpg-img-icon nav-rpg-icon" aria-hidden="true" focusable="false"><use href="./assets/rpg-icons.svg#icon-profile"></use></svg></div><div class="text-[11px] font-bold">我的角色</div></button>
     </div>
   </nav>
 </div>
@@ -1195,6 +1213,20 @@
 /* M23 雲端啟用旗標：cloud-config.js 補上 supabaseUrl 後為 true，否則純本機（與現狀相同）。 */
 const CLOUD = (typeof window!=='undefined' && window.KQ_CLOUD) || {};
 const CLOUD_READY = !!(CLOUD.supabaseUrl && CLOUD.supabasePublishableKey);
+const RPG_ICON_BASE = './assets/rpg-icons.svg';
+const RPG_ICON_IDS = new Set(['quest','exp','coins','reward','adventure','skill','equipment','profile','parent','bag','achievement','lock']);
+function rpgIcon(name, className=''){
+  const id = RPG_ICON_IDS.has(name) ? name : 'quest';
+  return `<svg class="rpg-img-icon ${className}" aria-hidden="true" focusable="false"><use href="${RPG_ICON_BASE}#icon-${id}"></use></svg>`;
+}
+function rpgIconLabel(name, label, className=''){
+  return `<span class="rpg-icon-title ${className}">${rpgIcon(name,'md')}<span>${label}</span></span>`;
+}
+function rpgItemIcon(type){
+  if(['hat','outfit','weapon','accessory','pet','title','emote','consumable'].includes(type)) return rpgIcon('equipment','lg');
+  return rpgIcon('reward','lg');
+}
+
 const STORAGE_KEY = 'kidquest_data';
 const VERSION = 4;
 
@@ -2186,10 +2218,10 @@ function renderHome(){
       <div class="flex items-center gap-3">
         <div class="rank-ring ${rankClass(next.difficulty)}" style="width:54px;height:54px;font-size:24px;">${d.rank}</div>
         <div class="flex-1 min-w-0">
-          <div class="font-black text-white">${next.emoji||c.emoji} ${next.name}</div>
+          <div class="font-black text-white rpg-icon-title">${rpgIcon('quest','md')}<span>${next.name}</span></div>
           <div class="flex flex-wrap gap-1 mt-1">
             <span class="chip">${c.name}</span><span class="chip">⏱ ${next.time||'—'}</span>
-            <span class="chip">+${r.xp} EXP</span><span class="chip">+${r.coins} 🪙</span>
+            <span class="chip rpg-icon-title">${rpgIcon('exp','sm')}<span>+${r.xp} EXP</span></span><span class="chip rpg-icon-title">${rpgIcon('coins','sm')}<span>+${r.coins}</span></span>
           </div>
         </div>
       </div>
@@ -3053,14 +3085,14 @@ function renderAchievements(){
     const cur = Math.min(def.target, def.val(state));
     const pct = Math.round(cur/def.target*100);
     return `<div class="sys-win p-3 text-center ${rec.unlocked?'':'opacity-60'}">
-      <div class="text-3xl mb-1" style="${rec.unlocked?'filter:drop-shadow(0 0 8px rgba(0,210,255,.7));':'filter:grayscale(1) brightness(.6);'}">${def.emoji}</div>
+      <div class="mb-1 flex justify-center" style="${rec.unlocked?'filter:drop-shadow(0 0 8px rgba(0,210,255,.7));':'filter:grayscale(1) brightness(.6);'}">${rpgIcon('achievement','lg')}</div>
       <div class="font-black text-white text-xs">${def.name}</div>
       <div class="text-[10px] font-bold mb-1.5" style="color:var(--sys-dim);">${def.desc}</div>
       ${rec.unlocked
         ? '<div class="text-[11px] font-black text-cyan-300">✔ 已解鎖</div>'
         : `<div class="bar-track h-1.5"><div class="h-full" style="width:${pct}%; background:#b06bff; box-shadow:0 0 6px #b06bff;"></div></div>
            <div class="text-[10px] num font-bold mt-1" style="color:var(--sys-dim);">${cur} / ${def.target}</div>`}
-      <div class="text-[10px] num font-bold mt-1" style="color:var(--sys-gold);">+${def.coins} 🪙</div>
+      <div class="text-[10px] num font-bold mt-1 rpg-icon-title justify-center" style="color:var(--sys-gold);">${rpgIcon('coins','sm')}<span>+${def.coins}</span></div>
     </div>`;
   }).join('');
 }
@@ -3100,13 +3132,13 @@ function renderShop(){
       const hasPower = !['title','emote'].includes(s.type);
       return `<div class="sys-win rar-${s.rarity} p-3 text-center" style="border-width:1px;">
         <span class="rar-tag text-[10px] font-black px-2 py-0.5 rounded">${RARITY[s.rarity]}</span>
-        <div class="text-4xl my-2">${s.emoji}</div>
+        <div class="my-2 flex justify-center">${rpgItemIcon(s.type)}</div>
         <div class="font-black text-white text-xs leading-tight">${s.name}</div>
         <div class="text-[10px] font-bold mb-1" style="color:var(--sys-dim);">${SLOT_NAMES[s.type]}${hasPower?'・戰鬥力 +'+RAR_POWER[s.rarity]:''}</div>
         ${s.set?`<div class="chip mb-1.5">🧩 ${s.set}套裝</div>`:''}
         ${owned
           ? '<div class="py-1.5 rounded text-xs font-black" style="background:rgba(20,35,60,.8); color:var(--sys-dim);">已持有 ✔</div>'
-          : `<button onclick="askBuy('${s.id}','virtual')" class="btn-sys w-full py-1.5 text-xs num ${state.player.coins>=price?'':'opacity-40'}">🪙 ${price}${price<s.cost?` <s class="opacity-50">${s.cost}</s>`:''}</button>`}
+          : `<button onclick="askBuy('${s.id}','virtual')" class="btn-sys w-full py-1.5 text-xs num ${state.player.coins>=price?'':'opacity-40'}">${rpgIcon('coins','sm')} ${price}${price<s.cost?` <s class="opacity-50">${s.cost}</s>`:''}</button>`}
       </div>`;
     }).join('');
   }else{
@@ -3118,11 +3150,11 @@ function renderShop(){
       const canRequest = availability.available && state.player.coins>=r.cost;
       return `<div class="sys-win gold-win p-3 text-center ${availability.available?'':'opacity-60'}">
         <span class="text-[10px] font-black px-2 py-0.5 rounded" style="background:#a87b14; color:#fff3cf;">真實獎勵</span>
-        <div class="text-4xl my-2">${r.emoji||'🎁'}</div>
+        <div class="my-2 flex justify-center">${rpgIcon('reward','lg')}</div>
         <div class="font-black text-white text-xs leading-tight mb-1">${r.name}</div>
         <div class="text-[10px] font-bold mb-1.5" style="color:var(--sys-dim);">約需努力 ${days} 天・${rewardMetaLine(r)}</div>
         ${availability.available ? '' : `<div class="chip mb-1.5">${availability.reason}</div>`}
-        <button onclick="askBuy('${r.id}','real')" class="btn-gold w-full py-1.5 text-xs num ${canRequest?'':'opacity-40'}" ${canRequest?'':'aria-disabled="true"'}>🪙 ${r.cost}</button>
+        <button onclick="askBuy('${r.id}','real')" class="btn-gold w-full py-1.5 text-xs num ${canRequest?'':'opacity-40'}" ${canRequest?'':'aria-disabled="true"'}>${rpgIcon('coins','sm')} ${r.cost}</button>
       </div>`;
     }).join('')
       : `<div class="col-span-2 lg:col-span-4 text-center font-bold py-8" style="color:var(--sys-dim);">管理者尚未設定真實獎勵。</div>`;
@@ -3138,7 +3170,7 @@ function askBuy(id, kind){
   const price = kind==='virtual' ? discounted(item.cost) : item.cost;
   if(state.player.coins < price){ toast('金幣不足。完成更多任務累積資金吧。'); return; }
   buyTarget = { item, kind, price };
-  document.getElementById('buy-emoji').textContent = item.emoji||'🎁';
+  document.getElementById('buy-emoji').innerHTML = kind==='virtual' ? rpgItemIcon(item.type) : rpgIcon('reward','xl');
   document.getElementById('buy-name').textContent = item.name;
   document.getElementById('buy-cost').textContent = `花費 🪙 ${price}（剩餘 ${state.player.coins - price}）`;
   openModal('buy-modal', '#buy-confirm');
@@ -3183,7 +3215,7 @@ function renderInventory(){
     const sellPrice = Math.floor(((catalog&&catalog.cost)||0)/2);
     return `<div class="sys-win rar-${i.rarity} p-3 text-center" style="border-width:1px; ${i.equipped?'box-shadow:0 0 16px rgba(0,210,255,.5) !important;':''}">
       <div onclick="toggleEquip('${i.id}')" style="cursor:pointer;">
-        <div class="text-3xl mb-1">${i.emoji}</div>
+      <div class="mb-1 flex justify-center">${rpgItemIcon(i.type)}</div>
         <div class="font-black text-white text-[11px] leading-tight">${i.name}</div>
         <div class="text-[10px] font-bold" style="color:var(--sys-dim);">${SLOT_NAMES[i.type]}・${RARITY[i.rarity]}</div>
         ${catalog&&catalog.set?`<div class="chip mt-0.5" style="font-size:9px;">🧩 ${catalog.set}</div>`:''}
@@ -3284,7 +3316,7 @@ function renderParent(){
     const r = calcRewards(t);
     const wait = waitLabel(t.submittedAt);
     return `<div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(120,90,10,.12); border:1px solid rgba(245,197,66,.3);">
-      <span class="text-xl">${t.emoji}</span>
+      ${rpgIcon('quest','md')}
       <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${t.name}</div>
       <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${d.name}　+${r.xp} EXP / +${r.coins} 🪙${wait?'　⏱'+wait:''}</div></div>
       <button onclick="approveTask('${t.id}')" class="btn-sys px-3 py-2 text-sm">核准 ✔</button>
@@ -3298,7 +3330,7 @@ function renderParent(){
   const rewardActions = reqs.length + approvedReqs.length;
   const requestRows = reqs.map(r=>`
     <div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(120,90,10,.12); border:1px solid rgba(245,197,66,.3);">
-      <span class="text-xl">${r.emoji}</span>
+      ${rpgIcon('reward','md')}
       <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${r.name}</div>
       <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">🪙${r.cost}　≈ NT$${r.estimatedTwd}　${r.date}</div></div>
       <button onclick="approveReward('${r.id}')" class="btn-sys px-3 py-2 text-sm">核准 ✔</button>
@@ -3306,7 +3338,7 @@ function renderParent(){
     </div>`).join('');
   const fulfillmentRows = approvedReqs.map(r=>`
     <div class="flex items-center gap-2 p-2.5 rounded" style="background:rgba(15,80,80,.12); border:1px solid rgba(92,255,184,.3);">
-      <span class="text-xl">${r.emoji}</span>
+      ${rpgIcon('reward','md')}
       <div class="flex-1 min-w-0"><div class="font-black text-white text-sm truncate">${r.name}</div>
       <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">已同意兌換，等待家長實際兌現 · NT$${r.estimatedTwd} · ${r.approvedDate||r.date}</div></div>
       <button onclick="fulfillReward('${r.id}')" class="btn-sys px-3 py-2 text-sm">標示已兌現</button>
@@ -3333,7 +3365,7 @@ function renderParent(){
   const statBox = (val,label,color)=>`<div class="p-2.5 rounded" style="background:rgba(12,26,50,.7); border:1px solid #1c3a60;"><div class="num text-xl font-bold" style="color:${color};">${val}</div><div class="text-[11px] font-bold" style="color:var(--sys-dim);">${label}</div></div>`;
   document.getElementById('parent-stats').innerHTML =
     statBox(weekDone,'本週完成任務','#5cb8ff') + statBox('🔥 '+state.player.streak,'連續天數','#ff9d5c') +
-    statBox('Lv.'+state.player.level,'目前等級','#c98aff') + statBox('🪙 '+state.player.coins,'金幣餘額','#ffd25c');
+    statBox('Lv.'+state.player.level,'目前等級','#c98aff') + statBox(state.player.coins,'金幣餘額','#ffd25c');
   const attention = document.getElementById('parent-attention');
   if(attention){
     const reqCount = rewardActions;

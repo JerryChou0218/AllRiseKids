@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="ark-soft-shadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#03101f" flood-opacity=".55"/>
+      <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#74e6ff" flood-opacity=".35"/>
+    </filter>
+    <linearGradient id="ark-blue" x1="16" y1="4" x2="48" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e6fbff"/>
+      <stop offset=".42" stop-color="#35d6ff"/>
+      <stop offset="1" stop-color="#1550c7"/>
+    </linearGradient>
+    <linearGradient id="ark-violet" x1="10" y1="8" x2="54" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f5e8ff"/>
+      <stop offset=".44" stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#3b1b94"/>
+    </linearGradient>
+    <linearGradient id="ark-gold" x1="12" y1="4" x2="48" y2="60" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fff8c7"/>
+      <stop offset=".48" stop-color="#f8c64f"/>
+      <stop offset="1" stop-color="#a96811"/>
+    </linearGradient>
+    <linearGradient id="ark-green" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#e7fff5"/>
+      <stop offset=".48" stop-color="#49e6a4"/>
+      <stop offset="1" stop-color="#117c62"/>
+    </linearGradient>
+    <radialGradient id="ark-glow" cx="35%" cy="24%" r="66%">
+      <stop stop-color="#ffffff" stop-opacity=".78"/>
+      <stop offset=".36" stop-color="#ffffff" stop-opacity=".22"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <symbol id="icon-quest" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M18 11h29c3 0 5 2 5 5v36c0 3-2 5-5 5H18c-3 0-5-2-5-5V16c0-3 2-5 5-5Z" fill="url(#ark-gold)"/>
+        <path d="M22 16h24v35H22z" fill="#fff2b0" opacity=".34"/>
+        <path d="M24 24h17M24 33h15M24 42h12" stroke="#5b3711" stroke-width="3" stroke-linecap="round" opacity=".72"/>
+        <path d="M13 18c4-4 8-4 12 0v38c-4-3-8-3-12 0Z" fill="#c58228"/>
+        <path d="M17 13h29c3 0 5 2 5 5" fill="none" stroke="#fff9cc" stroke-width="2" opacity=".75"/>
+        <circle cx="41" cy="19" r="6" fill="url(#ark-glow)"/>
+      </g>
+    </symbol>
+    <symbol id="icon-exp" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M32 4 51 21 45 53 32 61 19 53 13 21Z" fill="url(#ark-blue)"/>
+        <path d="M32 4v57M13 21h38M19 53l13-32 13 32" fill="none" stroke="#dffbff" stroke-width="2" opacity=".42"/>
+        <path d="M23 18 32 8l9 10-9 5Z" fill="#ffffff" opacity=".42"/>
+        <circle cx="30" cy="29" r="18" fill="url(#ark-glow)"/>
+      </g>
+    </symbol>
+    <symbol id="icon-coins" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <ellipse cx="29" cy="48" rx="19" ry="8" fill="#a96811"/>
+        <ellipse cx="29" cy="41" rx="19" ry="8" fill="url(#ark-gold)"/>
+        <ellipse cx="36" cy="32" rx="19" ry="8" fill="#a96811"/>
+        <ellipse cx="36" cy="25" rx="19" ry="8" fill="url(#ark-gold)"/>
+        <ellipse cx="25" cy="23" rx="17" ry="7" fill="#d9971d"/>
+        <ellipse cx="25" cy="17" rx="17" ry="7" fill="url(#ark-gold)"/>
+        <path d="M25 12v10M20 17h10" stroke="#fff8c7" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+      </g>
+    </symbol>
+    <symbol id="icon-reward" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M10 28h44v25a5 5 0 0 1-5 5H15a5 5 0 0 1-5-5Z" fill="url(#ark-violet)"/>
+        <path d="M7 20h50v12H7z" fill="url(#ark-gold)"/>
+        <path d="M29 20h7v38h-7z" fill="#fef3c7" opacity=".82"/>
+        <path d="M21 19c-8-2-9-12-1-13 6-1 9 7 12 14-4 0-8 0-11-1Zm22 0c8-2 9-12 1-13-6-1-9 7-12 14 4 0 8 0 11-1Z" fill="url(#ark-blue)"/>
+        <path d="M13 28h38" stroke="#fff8c7" stroke-width="2" opacity=".45"/>
+      </g>
+    </symbol>
+    <symbol id="icon-adventure" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M12 50 22 13l15 8 15-6-9 37-15 6Z" fill="#14345f"/>
+        <path d="M22 13v39M37 21l-9 37M52 15l-9 37" stroke="#7ddcff" stroke-width="2" opacity=".38"/>
+        <path d="M23 19c9 2 17 8 21 20" fill="none" stroke="#f8c64f" stroke-width="3" stroke-linecap="round" stroke-dasharray="4 5"/>
+        <circle cx="45" cy="43" r="6" fill="url(#ark-gold)"/>
+        <path d="M18 43c10-3 21-2 30 4" fill="none" stroke="#49e6a4" stroke-width="3" opacity=".5"/>
+      </g>
+    </symbol>
+    <symbol id="icon-skill" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M32 8c-8 8-12 16-12 25 0 10 6 18 12 23 6-5 12-13 12-23 0-9-4-17-12-25Z" fill="url(#ark-green)"/>
+        <path d="M32 15v38M32 31l-11-8M32 37l13-10M32 44l-10 7" stroke="#e7fff5" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+        <circle cx="32" cy="14" r="5" fill="url(#ark-blue)"/>
+        <circle cx="20" cy="23" r="5" fill="url(#ark-violet)"/>
+        <circle cx="45" cy="27" r="5" fill="url(#ark-gold)"/>
+      </g>
+    </symbol>
+    <symbol id="icon-equipment" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M38 6 51 19 24 46l-13 4 4-13Z" fill="url(#ark-blue)"/>
+        <path d="M16 37 27 48" stroke="#f8c64f" stroke-width="6" stroke-linecap="round"/>
+        <path d="M42 14 50 22" stroke="#e6fbff" stroke-width="3" stroke-linecap="round" opacity=".85"/>
+        <path d="M34 31c5 2 11 2 16-2 0 13-6 22-16 27-10-5-16-14-16-27 5 4 11 4 16 2Z" fill="url(#ark-violet)" opacity=".92"/>
+        <path d="M34 35v14" stroke="#fff" stroke-width="3" opacity=".45"/>
+      </g>
+    </symbol>
+    <symbol id="icon-profile" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M32 5 54 17v19c0 12-9 20-22 24-13-4-22-12-22-24V17Z" fill="url(#ark-blue)"/>
+        <circle cx="32" cy="25" r="9" fill="url(#ark-gold)"/>
+        <path d="M18 49c3-10 25-10 28 0" fill="url(#ark-violet)"/>
+        <path d="M16 18 32 9l16 9" fill="none" stroke="#e6fbff" stroke-width="2" opacity=".65"/>
+      </g>
+    </symbol>
+    <symbol id="icon-parent" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M18 10h28a5 5 0 0 1 5 5v38a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V15a5 5 0 0 1 5-5Z" fill="#10284c"/>
+        <path d="M23 16h18v8H23z" fill="url(#ark-gold)"/>
+        <path d="M22 33h20M22 42h16" stroke="#cfe8ff" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="46" cy="44" r="9" fill="url(#ark-green)"/>
+        <path d="m41 44 4 4 7-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+    </symbol>
+    <symbol id="icon-bag" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M18 24h28l5 27a6 6 0 0 1-6 7H19a6 6 0 0 1-6-7Z" fill="url(#ark-violet)"/>
+        <path d="M23 24c0-10 18-10 18 0" fill="none" stroke="#f8c64f" stroke-width="5" stroke-linecap="round"/>
+        <path d="M24 36h16M28 45h8" stroke="#f5e8ff" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+      </g>
+    </symbol>
+    <symbol id="icon-achievement" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M20 10h24v10c0 13-5 22-12 25-7-3-12-12-12-25Z" fill="url(#ark-gold)"/>
+        <path d="M20 16H9c1 13 7 20 17 20M44 16h11c-1 13-7 20-17 20" fill="none" stroke="#f8c64f" stroke-width="5" stroke-linecap="round"/>
+        <path d="M32 45v9M22 58h20" stroke="#a96811" stroke-width="5" stroke-linecap="round"/>
+        <path d="m32 16 3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1Z" fill="#fff8c7"/>
+      </g>
+    </symbol>
+    <symbol id="icon-lock" viewBox="0 0 64 64">
+      <g filter="url(#ark-soft-shadow)">
+        <path d="M18 29h28a5 5 0 0 1 5 5v18a5 5 0 0 1-5 5H18a5 5 0 0 1-5-5V34a5 5 0 0 1 5-5Z" fill="url(#ark-gold)"/>
+        <path d="M22 29V19c0-13 20-13 20 0v10" fill="none" stroke="#cfe8ff" stroke-width="6" stroke-linecap="round"/>
+        <circle cx="32" cy="42" r="4" fill="#5b3711"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>

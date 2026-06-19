@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 59.2,
+    "used_usd": 59.8,
     "limit_usd": 999.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 30,
-    "verification_calls": 40,
+    "execution_calls": 31,
+    "verification_calls": 42,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -561,7 +561,8 @@
         { "timestamp": "2026-06-19T19:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed e771ffb to GitHub master and deployed production with Vercel deployment dpl_GcbaSWsBueszQVLuQAyCzzkYweJC, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed tf-completion, completion copy in makeInstance, task detail completion criteria label, and fallback completion copy are present." },
         { "timestamp": "2026-06-19T19:45:00+08:00", "automated_tests": "N/A", "ai_verification": "HANDOFF: Added M24 Codex handoff notes to CLAUDE.md for Claude acceptance review. M24 remains in_progress intentionally; latest full verification remains npm run test:all PASS and npm run pack PASS from the completion-criteria deployment cycle." },
         { "timestamp": "2026-06-19T20:15:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Fixed parent backend child deletion persistence. deleteChild is now async and waits for cloudSyncParentNow(parent) after cloudStore.saveParent(parent), so Google/Supabase sessions push the updated children list immediately instead of refreshing back from stale cloud data. Targeted verification only: node test/cloud-store.test.js PASS 11/11, node test/accounts.test.js PASS 8/8." },
-        { "timestamp": "2026-06-19T20:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed eeb29f6 to GitHub master and deployed production with Vercel deployment dpl_KvPqUDTGsBE7F6d1PNNbQu4JJeV3, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed cloudSyncParentNow and async deleteChild await the immediate cloud push." }
+        { "timestamp": "2026-06-19T20:30:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Pushed eeb29f6 to GitHub master and deployed production with Vercel deployment dpl_KvPqUDTGsBE7F6d1PNNbQu4JJeV3, aliased to https://allrisekids.vercel.app. Online cache-buster check confirmed cloudSyncParentNow and async deleteChild await the immediate cloud push." },
+        { "timestamp": "2026-06-19T21:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: Added a project-local RPG icon sprite (assets/rpg-icons.svg) and replaced high-exposure emoji/text UI icons in onboarding hero, child navigation, home status sections, reward/shop tabs, shop cards, inventory cards, achievement cards, and parent review rows with consistent 3D-styled SVG image icons. No data format, localStorage key, EXP, coin, task, reward, or cloud logic was changed. Targeted verification only per user request: node test/ui-architecture.test.js PASS 31/31; node test/browser-responsive.test.js PASS 31/31." }
       ]
     }
   ]
