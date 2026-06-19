@@ -7,7 +7,7 @@
  *     首次上線載入後即快取，之後離線也能維持完整介面。
  * 改版時請更新 CACHE_VERSION，activate 會自動清掉舊快取。
  */
-const CACHE_VERSION = 'kidquest-v2';
+const CACHE_VERSION = 'kidquest-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -51,7 +51,7 @@ self.addEventListener('fetch', (event) => {
 
   if (isAppShell) {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then((res) => {
           if (res && res.ok) {
             const copy = res.clone();
