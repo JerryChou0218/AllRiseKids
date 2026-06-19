@@ -39,6 +39,7 @@ assert(html.includes('今日任務') && html.includes('挑戰任務') && html.in
 assert(html.includes('function missionUiState') && html.includes('function startTask') && ['尚未開始','進行中','等待審核','已完成'].every(s=>html.includes(s)), '任務流程有派生狀態與開始任務導引');
 assert(html.includes('開始任務') && html.includes('提交完成，等待家長審核'), '任務詳情先開始再提交完成');
 assert(html.includes('冒險團戰績') && !html.includes('<span class="sys-i">i</span>世界戰績排行榜'), '排行榜弱化為冒險團戰績');
+assert(!html.includes('DEMO_RIVALS') && html.includes('不製造假的全球排行榜'), '冒險團戰績不使用假全球玩家資料');
 assert(!html.includes('警告：未完成全部每日任務'), '任務頁不使用恐嚇式連續紀錄文案');
 
 assert(html.includes('advanced-box') && html.includes('進階設定 / 除錯'), '除錯和平衡測試收在進階設定');

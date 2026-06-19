@@ -2796,19 +2796,7 @@ function runDebugSimulation(){
   const out = document.getElementById('dbg-sim-out'); if(out) out.innerHTML = head + rows;
 }
 
-/* ===== M21 世界戰績排行榜（跨家庭；只公開非敏感欄位；本機示範資料，介面對齊未來雲端公開讀取表） ===== */
-const DEMO_RIVALS = [
-  { id:'r1',  name:'闇影獵人',   level:96, tasks:1680, weekTasks:41, age:14, self:false },
-  { id:'r2',  name:'星辰法師',   level:88, tasks:1402, weekTasks:33, age:13, self:false },
-  { id:'r3',  name:'白銀騎士',   level:74, tasks:1115, weekTasks:38, age:12, self:false },
-  { id:'r4',  name:'烈焰小將',   level:61, tasks:902,  weekTasks:29, age:11, self:false },
-  { id:'r5',  name:'青空旅人',   level:52, tasks:760,  weekTasks:35, age:10, self:false },
-  { id:'r6',  name:'微光學徒',   level:43, tasks:611,  weekTasks:27, age:9,  self:false },
-  { id:'r7',  name:'勇敢小熊',   level:34, tasks:455,  weekTasks:31, age:8,  self:false },
-  { id:'r8',  name:'彩虹精靈',   level:25, tasks:320,  weekTasks:22, age:7,  self:false },
-  { id:'r9',  name:'初心冒險者', level:16, tasks:188,  weekTasks:24, age:6,  self:false },
-  { id:'r10', name:'晨曦新星',   level:9,  tasks:92,   weekTasks:18, age:7,  self:false },
-];
+/* ===== M21 冒險團戰績（只使用實際孩子資料；不製造假的全球排行榜） ===== */
 function rankBadge(level){ return ({E:'🔰',D:'🗡️',C:'⚔️',B:'🛡️',A:'🔥',S:'👑','國家':'🏆'})[hunterRank(level)] || '🗡️'; }
 let lbFilter = 'all';
 function setLbFilter(f){
@@ -2822,7 +2810,7 @@ function setLbFilter(f){
 function worldLeaderboard(filter){
   filter = filter || lbFilter || 'all';
   const wk = (typeof weekKey==='function') ? weekKey() : '';
-  let entries = cloudStore.publicChildren(wk).concat(DEMO_RIVALS.map(d=>({ ...d })));
+  let entries = cloudStore.publicChildren(wk);
   if(filter==='age'){ const selfAge = (state.player.age)||10; entries = entries.filter(e=>Math.abs((e.age||10)-selfAge)<=1); }
   const score = filter==='week' ? (e=>e.weekTasks||0) : (e=>(e.level||1)*100000 + (e.tasks||0));
   entries.sort((a,b)=> score(b)-score(a) || ((b.level||1)-(a.level||1)));
@@ -2843,7 +2831,7 @@ function renderLeaderboard(){
       <div class="text-[11px] font-bold num" style="color:var(--sys-dim);">${hunterRank(e.level)} 級・${e.age} 歲</div></div>
       <div class="num font-bold text-xs flex-none" style="color:#5cb8ff;">${metric}</div>
     </div>`;
-  }).join('') || `<div class="text-sm text-center py-4" style="color:var(--sys-dim);">目前還沒有排行資料。</div>`;
+  }).join('') || `<div class="text-sm text-center py-4" style="color:var(--sys-dim);">目前還沒有冒險團戰績資料。這裡只顯示家人或已同步的實際孩子資料。</div>`;
 }
 
 /* ===== M22 跨家庭虛擬物品交換（交易狀態機 + 家長核可 + 守恆） =====

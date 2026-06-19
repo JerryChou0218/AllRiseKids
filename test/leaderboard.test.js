@@ -1,4 +1,4 @@
-/* M21 世界排行榜驗證：跨家庭彙整、排序/名次、隱私（不洩 email/家長）、總榜/週榜/同齡篩選。
+/* M21 冒險團戰績驗證：實際孩子資料彙整、排序/名次、隱私（不洩 email/家長）、總榜/週榜/同齡篩選。
  * 執行：node test/leaderboard.test.js
  */
 'use strict';
@@ -48,9 +48,11 @@ parentGoogleLogin();
 makeChild('小宇', 12, 40, 300); exitChild();
 makeChild('小美', 8, 20, 150);   // 留在小美（state.player.age=8）
 
-/* 1. 跨家庭彙整：示範對手 + 2 個本機小孩 */
+/* 1. 冒險團戰績只使用實際孩子資料，不混入示範對手 */
 const all = worldLeaderboard('all');
-__assert(all.length === DEMO_RIVALS.length + 2, '排行榜含示範對手 + 2 個本機小孩（共 '+all.length+'）');
+__assert(typeof DEMO_RIVALS === 'undefined', '不再保留 DEMO_RIVALS 假排行榜資料');
+__assert(all.length === 2, '冒險團戰績只含 2 個實際小孩（共 '+all.length+'）');
+__assert(!all.some(e=>['闇影獵人','星辰法師','白銀騎士'].includes(e.name)), '榜單不含假全球玩家名稱');
 
 /* 2. 名次與排序：依等級/任務遞減，place=1..n */
 let sorted=true; const sc = e=>(e.level||1)*100000+(e.tasks||0);
@@ -75,7 +77,7 @@ let wsorted=true; for(let i=1;i<wk.length;i++){ if((wk[i].weekTasks||0)>(wk[i-1]
 __assert(wsorted, '週榜依本週任務數遞減排序');
 
 console.log('');
-console.log(__af()===0 ? '=== 世界排行榜驗證通過（'+__ap()+' 項）===' : '=== 失敗 '+__af()+' 項 ===');
+console.log(__af()===0 ? '=== 冒險團戰績驗證通過（'+__ap()+' 項）===' : '=== 失敗 '+__af()+' 項 ===');
 `;
 
 try{
