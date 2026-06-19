@@ -135,6 +135,20 @@ async function loadApp(client, appUrl, width, height){
       }
     }, 80);
   });
+  const onboardingWizard = await evalOnPage(client, `(() => {
+    const visible = [...document.querySelectorAll('#onboarding [data-ob-step].active')].map(el=>el.dataset.obStep);
+    const dots = document.querySelectorAll('#ob-progress .ob-dot').length;
+    showOnboardingStep(2);
+    const visibleAfterNext = [...document.querySelectorAll('#onboarding [data-ob-step].active')].map(el=>el.dataset.obStep);
+    return {
+      startsAtValue: visible.length > 0 && visible.every(s=>s === '1'),
+      hasProgress: dots === 5,
+      movesToName: visibleAfterNext.length > 0 && visibleAfterNext.every(s=>s === '2'),
+      hasNameInput: !!document.getElementById('ob-name'),
+    };
+  })()`);
+  assert(onboardingWizard.startsAtValue && onboardingWizard.hasProgress, '初次使用流程先顯示產品價值與 5 步進度');
+  assert(onboardingWizard.movesToName && onboardingWizard.hasNameInput, '開始覺醒後進入孩子名稱步驟');
   await evalOnPage(client, `(() => {
     localStorage.clear();
     document.getElementById('ob-name').value='測試小勇';

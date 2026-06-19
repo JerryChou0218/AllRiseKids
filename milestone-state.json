@@ -7,12 +7,12 @@
   "current_milestone_id": 24,
   "planning_complete": true,
   "budget": {
-    "used_usd": 34.0,
+    "used_usd": 35.8,
     "limit_usd": 999.0,
     "tokens_used": 0,
     "planning_calls": 2,
-    "execution_calls": 19,
-    "verification_calls": 20,
+    "execution_calls": 20,
+    "verification_calls": 21,
     "post_completion_polish": "2026-06-17 UX 優化批次(8 項)：改名 AllRiseKids 孩子們覺醒吧!、帳號切換限家長、傳送門由下往上不裁切+門名加長、技能樹每職業25個、成就50個、帳號頁大 QR、行動導覽2列、整體放大字級。9 套件全綠。",
     "cost_estimate_usd": {
       "planning": 1.5,
@@ -540,7 +540,8 @@
         { "timestamp": "2026-06-19T08:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 依使用者授權將 M24 budget.limit_usd 調整為 35.0 後續作。補強家長模式「成長紀錄」：新增 parent-records-dashboard 與 renderParentRecords()，用現有 state.history/state.tasks/state.rewardRequests/state.player.stats 顯示今日完成率、本週完成任務、每日完成率、任務分類分布、能力成長、獎勵兌換紀錄、需要關注與最近紀錄；沒有資料時顯示清楚空狀態。未更改 localStorage key、資料格式、EXP/金幣公式或審核狀態機。更新 test/ui-architecture.test.js 與 test/browser-responsive.test.js 驗證此分頁；npm run test:all 全綠，browser-responsive 26/26 且無 console/runtime error。M24 仍 in_progress，尚需完成更深層完成審核與剩餘產品規格缺口。" },
         { "timestamp": "2026-06-19T09:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強孩子任務完成流程：新增 missionUiState()/missionStatusBadge()/startTask()，以 startedAt 做 UI 派生狀態，讓任務詳情先顯示「開始任務」，開始後才顯示「提交完成，等待家長審核」；任務卡呈現尚未開始/進行中/等待審核/已完成。保留既有 available/pending/completed 狀態機與 markDone() 相容路徑，不改 EXP、金幣、審核或 localStorage key；退回任務會清掉 startedAt。更新 ui-architecture 與 browser-responsive 測試，npm run test:all 全綠，browser-responsive 27/27 且無 console/runtime error。M24 仍 in_progress，待完成審核與部署。" },
         { "timestamp": "2026-06-19T10:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 已推送 d65253d/4a2d425/956dfd5 到 GitHub master，並以 Vercel CLI 部署 production；部署 dpl_7JmfS6rRbZcn2qmhf9Bd9xMTkgUE ready，alias 到 https://allrisekids.vercel.app。線上 cache-buster 驗證 index.html 包含 parent-records-dashboard、renderParentRecords、missionUiState、startTask、開始任務、提交完成，等待家長審核。M24 budget 目前 34.0/35.0，下一輪不可再開完整實作+驗證，應先做完成審核或調整預算。" },
-        { "timestamp": "2026-06-19T10:30:00+08:00", "automated_tests": "N/A", "ai_verification": "IN_PROGRESS: 使用者明確授權訂閱制工作方式，將 M24 budget.limit_usd 從 35.0 調整為 999.0，避免 framework budget gate 阻擋後續完整重構。此數字只作為本 repo milestone 框架門檻，不代表實際 API/金流支出；若 5H/RESET 發生，下一輪仍可從 milestone-state.json 與 git commit 繼續。" }
+        { "timestamp": "2026-06-19T10:30:00+08:00", "automated_tests": "N/A", "ai_verification": "IN_PROGRESS: 使用者明確授權訂閱制工作方式，將 M24 budget.limit_usd 從 35.0 調整為 999.0，避免 framework budget gate 阻擋後續完整重構。此數字只作為本 repo milestone 框架門檻，不代表實際 API/金流支出；若 5H/RESET 發生，下一輪仍可從 milestone-state.json 與 git commit 繼續。" },
+        { "timestamp": "2026-06-19T11:00:00+08:00", "automated_tests": "PASS", "ai_verification": "IN_PROGRESS: 補強初次使用流程：將 onboarding 從長頁改為 5 步 wizard（產品價值、孩子名稱、孩子資料、職業、家長 PIN），新增 ob-progress、ob-step、showOnboardingStep()/updateOnboardingWizard()，每一步只顯示當下必要內容；保留 ob-name/ob-age/ob-gender/ob-classes/ob-pin 與 finishOnboarding() 相容，不改 localStorage key 或資料格式。新增 ui-architecture 靜態驗收與 browser-responsive 真瀏覽器驗收，npm run test:all 全綠，browser-responsive 31/31 且無 console/runtime error。" }
       ]
     }
   ]

@@ -134,6 +134,13 @@
   .hero-chip.locked .lock-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .level-tag{ display:inline-flex; align-items:center; white-space:nowrap; border-radius:999px; padding:3px 8px;
     font-size:12px; font-weight:900; color:#ffe28a; border:1px solid rgba(245,197,66,.45); background:rgba(245,197,66,.10); }
+  .ob-progress{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:0 0 14px; }
+  .ob-dot{ height:8px; border-radius:999px; background:rgba(110,150,190,.22); border:1px solid rgba(0,210,255,.16); }
+  .ob-dot.active{ background:linear-gradient(90deg,var(--accent-cyan),var(--accent-violet)); box-shadow:0 0 14px rgba(0,210,255,.34); }
+  .ob-step{ display:none; }
+  .ob-step.active{ display:block; }
+  .ob-step-actions{ display:grid; grid-template-columns:1fr; gap:10px; margin-top:14px; }
+  @media (min-width:540px){ .ob-step-actions{ grid-template-columns:1fr 1fr; } }
   @media (min-width:520px){
     .hero-actions{ grid-template-columns:1fr 1fr; }
     .hero-proof{ grid-template-columns:repeat(2,1fr); }
@@ -356,14 +363,21 @@
 <!-- ════════ 覺醒（新手引導）════════ -->
 <div id="onboarding" class="screen fixed inset-0 z-50 overflow-y-auto">
   <div class="hero-wrap">
-    <section class="text-center mb-5">
+    <div id="ob-progress" class="ob-progress" aria-label="初次設定進度">
+      <span class="ob-dot active" aria-hidden="true"></span>
+      <span class="ob-dot" aria-hidden="true"></span>
+      <span class="ob-dot" aria-hidden="true"></span>
+      <span class="ob-dot" aria-hidden="true"></span>
+      <span class="ob-dot" aria-hidden="true"></span>
+    </div>
+    <section class="text-center mb-5 ob-step active" data-ob-step="1">
       <div class="hero-kicker">ALLRISEKIDS RPG SYSTEM</div>
       <h1 class="hero-title">把每天該做的事，變成一場升級冒險</h1>
       <p class="hero-subtitle">
         完成刷牙、閱讀、運動、整理書包和家事任務，獲得<strong>經驗值</strong>、<strong>金幣</strong>與真實獎勵。
       </p>
       <div class="hero-actions">
-        <button type="button" onclick="document.getElementById('ob-setup').scrollIntoView({behavior:'smooth',block:'start'}); setTimeout(()=>document.getElementById('ob-name').focus(),350);" class="btn-gold hero-btn">開始覺醒</button>
+        <button type="button" onclick="showOnboardingStep(2)" class="btn-gold hero-btn">開始覺醒</button>
         <button type="button" onclick="document.getElementById('ob-how').scrollIntoView({behavior:'smooth',block:'start'});" class="btn-sys hero-btn">看看孩子怎麼升級</button>
       </div>
       <p class="caption mt-3">由家長建立任務，孩子完成挑戰並持續成長。</p>
@@ -387,22 +401,26 @@
         </div>
       </div>
     </section>
-    <div class="sys-win scanline mb-4">
+    <div class="sys-win scanline mb-4 ob-step active" data-ob-step="1">
       <div class="sys-head"><span class="sys-i">i</span>給家長的任務說明</div>
       <div class="p-4 text-sm font-bold leading-relaxed">
         AllRiseKids 保留 RPG、獵人與覺醒感，但核心很簡單：
         <span class="text-cyan-300">把「一直催」改成「孩子想升級」。</span>
       </div>
     </div>
-    <div id="ob-setup" class="sys-win mb-4">
+    <div id="ob-setup" class="sys-win mb-4 ob-step" data-ob-step="2">
       <div class="sys-head"><span class="sys-i">1</span>建立孩子角色</div>
       <div class="p-4">
         <label for="ob-name" class="sr-only">孩子角色名稱</label>
         <input id="ob-name" maxlength="12" placeholder="輸入孩子的名字..." class="inp text-lg" aria-describedby="ob-name-help">
         <div id="ob-name-help" class="caption mt-2">這會顯示在孩子模式的角色狀態中。</div>
+        <div class="ob-step-actions">
+          <button type="button" onclick="showOnboardingStep(1)" class="btn-dark py-3">返回產品說明</button>
+          <button type="button" onclick="showOnboardingStep(3)" class="btn-gold py-3">下一步：孩子資料</button>
+        </div>
       </div>
     </div>
-    <div class="sys-win mb-4">
+    <div class="sys-win mb-4 ob-step" data-ob-step="3">
       <div class="sys-head"><span class="sys-i">2</span>孩子資料（幫助抽選合適任務）</div>
       <div class="p-4 grid grid-cols-2 gap-3 items-center text-sm font-bold">
         <label for="ob-age" style="color:var(--sys-dim);">年齡（5–15）</label>
@@ -413,23 +431,34 @@
           <option value="boy">男生</option>
           <option value="girl">女生</option>
         </select>
+        <button type="button" onclick="showOnboardingStep(2)" class="btn-dark py-3 col-span-2">返回名稱</button>
+        <button type="button" onclick="showOnboardingStep(4)" class="btn-gold py-3 col-span-2">下一步：選擇職業</button>
       </div>
     </div>
-    <div class="sys-win mb-5">
+    <div class="sys-win mb-5 ob-step" data-ob-step="4">
       <div class="sys-head"><span class="sys-i">3</span>選擇孩子的覺醒職業</div>
-      <div id="ob-classes" class="p-4 grid gap-3"></div>
+      <div class="p-4 grid gap-3">
+        <div id="ob-classes" class="grid gap-3"></div>
+        <div class="ob-step-actions">
+          <button type="button" onclick="showOnboardingStep(3)" class="btn-dark py-3">返回孩子資料</button>
+          <button type="button" onclick="showOnboardingStep(5)" class="btn-gold py-3">下一步：家長 PIN</button>
+        </div>
+      </div>
     </div>
-    <div class="sys-win mb-5">
+    <div class="sys-win mb-5 ob-step" data-ob-step="5">
       <div class="sys-head"><span class="sys-i">4</span>建立家長 PIN</div>
       <div class="p-4 grid gap-3">
         <p class="caption">PIN 用來保護新增/修改任務、審核任務、管理獎勵、查看紀錄與修改設定。</p>
         <label for="ob-pin" class="sr-only">家長 PIN</label>
         <input id="ob-pin" inputmode="numeric" maxlength="4" placeholder="預設 1234，可改成 4 位數 PIN" class="inp text-lg" aria-describedby="ob-pin-help">
         <div id="ob-pin-help" class="caption">可留空使用預設 1234；設定後請由家長保管。</div>
+        <div class="ob-step-actions">
+          <button type="button" onclick="showOnboardingStep(4)" class="btn-dark py-3">返回職業</button>
+          <button onclick="finishOnboarding()" class="btn-gold py-3 text-lg">第一個任務已出現</button>
+        </div>
       </div>
     </div>
-    <button onclick="finishOnboarding()" class="btn-gold w-full py-4 text-xl">第一個任務已出現</button>
-    <p class="text-center text-xs mt-3" style="color:var(--sys-dim);">完成後會進入今日任務引導，先從一個任務開始。</p>
+    <p class="text-center text-xs mt-3 ob-step" data-ob-step="5" style="color:var(--sys-dim);">完成後會進入今日任務引導，先從一個任務開始。</p>
   </div>
 </div>
 
@@ -1990,7 +2019,26 @@ function renderTop(){
 
 /* ═══════════════════ 覺醒引導 ═══════════════════ */
 let obClass = 'warrior';
+let obStep = 1;
+function updateOnboardingWizard(){
+  document.querySelectorAll('[data-ob-step]').forEach(el=>{
+    el.classList.toggle('active', String(el.dataset.obStep) === String(obStep));
+  });
+  const prog = document.getElementById('ob-progress');
+  if(prog){
+    prog.innerHTML = [1,2,3,4,5].map(n=>`<span class="ob-dot ${n<=obStep?'active':''}" aria-hidden="true"></span>`).join('');
+  }
+}
+function showOnboardingStep(step){
+  obStep = Math.max(1, Math.min(5, Number(step)||1));
+  updateOnboardingWizard();
+  setTimeout(()=>{
+    const target = document.querySelector(`[data-ob-step="${obStep}"] input, [data-ob-step="${obStep}"] select, [data-ob-step="${obStep}"] button`);
+    if(target && typeof target.focus === 'function') target.focus();
+  }, 40);
+}
 function renderOnboarding(){
+  updateOnboardingWizard();
   document.getElementById('ob-classes').innerHTML = Object.entries(CLASSES).map(([k,c])=>`
     <button onclick="pickClass('${k}')" class="text-left p-3 rounded flex items-center gap-3 transition-all"
       style="border:1px solid ${k===obClass?'var(--sys-cyan)':'#1c3a60'}; background:${k===obClass?'rgba(0,210,255,.12)':'rgba(12,24,46,.6)'}; ${k===obClass?'box-shadow:0 0 12px rgba(0,210,255,.3);':''}">
@@ -4053,7 +4101,7 @@ function enterChild(childId){
     document.getElementById('account-gate').style.display='none';
     document.getElementById('game').classList.add('hidden');
     const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
-    document.getElementById('ob-name').value = ch.name; obClass='warrior'; renderOnboarding();
+    document.getElementById('ob-name').value = ch.name; obClass='warrior'; obStep=1; renderOnboarding();
   }
 }
 // 小孩登出（回家長首頁）— 小孩端唯一的離開出口，無法登出家長
@@ -4148,7 +4196,7 @@ function createAccountSubmit(){
   document.getElementById('account-gate').style.display='none';
   document.getElementById('game').classList.add('hidden');
   const ob = document.getElementById('onboarding'); ob.style.display=''; ob.classList.add('active');
-  document.getElementById('ob-name').value = nm; obClass = 'warrior'; renderOnboarding();
+  document.getElementById('ob-name').value = nm; obClass = 'warrior'; obStep=1; renderOnboarding();
 }
 // M17：頂部「切換」＝登出小孩回家長首頁（小孩無法登出家長）
 function switchAccount(){ exitChild(); }
