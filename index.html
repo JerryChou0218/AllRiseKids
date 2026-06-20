@@ -554,6 +554,8 @@
     </div>
 
     <!-- 0. 孩子首頁 -->
+    <div id="parent-test-nav" class="sys-win mb-3 hidden" data-parent-test-nav></div>
+
     <div id="screen-home" class="screen">
       <div class="grid gap-3 lg:grid-cols-[1.35fr_.85fr] lg:items-start">
         <div class="grid gap-3">
@@ -875,6 +877,11 @@
       <div class="sys-win mb-3 parent-panel active" data-parent-panel="overview">
         <div class="sys-head text-sm"><span class="sys-i">!</span>需要關注的項目</div>
         <div class="p-3 grid gap-2" id="parent-attention"></div>
+      </div>
+
+      <div class="sys-win mb-3 parent-panel active" data-parent-panel="overview">
+        <div class="sys-head text-sm"><span class="sys-i">☁</span>同步狀態</div>
+        <div class="p-3 grid gap-2" id="parent-sync-status"></div>
       </div>
 
       <div class="sys-win gold-win mb-3 parent-panel" data-parent-panel="review">
@@ -1994,6 +2001,7 @@ function isFeatureUnlocked(key){
   const u = featureUnlock(key);
   return (state.player.level||1) >= u.level || hasUsedFeature(key);
 }
+function parentCanPreviewAll(){ return !!parentUnlocked; }
 function lockedFeatureHTML(key){
   const u = featureUnlock(key);
   const gap = Math.max(0, u.level - (state.player.level||1));
@@ -2027,7 +2035,7 @@ function goScreen(name){
   window.scrollTo(0,0);
 }
 function gatedGoScreen(name, level, label){
-  if((state.player.level||1) < level){
+  if(!parentCanPreviewAll() && (state.player.level||1) < level){
     toast(`🔒 ${label} 會在 Lv${level} 解鎖。目前先專心完成今日任務、升級、累積金幣。`);
     return;
   }
@@ -2035,7 +2043,7 @@ function gatedGoScreen(name, level, label){
 }
 function goLockedFeature(screen, featureKey){
   const u = featureUnlock(featureKey);
-  if(!isFeatureUnlocked(featureKey)){
+  if(!parentCanPreviewAll() && !isFeatureUnlocked(featureKey)){
     toast(`🔒 ${u.name} 會在 Lv${u.level} 解鎖。${Math.max(0,u.level-(state.player.level||1))} 級後再回來看看。`);
     return;
   }
@@ -2079,6 +2087,39 @@ function renderScreen(name){
   else if(name==='parent') renderParent();
 }
 function renderCurrent(){ renderTop(); renderScreen(currentScreen); }
+function parentTestNavHTML(){
+  const sess = cloudStore.getSession();
+  const parent = sess.parentId ? cloudStore.getParent(sess.parentId) : null;
+  const kids = parent ? (parent.children||[]) : [];
+  const active = kids.find(c=>c.id===sess.activeChildId);
+  const pages = [
+    ['home','首頁'], ['quests','任務'], ['map','地圖'], ['skills','技能'],
+    ['inventory','物品'], ['shop','商店'], ['wallet','錢包'], ['status','角色'],
+    ['achievements','成就'], ['leaderboard','排行'], ['parent','家長']
+  ];
+  return `<div class="sys-head text-sm"><span class="sys-i">P</span>家長測試模式：可直接查看全部孩子頁面</div>
+    <div class="p-3 grid gap-2">
+      <div class="flex items-center gap-2 text-xs font-bold">
+        <span class="flex-none" style="color:var(--sys-dim);">目前孩子</span>
+        <select class="inp flex-1" style="padding:6px 10px;" data-parent-test-switch onchange="parentTestChild(this.value)">
+          ${kids.map(c=>`<option value="${c.id}" ${c.id===sess.activeChildId?'selected':''}>${c.name}</option>`).join('')}
+        </select>
+        <button class="btn-dark px-3 py-2 flex-none" onclick="parentBackHome()">回家長首頁</button>
+      </div>
+      <div class="caption">${active ? `正在檢視：${active.name}` : '尚未選擇孩子。'}</div>
+      <div class="flex gap-2 overflow-x-auto">
+      ${pages.map(([screen,label])=>`<button class="btn-${currentScreen===screen?'gold':'dark'} px-3 py-2 text-xs flex-none" data-parent-test-page="${screen}" onclick="parentOpenPage('${screen}')">${label}</button>`).join('')}
+      </div>
+    </div>`;
+}
+function parentOpenPage(screen){
+  if(screen==='inventory') inventoryContext = 'rewards';
+  if(screen==='shop') shopTab = 'virtual';
+  goScreen(screen);
+}
+function parentBackHome(){
+  exitChild();
+}
 function renderTop(){
   document.getElementById('top-coins').textContent = state.player.coins;
   document.getElementById('top-streak').textContent = state.player.streak;
@@ -2100,6 +2141,16 @@ function renderTop(){
 }
 
 /* ═══════════════════ 覺醒引導 ═══════════════════ */
+const renderTopBase = renderTop;
+renderTop = function(){
+  renderTopBase();
+  const testNav = document.getElementById('parent-test-nav');
+  if(testNav){
+    testNav.classList.toggle('hidden', !parentUnlocked);
+    if(parentUnlocked) testNav.innerHTML = parentTestNavHTML();
+  }
+};
+
 let obClass = 'warrior';
 let obAvatar = '🛡️';
 let obStep = 1;
@@ -2563,7 +2614,7 @@ function gateSlots(n){
 }
 function renderMap(){
   const map = document.getElementById('gate-map');
-  if(!isFeatureUnlocked('map')){
+  if(!parentCanPreviewAll() && !isFeatureUnlocked('map')){
     document.getElementById('map-count').textContent = `Lv${featureUnlock('map').level} 解鎖`;
     map.innerHTML = `<div class="p-4 grid gap-3">${lockedFeatureHTML('map')}${lockedFeatureHTML('skills')}${lockedFeatureHTML('equipment')}</div>`;
     return;
@@ -3100,7 +3151,7 @@ function renderAchievements(){
 /* ═══════════════════ 商店 ═══════════════════ */
 const SHOP_FILTERS = [ ['all','全部'],['hat','頭部'],['outfit','服裝'],['weapon','武器'],['accessory','飾品'],['pet','隨從'],['title','稱號'],['emote','徽記'] ];
 function setShopTab(tab){
-  if(tab==='virtual' && !isFeatureUnlocked('backpack')){
+  if(tab==='virtual' && !parentCanPreviewAll() && !isFeatureUnlocked('backpack')){
     shopTab = 'real';
     toast('🔒 背包與系統商店會在 Lv3 解鎖。現在先使用真實獎勵。');
     renderShop();
@@ -3112,7 +3163,7 @@ function setShopTab(tab){
 }
 function setShopFilter(f){ shopFilter = f; renderShop(); }
 function renderShop(){
-  if(shopTab==='virtual' && !isFeatureUnlocked('backpack')) shopTab = 'real';
+  if(shopTab==='virtual' && !parentCanPreviewAll() && !isFeatureUnlocked('backpack')) shopTab = 'real';
   document.querySelectorAll('[data-stab]').forEach(b=>b.classList.toggle('active', b.dataset.stab===shopTab));
   document.getElementById('shop-coins').textContent = state.player.coins;
   const disc = shopDiscount();
@@ -3369,13 +3420,27 @@ function renderParent(){
   const attention = document.getElementById('parent-attention');
   if(attention){
     const reqCount = rewardActions;
+    const todayTasks = state.tasks.filter(t=>!CHALLENGE.has(t.difficulty) && t.pickedDate===todayStr());
+    const todayDone = todayTasks.filter(t=>t.status==='completed').length;
+    const todayRate = todayTasks.length ? Math.round(todayDone / todayTasks.length * 100) : 0;
+    const fulfilledWaiting = approvedReqs.length;
+    const workCard = (value,label,color)=>`<div class="p-2.5 rounded" style="background:rgba(12,26,50,.72); border:1px solid #1c3a60;">
+      <div class="num text-lg font-black" style="color:${color};">${value}</div>
+      <div class="text-[11px] font-bold" style="color:var(--sys-dim);">${label}</div>
+    </div>`;
     attention.innerHTML = `
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2">
+        ${workCard(pending.length,'待審核任務',pending.length?'#ffd25c':'#5cffb8')}
+        ${workCard(reqs.length,'待同意獎勵',reqs.length?'#ffd25c':'#5cffb8')}
+        ${workCard(fulfilledWaiting,'待兌現獎勵',fulfilledWaiting?'#ffb86b':'#5cffb8')}
+        ${workCard(todayRate+'%','今日完成率',todayRate>=80?'#5cffb8':'#7ea8cc')}
+      </div>
       <div class="grid grid-cols-2 gap-2">
         <button onclick="setParentTab('review')" class="btn-${pending.length?'gold':'dark'} py-2 text-sm">待審核任務：${pending.length}</button>
         <button onclick="setParentTab('review')" class="btn-${reqCount?'gold':'dark'} py-2 text-sm">獎勵申請：${reqCount}</button>
       </div>
       <button onclick="setParentTab('tasks'); openTaskForm();" class="btn-sys py-2.5 text-sm">＋ 快速新增任務</button>
-      <div class="caption">${pending.length||reqCount?'優先處理孩子已送出的申請。':'目前沒有急件，可以查看本週紀錄或調整任務。'}</div>`;
+      <div class="caption">${pending.length||reqCount?'優先處理孩子已送出的申請。':`目前沒有急件。本週已完成 ${weekDone} 個任務，可查看成長紀錄或調整任務。`}</div>`;
   }
 
   document.getElementById('pf-dailycount').value = state.parentConfig.dailyCount||8;
@@ -3438,6 +3503,7 @@ function renderParent(){
     : `<div class="font-bold text-center py-2" style="color:var(--sys-dim);">還沒有任何紀錄。</div>`;
 
   renderAccounts();
+  renderCloudSyncStatus();
   renderDebugPanel();
   renderParentTrades();
   setParentTab(parentTab);
@@ -3796,13 +3862,43 @@ function resetPin(){
   toast('PIN 碼已更新。');
 }
 function validateImportedSave(data){
-  if(!data || typeof data !== 'object') return false;
-  if(!data.player || typeof data.player !== 'object') return false;
-  if(typeof data.player.name !== 'string') return false;
-  if(!data.player.stats || typeof data.player.stats !== 'object') return false;
-  if(!Array.isArray(data.tasks) || !Array.isArray(data.taskPool)) return false;
-  if(!Array.isArray(data.inventory) || !Array.isArray(data.achievements)) return false;
-  if(!data.parentConfig || typeof data.parentConfig !== 'object') return false;
+  const fail = msg => { validateImportedSave.lastError = msg; return false; };
+  validateImportedSave.lastError = '';
+  const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
+  const isNum = v => typeof v === 'number' && Number.isFinite(v);
+  const isStr = v => typeof v === 'string';
+  const validDate = v => !v || (isStr(v) && /^\d{4}-\d{2}-\d{2}$/.test(v));
+  if(!isObj(data)) return fail('root');
+  if(data.version !== undefined && (!Number.isInteger(data.version) || data.version < 1 || data.version > VERSION)) return fail('version');
+  if(!isObj(data.player)) return fail('player');
+  const p = data.player;
+  if(!isStr(p.name) || p.name.length > 30) return fail('player.name');
+  if(p.class !== undefined && !isStr(p.class)) return fail('player.class');
+  if(p.avatar !== undefined && !isStr(p.avatar)) return fail('player.avatar');
+  if(!isNum(p.level) || p.level < 1 || p.level > MAX_LEVEL) return fail('player.level');
+  if(!isNum(p.xp) || p.xp < 0) return fail('player.xp');
+  if(!isNum(p.coins) || p.coins < 0) return fail('player.coins');
+  if(!isObj(p.stats)) return fail('player.stats');
+  if(!['str','agi','int','vit','sen'].every(k=>isNum(p.stats[k]) && p.stats[k] >= 0 && p.stats[k] <= 999)) return fail('player.stats.values');
+  if(p.skills !== undefined && !Array.isArray(p.skills)) return fail('player.skills');
+  if(!Array.isArray(data.tasks) || !Array.isArray(data.taskPool)) return fail('tasks');
+  if(!Array.isArray(data.inventory) || !Array.isArray(data.achievements)) return fail('inventory');
+  if(!isObj(data.parentConfig)) return fail('parentConfig');
+  if(data.parentConfig.pin !== undefined && !/^\d{4}$/.test(String(data.parentConfig.pin))) return fail('parentConfig.pin');
+  if(data.parentConfig.customRewards !== undefined && !Array.isArray(data.parentConfig.customRewards)) return fail('parentConfig.customRewards');
+  if(data.rewardRequests !== undefined && !Array.isArray(data.rewardRequests)) return fail('rewardRequests');
+  if(data.history !== undefined && !Array.isArray(data.history)) return fail('history');
+  if(data.counters !== undefined && !isObj(data.counters)) return fail('counters');
+  if(data.meta !== undefined && (!isObj(data.meta) || !validDate(data.meta.lastDay))) return fail('meta');
+  const validTask = t => isObj(t) && isStr(t.id) && isStr(t.name)
+    && (!t.difficulty || !!DIFFS[t.difficulty])
+    && (!t.category || !!CATS[t.category])
+    && (!t.status || ['available','started','pending','completed'].includes(t.status))
+    && validDate(t.completedDate) && validDate(t.pickedDate);
+  if(!data.tasks.every(validTask)) return fail('tasks.item');
+  if(!data.taskPool.every(t=>isObj(t) && isStr(t.id) && isStr(t.name) && (!t.difficulty || !!DIFFS[t.difficulty]) && (!t.category || !!CATS[t.category]))) return fail('taskPool.item');
+  if(!data.inventory.every(i=>isObj(i) && isStr(i.id) && isStr(i.name))) return fail('inventory.item');
+  if(!data.achievements.every(a=>isObj(a) && isStr(a.id) && typeof a.unlocked === 'boolean')) return fail('achievements.item');
   return true;
 }
 function resetCurrentChildData(){
@@ -3856,7 +3952,7 @@ function importSave(input){
     try{
       const data = JSON.parse(reader.result);
       if(!validateImportedSave(data)){
-        toast('這不是有效的 AllRiseKids 存檔檔案。'); input.value=''; return;
+        toast('這不是有效的 AllRiseKids 存檔檔案：' + (validateImportedSave.lastError || '格式錯誤')); input.value=''; return;
       }
       if(!confirm('⚠️ 匯入會覆蓋這台裝置目前的進度，確定嗎？')){ input.value=''; return; }
       kqStorage.write(JSON.stringify(data));
@@ -4031,7 +4127,7 @@ const cloudStore = (function(){
       p={ id:uid(), email, provider:'google', displayName: displayName||(email||'家長').split('@')[0], createdAt: todayStr(), pin:null, children:[] };
       c.parents.push(p); _write(c); return p;
     },
-    saveParent(p){ const c=_read(); const i=c.parents.findIndex(x=>x.id===p.id); if(i>=0) c.parents[i]=p; else c.parents.push(p); _write(c); },
+    saveParent(p){ p._localUpdatedAt = Date.now(); const c=_read(); const i=c.parents.findIndex(x=>x.id===p.id); if(i>=0) c.parents[i]=p; else c.parents.push(p); _write(c); },
     getParent(parentId){ return _read().parents.find(x=>x.id===parentId) || null; },
     listChildren(parentId){ const p=_read().parents.find(x=>x.id===parentId); return p? p.children.slice() : []; },
     addChild(parentId, name){
@@ -4086,6 +4182,39 @@ const auth = {
 
 /* ===== M23 真正的 Supabase 雲端（只在 CLOUD_READY 時啟用；否則完全不影響本機流程） ===== */
 let _supa=null, _cloudUser=null, _pushTimer=null;
+let cloudSyncState = { status: CLOUD_READY ? 'idle' : 'local', lastSyncedAt: null, error: '' };
+function cloudSetSyncStatus(status, error){
+  cloudSyncState = {
+    status,
+    lastSyncedAt: status==='synced' ? new Date().toISOString() : cloudSyncState.lastSyncedAt,
+    error: error || ''
+  };
+  renderCloudSyncStatus();
+}
+function cloudSyncStatusHTML(){
+  const labels = {
+    local: ['本機模式', '尚未設定 Supabase，資料只存在這台裝置。', '#7ea8cc'],
+    idle: ['等待同步', '雲端已設定，登入後會自動同步。', '#7ea8cc'],
+    syncing: ['同步中', '正在把目前家長資料寫入雲端。', '#ffd25c'],
+    synced: ['已同步', '資料已寫入雲端。', '#5cffb8'],
+    error: ['同步失敗', cloudSyncState.error || '請檢查網路或 Supabase 設定。', '#ff8a8a']
+  };
+  const info = labels[cloudSyncState.status] || labels.idle;
+  const when = cloudSyncState.lastSyncedAt ? new Date(cloudSyncState.lastSyncedAt).toLocaleString() : '尚未同步';
+  const mode = CLOUD_READY ? (_cloudUser ? `雲端帳號：${_cloudUser.email||'已登入'}` : '雲端已設定，尚未登入') : '目前使用本機模式';
+  return `<div class="flex items-center gap-2">
+      <div class="flex-1 min-w-0">
+        <div class="font-black text-sm" style="color:${info[2]};">${info[0]}</div>
+        <div class="caption">${mode}</div>
+        <div class="text-[11px] font-bold" style="color:var(--sys-dim);">${info[1]} 上次同步：${when}</div>
+      </div>
+      <button onclick="cloudManualSync()" class="btn-sys px-3 py-2 text-xs flex-none" ${CLOUD_READY&&_cloudUser?'':'disabled'}>手動同步</button>
+    </div>`;
+}
+function renderCloudSyncStatus(){
+  const box = document.getElementById('parent-sync-status');
+  if(box) box.innerHTML = cloudSyncStatusHTML();
+}
 function cloudClient(){
   if(!CLOUD_READY) return null;
   if(_supa) return _supa;
@@ -4106,7 +4235,7 @@ async function cloudSignInGoogle(options={}){
   }
   catch(e){ toast('Google 登入啟動失敗：'+(e&&e.message||e)); }
 }
-async function cloudSignOut(){ const c=cloudClient(); if(c){ try{ await c.auth.signOut(); }catch(e){} } _cloudUser=null; }
+async function cloudSignOut(){ const c=cloudClient(); if(c){ try{ await c.auth.signOut(); }catch(e){} } _cloudUser=null; cloudSetSyncStatus(CLOUD_READY?'idle':'local'); }
 async function cloudSwitchGoogleAccount(){
   if(!CLOUD_READY){ parentLogout(); return; }
   await cloudSignOut();
@@ -4121,11 +4250,20 @@ async function cloudCurrentUser(){
 async function cloudPull(userId){
   const c=cloudClient(); if(!c) return null;
   try{ const { data, error } = await c.from('saves').select('data').eq('user_id', userId).maybeSingle();
-    if(error) return null; return data? data.data : null; }catch(e){ return null; }
+    if(error){ cloudSetSyncStatus('error', error.message); return null; } return data? data.data : null; }catch(e){ cloudSetSyncStatus('error', e.message); return null; }
 }
 async function cloudPush(userId, payload){
   const c=cloudClient(); if(!c) return;
-  try{ await c.from('saves').upsert({ user_id:userId, data:payload, updated_at:new Date().toISOString() }); }catch(e){}
+  cloudSetSyncStatus('syncing');
+  try{
+    const { error } = await c.from('saves').upsert({ user_id:userId, data:payload, updated_at:new Date().toISOString() });
+    if(error) throw error;
+    cloudSetSyncStatus('synced');
+    return true;
+  }catch(e){
+    cloudSetSyncStatus('error', e.message || '雲端寫入失敗');
+    return false;
+  }
 }
 // 進度有變更時，去抖動地把目前家長整包資料推上雲端
 function cloudSchedulePush(){
@@ -4139,8 +4277,14 @@ function cloudSchedulePush(){
 }
 async function cloudSyncParentNow(p){
   if(!CLOUD_READY || !_cloudUser || !p) return false;
-  await cloudPush(_cloudUser.id, p);
-  return true;
+  return await cloudPush(_cloudUser.id, p);
+}
+async function cloudManualSync(){
+  const sess = cloudStore.getSession();
+  const p = sess.parentId ? cloudStore.getParent(sess.parentId) : null;
+  const ok = await cloudSyncParentNow(p);
+  toast(ok ? '雲端同步完成。' : '雲端同步失敗，請稍後再試。');
+  renderCloudSyncStatus();
 }
 // 啟動時若已有 Google 登入工作階段：拉雲端資料 → 灌入本機家長 → 進家長首頁
 async function cloudBoot(){
@@ -4148,14 +4292,28 @@ async function cloudBoot(){
   const user = await cloudCurrentUser();
   if(!user) return;                          // 未登入 → 維持本機登入畫面
   _cloudUser = user;
+  cloudSetSyncStatus('syncing');
   const dn = (user.user_metadata && (user.user_metadata.full_name||user.user_metadata.name)) || (user.email||'家長');
   const p = cloudStore.createParent(user.email, dn);
   const pulled = await cloudPull(user.id);
+  const pullFailed = cloudSyncState.status === 'error';
   if(pulled && Array.isArray(pulled.children)){
-    pulled.id = p.id; pulled.email = user.email;   // 維持本機 id/email 一致
-    cloudStore.saveParent(pulled);
+    const localParent = cloudStore.getParent(p.id);
+    const localTime = localParent ? (localParent._localUpdatedAt || 0) : 0;
+    const cloudTime = pulled._localUpdatedAt || 0;
+    if(localTime > cloudTime){
+      // 本機比雲端新（例如：上次推送失敗），把本機推回雲端
+      cloudPush(user.id, localParent)
+        .then(ok => cloudSetSyncStatus(ok ? 'synced' : 'error', ok ? '' : '本機資料較新，但推送至雲端失敗，請點手動同步。'))
+        .catch(()=>cloudSetSyncStatus('error', '本機推送重試失敗，請點手動同步。'));
+    } else {
+      // 雲端較新或一致，以雲端為主
+      pulled.id = p.id; pulled.email = user.email;   // 維持本機 id/email 一致
+      cloudStore.saveParent(pulled);
+    }
   }
   cloudStore.setSession({ parentId:p.id, activeChildId:null });
+  if(!pullFailed) cloudSetSyncStatus('synced');
   showAccountGate();                          // → 家長首頁（已含雲端小孩）
 }
 function avatarFor(a){ let h=0; for(const ch of (a.name||'')) h=(h+ch.charCodeAt(0))%AVATARS.length; return a.avatar || AVATARS[h]; }
@@ -4231,6 +4389,7 @@ function renderAccountGate(){
       <span class="text-2xl">${avatarFor(c)}</span>
       <span class="flex-1 font-black text-white truncate">${c.name}${badge}</span>
       ${reviewBtn}
+      <button onclick="parentTestChild('${c.id}')" class="btn-gold px-3 py-2 text-xs font-black flex-none" data-parent-test-child="${c.id}">管理/測試</button>
       <button onclick="enterChild('${c.id}')" class="btn-sys px-3 py-2 text-xs font-black flex-none">進入 →</button>
     </div>`;
   }).join('') || `<div class="text-xs font-bold" style="color:var(--sys-dim);">還沒有小孩帳號，先建立一個吧！</div>`;
@@ -4324,6 +4483,12 @@ function reviewChild(childId){
   enterChild(childId);
   parentUnlocked = true;
   goScreen('parent');
+}
+function parentTestChild(childId){
+  parentUnlocked = true;
+  enterChild(childId);
+  goScreen('home');
+  toast('家長測試模式已開啟，可直接查看全部孩子頁面。');
 }
 // 一次性遷移：舊扁平 kidquest_accounts → 預設本機家長名下的小孩（原資料保留作備援）
 function migrateFlatAccountsToCloud(){
@@ -4453,8 +4618,12 @@ async function deleteChild(id){
   if(!confirm(`確定刪除小孩「${ch.name}」？該帳號進度將永久消失！`)) return;
   p.children = p.children.filter(x=>x.id!==id);
   cloudStore.saveParent(p);
-  await cloudSyncParentNow(p);
-  toast(`已刪除「${ch.name}」。`);
+  const syncOk = await cloudSyncParentNow(p);
+  if(CLOUD_READY && _cloudUser && !syncOk){
+    toast(`已刪除「${ch.name}」，但雲端同步失敗——重新整理頁面時將自動重試。`);
+  } else {
+    toast(`已刪除「${ch.name}」。`);
+  }
   if(sess.activeChildId===id){ cloudStore.setSession({ parentId:p.id, activeChildId:null }); currentAccountId=null; showAccountGate(); }
   else renderAccounts();
 }
