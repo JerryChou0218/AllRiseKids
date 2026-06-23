@@ -7,7 +7,7 @@
  *     首次上線載入後即快取，之後離線也能維持完整介面。
  * 改版時請更新 CACHE_VERSION，activate 會自動清掉舊快取。
  */
-const CACHE_VERSION = 'kidquest-v3';
+const CACHE_VERSION = 'kidquest-v4';
 const CORE_ASSETS = [
   './',
   './index.html',

@@ -12,7 +12,7 @@ function assert(cond, msg){
   else { console.log('FAIL:', msg); fail++; }
 }
 
-assert(sw.includes("const CACHE_VERSION = 'kidquest-v3'"), 'service worker cache version was bumped');
+assert(sw.includes("const CACHE_VERSION = 'kidquest-v4'"), 'service worker cache version was bumped');
 assert(sw.includes("url.pathname.endsWith('/index.html')"), 'index.html is treated as app shell');
 assert(sw.includes("url.pathname.endsWith('/cloud-config.js')"), 'cloud-config.js is treated as app shell');
 assert(sw.includes("fetch(req, { cache: 'no-store' })"), 'app shell fetch bypasses HTTP cache');
