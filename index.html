@@ -4127,16 +4127,18 @@ const cloudStore = (function(){
       p={ id:uid(), email, provider:'google', displayName: displayName||(email||'家長').split('@')[0], createdAt: todayStr(), pin:null, children:[] };
       c.parents.push(p); _write(c); return p;
     },
-    saveParent(p){ p._localUpdatedAt = Date.now(); const c=_read(); const i=c.parents.findIndex(x=>x.id===p.id); if(i>=0) c.parents[i]=p; else c.parents.push(p); _write(c); },
+    // putParent：照原樣寫入，不更新時間戳（合併寫回時用）；saveParent：標記為本機剛改過。
+    putParent(p){ const c=_read(); const i=c.parents.findIndex(x=>x.id===p.id); if(i>=0) c.parents[i]=p; else c.parents.push(p); _write(c); },
+    saveParent(p){ p._localUpdatedAt = Date.now(); this.putParent(p); },
     getParent(parentId){ return _read().parents.find(x=>x.id===parentId) || null; },
     listChildren(parentId){ const p=_read().parents.find(x=>x.id===parentId); return p? p.children.slice() : []; },
     addChild(parentId, name){
       const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return { ok:false, reason:'no-parent' };
       if(p.children.length>=MAX_CHILDREN) return { ok:false, reason:'max' };
-      const child={ id:uid(), name:(name||'小獵人').trim()||'小獵人', avatar:null, blob:null, createdAt: todayStr() };
-      p.children.push(child); _write(c); return { ok:true, child };
+      const child={ id:uid(), name:(name||'小獵人').trim()||'小獵人', avatar:null, blob:null, createdAt: todayStr(), _updatedAt: Date.now() };
+      p.children.push(child); p._localUpdatedAt = Date.now(); _write(c); return { ok:true, child };
     },
-    saveChildBlob(parentId, childId, blob){ const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return; const ch=p.children.find(x=>x.id===childId); if(!ch) return; ch.blob=blob; p._localUpdatedAt = Date.now(); _write(c); },
+    saveChildBlob(parentId, childId, blob){ const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return; const ch=p.children.find(x=>x.id===childId); if(!ch) return; ch.blob=blob; ch._updatedAt = Date.now(); p._localUpdatedAt = Date.now(); _write(c); },
     loadChildBlob(parentId, childId){ const p=_read().parents.find(x=>x.id===parentId); if(!p) return null; const ch=p.children.find(x=>x.id===childId); return ch? ch.blob : null; },
     getSession(){ return _read().session || { parentId:null, activeChildId:null }; },
     setSession(s){ const c=_read(); c.session=s; _write(c); },
@@ -4173,6 +4175,39 @@ const cloudStore = (function(){
     }
   };
 })();
+/* ===== 逐小孩合併：多台裝置各玩不同小孩時，避免「整包覆蓋」導致他台進度遺失 =====
+ * 規則：
+ *   - 小孩：依 id 合併，同一 id 取 _updatedAt 較新者；被 tombstone（deletedChildIds）標記者一律移除。
+ *   - 家長純量欄位（pin / displayName 等）：取 _localUpdatedAt 較新的家長為主。
+ * 因每台裝置只會更新自己正在玩的小孩，合併後不會互相覆蓋。
+ */
+function mergeChildLists(localChildren, cloudChildren, tombstones){
+  const byId = {};
+  (cloudChildren||[]).forEach(c=>{ if(c && c.id) byId[c.id]=c; });
+  (localChildren||[]).forEach(c=>{
+    if(!c || !c.id) return;
+    const ex = byId[c.id];
+    if(!ex) byId[c.id]=c;
+    else byId[c.id] = ((c._updatedAt||0) >= (ex._updatedAt||0)) ? c : ex;
+  });
+  const dead = new Set(tombstones||[]);
+  return Object.keys(byId).map(k=>byId[k]).filter(c=>!dead.has(c.id));
+}
+function mergeParents(localP, cloudP){
+  if(!cloudP) return localP;
+  if(!localP) return cloudP;
+  const lt = localP._localUpdatedAt||0, ct = cloudP._localUpdatedAt||0;
+  const base = (lt >= ct) ? localP : cloudP;            // 家長純量欄位以較新者為主
+  const tombstones = Object.keys(
+    [].concat(localP.deletedChildIds||[], cloudP.deletedChildIds||[])
+      .reduce((m,id)=>{ m[id]=1; return m; }, {})
+  );
+  const merged = Object.assign({}, base);
+  merged.children = mergeChildLists(localP.children, cloudP.children, tombstones);
+  merged.deletedChildIds = tombstones;
+  merged._localUpdatedAt = Math.max(lt, ct);
+  return merged;
+}
 /* 家長登入：本機 stub（無雲端時用 email 模擬）；CLOUD_READY 時改走真正的 Google OAuth（見 cloud 模組）。 */
 const auth = {
   signInWithGoogle(email, displayName){ if(!email) return null; return cloudStore.createParent(email, displayName); },
@@ -4256,8 +4291,16 @@ async function cloudPush(userId, payload){
   const c=cloudClient(); if(!c) return;
   cloudSetSyncStatus('syncing');
   try{
-    const { error } = await c.from('saves').upsert({ user_id:userId, data:payload, updated_at:new Date().toISOString() });
+    // 先抓雲端最新，與本地 payload 逐小孩合併，避免覆蓋其他裝置剛存的小孩進度
+    let merged = payload;
+    try{
+      const { data: cur } = await c.from('saves').select('data').eq('user_id', userId).maybeSingle();
+      if(cur && cur.data) merged = mergeParents(payload, cur.data);
+    }catch(_){ /* 讀取失敗就退回只推本地，至少不丟自己的進度 */ }
+    const { error } = await c.from('saves').upsert({ user_id:userId, data:merged, updated_at:new Date().toISOString() });
     if(error) throw error;
+    // 把合併結果寫回本機（不更新時間戳），讓本機也擁有其他裝置的小孩更新
+    if(merged && merged.id) cloudStore.putParent(merged);
     cloudSetSyncStatus('synced');
     return true;
   }catch(e){
@@ -4297,24 +4340,19 @@ async function cloudBoot(){
   const p = cloudStore.createParent(user.email, dn);
   const pulled = await cloudPull(user.id);
   const pullFailed = cloudSyncState.status === 'error';
-  if(pulled && Array.isArray(pulled.children)){
+  if(!pullFailed){
+    // 本機與雲端逐小孩合併（不再「整包二選一」），保留每個小孩較新的版本、套用刪除墓碑
     const localParent = cloudStore.getParent(p.id);
-    const localTime = localParent ? (localParent._localUpdatedAt || 0) : 0;
-    const cloudTime = pulled._localUpdatedAt || 0;
-    if(localTime > cloudTime){
-      // 本機比雲端新（例如：上次推送失敗），把本機推回雲端
-      cloudPush(user.id, localParent)
-        .then(ok => cloudSetSyncStatus(ok ? 'synced' : 'error', ok ? '' : '本機資料較新，但推送至雲端失敗，請點手動同步。'))
-        .catch(()=>cloudSetSyncStatus('error', '本機推送重試失敗，請點手動同步。'));
-    } else {
-      // 雲端較新或一致，以雲端為主
-      pulled.id = p.id; pulled.email = user.email;   // 維持本機 id/email 一致
-      cloudStore.saveParent(pulled);
-    }
+    const merged = mergeParents(localParent, pulled);
+    merged.id = p.id; merged.email = user.email;     // 維持本機 id/email 一致
+    cloudStore.putParent(merged);
+    // 推回合併結果，讓雲端也補上本機較新的小孩；推送失敗則提示手動同步
+    cloudPush(user.id, merged)
+      .then(ok => cloudSetSyncStatus(ok ? 'synced' : 'error', ok ? '' : '合併後推送至雲端失敗，請點手動同步。'))
+      .catch(()=>cloudSetSyncStatus('error', '合併後推送重試失敗，請點手動同步。'));
   }
   cloudStore.setSession({ parentId:p.id, activeChildId:null });
-  if(!pullFailed) cloudSetSyncStatus('synced');
-  showAccountGate();                          // → 家長首頁（已含雲端小孩）
+  showAccountGate();                          // → 家長首頁（已含合併後的小孩）
 }
 function avatarFor(a){ let h=0; for(const ch of (a.name||'')) h=(h+ch.charCodeAt(0))%AVATARS.length; return a.avatar || AVATARS[h]; }
 function snapshotActive(c){
@@ -4617,6 +4655,9 @@ async function deleteChild(id){
   const ch = p.children.find(x=>x.id===id); if(!ch) return;
   if(!confirm(`確定刪除小孩「${ch.name}」？該帳號進度將永久消失！`)) return;
   p.children = p.children.filter(x=>x.id!==id);
+  p.deletedChildIds = Object.keys(
+    [].concat(p.deletedChildIds||[], [id]).reduce((m,x)=>{ m[x]=1; return m; }, {})
+  );   // 墓碑：避免其他裝置的舊資料把已刪小孩合併回來
   cloudStore.saveParent(p);
   const syncOk = await cloudSyncParentNow(p);
   if(CLOUD_READY && _cloudUser && !syncOk){

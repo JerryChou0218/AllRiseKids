@@ -82,6 +82,29 @@ __assert(auth.currentParent().id===p1.id && cloudStore.getSession().activeChildI
 auth.signOutParent();
 __assert(auth.currentParent()===null, '家長登出後無 session');
 
+/* 7. 逐小孩合併：兩台裝置各改不同小孩，合併後都不遺失（取各自較新版本） */
+const localP = { id:'p', email:'mom@gmail.com', _localUpdatedAt:200, children:[
+  { id:'x', _updatedAt:200, blob:JSON.stringify({coins:10}) },   // 本機把 X 改新
+  { id:'y', _updatedAt:100, blob:JSON.stringify({coins:1})  },   // 本機的 Y 較舊
+]};
+const cloudP = { id:'p', email:'mom@gmail.com', _localUpdatedAt:100, children:[
+  { id:'x', _updatedAt:100, blob:JSON.stringify({coins:5})  },   // 雲端的 X 較舊
+  { id:'y', _updatedAt:300, blob:JSON.stringify({coins:99}) },   // 另一台把 Y 改新
+]};
+const m = mergeParents(localP, cloudP);
+const mx = JSON.parse(m.children.find(c=>c.id==='x').blob).coins;
+const my = JSON.parse(m.children.find(c=>c.id==='y').blob).coins;
+__assert(mx===10 && my===99, '逐小孩合併取各自較新版本（X 用本機10、Y 用雲端99，零遺失）');
+
+/* 8. 刪除墓碑：已刪小孩不會被另一台的舊資料合併回來 */
+const delLocal = { id:'p', _localUpdatedAt:500, deletedChildIds:['y'], children:[{ id:'x', _updatedAt:500, blob:'{}' }] };
+const delCloud = { id:'p', _localUpdatedAt:300, children:[{ id:'x', _updatedAt:300, blob:'{}' }, { id:'y', _updatedAt:300, blob:'{}' }] };
+const dm = mergeParents(delLocal, delCloud);
+__assert(!dm.children.some(c=>c.id==='y') && dm.children.some(c=>c.id==='x'), '刪除墓碑：已刪小孩 Y 不被合併復活，X 保留');
+
+/* 9. 缺一邊時不爆且回傳另一邊 */
+__assert(mergeParents(localP, null)===localP && mergeParents(null, cloudP)===cloudP, 'mergeParents 對 null 安全');
+
 console.log('');
 console.log(__af()===0 ? '=== 雲端抽象層驗證通過（'+__ap()+' 項）===' : '=== 失敗 '+__af()+' 項 ===');
 `;
