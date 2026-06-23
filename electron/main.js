@@ -1,4 +1,4 @@
-/* KidQuest 桌面版主程序（Electron）
+/* AllRiseKids 桌面版主程序（Electron）
  * 開一個視窗載入 index.html；存檔由 preload.js 寫到 .exe 同層的檔案。 */
 const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
@@ -11,7 +11,7 @@ function createWindow(){
     minHeight: 640,
     center: true,
     backgroundColor: '#060b18',
-    title: 'KidQuest：覺醒 獵人任務系統',
+    title: 'AllRiseKids 孩子們覺醒吧!',
     autoHideMenuBar: true,
     fullscreenable: true,
     webPreferences: {

@@ -1,7 +1,7 @@
-/* 打包 KidQuest 桌面版（@electron/packager）
+/* 打包 AllRiseKids 桌面版（@electron/packager）
  * 用 ignore 函式精確控制：只把遊戲執行所需的檔案放進 App，
  * 排除框架檔（milestone-state.json、milestones/、docs/…）與開發用 node_modules。
- * 產出：dist/KidQuest-win32-x64/，內含 KidQuest.exe。 */
+ * 產出：dist/AllRiseKids-win32-x64/，內含 AllRiseKids.exe。 */
 const { packager } = require('@electron/packager');
 const path = require('path');
 
@@ -17,7 +17,7 @@ const ALLOW_TOP = new Set([
 
 packager({
   dir: path.join(__dirname, '..'),
-  name: 'KidQuest',
+  name: 'AllRiseKids',
   platform: 'win32',
   arch: 'x64',
   out: path.join(__dirname, '..', 'dist'),

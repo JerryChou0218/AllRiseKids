@@ -26,6 +26,8 @@ const parentTabs = [...html.matchAll(/data-ptab="([^"]+)"/g)].map(m=>m[1]);
 assert(['overview','review','tasks','rewards','records','settings'].every(t=>parentTabs.includes(t)), '家長模式六分頁存在');
 assert(count(/data-parent-panel="/g) >= 9, '家長內容依分頁分組');
 assert(html.includes('id="parent-records-dashboard"') && html.includes('function renderParentRecords'), 'parent records dashboard render helper exists');
+assert(html.includes('id="parent-sync-status"') && html.includes('cloudSyncStatusHTML') && html.includes('cloudManualSync'), 'parent dashboard exposes cloud sync status and manual sync');
+assert(html.includes('data-parent-test-switch') && html.includes('function parentBackHome') && html.includes('data-parent-test-child'), 'parent test mode can switch child and return home');
 assert(html.includes('id="rf-stock"') && html.includes('id="rf-expires"') && html.includes('id="rf-paused"') && html.includes('function rewardAvailability'), 'real reward management supports stock, expiry, and paused state');
 assert(['每日完成率','任務分類分布','能力成長','獎勵兌換紀錄','最近紀錄'].every(s=>html.includes(s)), 'parent records dashboard covers completion/category/ability/reward/history');
 assert(html.includes('function fulfillReward') && html.includes('標示已兌現') && html.includes("status = 'fulfilled'"), '真實獎勵核准後仍需家長標示已兌現');
@@ -50,6 +52,7 @@ assert(!html.includes('警告：未完成全部每日任務'), '任務頁不使�
 
 assert(html.includes('advanced-box') && html.includes('進階設定 / 除錯'), '除錯和平衡測試收在進階設定');
 assert(html.includes('validateImportedSave'), '匯入資料前有格式驗證');
+assert(html.includes('validateImportedSave.lastError') && html.includes('tasks.item') && html.includes('achievements.item'), '匯入資料驗證提供欄位級錯誤原因');
 assert(html.includes('resetCurrentChildData') && html.includes("code !== 'RESET'"), '重置資料有二次確認');
 assert(html.includes('aria-label="孩子模式主要導覽"') && html.includes('aria-label="家長模式分頁"'), '主要導覽有 aria-label');
 assert(html.includes('assets/rpg-icons.svg') && html.includes('nav-rpg-icon') && html.includes('function rpgIcon'), '主要 UI 使用 RPG 圖像化 icon helper');

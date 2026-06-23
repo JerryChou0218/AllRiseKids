@@ -1,7 +1,7 @@
 {
-  "name": "kidquest",
+  "name": "allrisekids",
   "version": "3.1.0",
-  "description": "KidQuest：覺醒 獵人任務系統 — 單機桌面版（存檔隨資料夾移動）",
+  "description": "AllRiseKids：給孩子的每日任務 RPG，支援 PWA、桌面版、家長審核與雲端同步。",
   "main": "electron/main.js",
   "scripts": {
     "start": "electron .",
@@ -10,7 +10,7 @@
     "test:browser": "node test/browser-responsive.test.js",
     "pack": "node electron/pack.js"
   },
-  "author": "KidQuest",
+  "author": "AllRiseKids",
   "license": "MIT",
   "devDependencies": {
     "@electron/packager": "^20.0.1",
