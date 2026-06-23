@@ -4136,7 +4136,7 @@ const cloudStore = (function(){
       const child={ id:uid(), name:(name||'小獵人').trim()||'小獵人', avatar:null, blob:null, createdAt: todayStr() };
       p.children.push(child); _write(c); return { ok:true, child };
     },
-    saveChildBlob(parentId, childId, blob){ const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return; const ch=p.children.find(x=>x.id===childId); if(!ch) return; ch.blob=blob; _write(c); },
+    saveChildBlob(parentId, childId, blob){ const c=_read(); const p=c.parents.find(x=>x.id===parentId); if(!p) return; const ch=p.children.find(x=>x.id===childId); if(!ch) return; ch.blob=blob; p._localUpdatedAt = Date.now(); _write(c); },
     loadChildBlob(parentId, childId){ const p=_read().parents.find(x=>x.id===parentId); if(!p) return null; const ch=p.children.find(x=>x.id===childId); return ch? ch.blob : null; },
     getSession(){ return _read().session || { parentId:null, activeChildId:null }; },
     setSession(s){ const c=_read(); c.session=s; _write(c); },
@@ -4654,24 +4654,25 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function(){
     // 記錄是否已有舊版 SW 控制頁面，首次安裝時不需要重新整理
     var hadController = !!navigator.serviceWorker.controller;
+    var refreshing = false;                 // 防止 updatefound 與 controllerchange 各觸發一次造成雙重 reload
+    function applyUpdate(){
+      if (refreshing || !hadController) return;
+      refreshing = true;
+      window.location.reload();
+    }
     navigator.serviceWorker.register('./sw.js').then(function(reg){
       // 每次頁面載入時主動向伺服器檢查是否有新版 sw.js
       reg.update();
       // 偵測新版 SW 安裝完成後，自動重整套用新版（僅限更新情境，非首次安裝）
       reg.addEventListener('updatefound', function(){
-        if (!hadController) return;
         var newWorker = reg.installing;
         newWorker.addEventListener('statechange', function(){
-          if (newWorker.state === 'activated') {
-            window.location.reload();
-          }
+          if (newWorker.state === 'activated') applyUpdate();
         });
       });
     }).catch(function(){ /* 離線或 file:// 下忽略 */ });
     // 控制器切換時重整（skipWaiting 觸發，僅限更新情境）
-    navigator.serviceWorker.addEventListener('controllerchange', function(){
-      if (hadController) window.location.reload();
-    });
+    navigator.serviceWorker.addEventListener('controllerchange', applyUpdate);
   });
 }
 </script>

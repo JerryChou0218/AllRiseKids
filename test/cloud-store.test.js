@@ -59,6 +59,12 @@ const b1 = JSON.parse(cloudStore.loadChildBlob(p1.id, r1.child.id)||'{}');
 const b2 = JSON.parse(cloudStore.loadChildBlob(p1.id, r2.child.id)||'{}');
 __assert(b1.coins===111 && b2.coins===222, '兩小孩存檔各自獨立（111 / 222）');
 
+/* 4b. 小孩進度存檔會更新家長 _localUpdatedAt（讓 cloudBoot 時間戳比對對遊戲進度也生效） */
+const __tsBefore = cloudStore.getParent(p1.id)._localUpdatedAt || 0;
+cloudStore.saveChildBlob(p1.id, r1.child.id, JSON.stringify({coins:333}));
+const __tsAfter = cloudStore.getParent(p1.id)._localUpdatedAt || 0;
+__assert(__tsAfter >= __tsBefore && __tsAfter > 0, 'saveChildBlob 更新家長 _localUpdatedAt 時間戳');
+
 /* 5. 不同家長資料互不可見 */
 const p2 = auth.signInWithGoogle('dad@gmail.com', '爸爸');
 cloudStore.addChild(p2.id, '別家小孩');
